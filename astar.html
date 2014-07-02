@@ -74,7 +74,7 @@
                 return i;
         return -1;
     }
-    
+
 
     function pq_Test()
     {
@@ -98,7 +98,58 @@
         }
     }
 
-    pq_Test();
+//    pq_Test();
+</script>
+
+<style type="text/css">
+    .asTable { border: 1px solid black; font-size: 10px; }
+    .asTable td { border: 1px solid black; height: 25px; width: 25px; }
+</style>
+
+<table class="asTable" cellpadding="0" cellspacing="0">
+    <tbody id="astar_tbody"></tbody>
+</table>
+
+<script type="text/javascript">
+    var AS_MAXY = 20;
+    var AS_MAXX = 20;
+
+    function as_CreateTable()
+    {
+        var astar_tbody = document.getElementById('astar_tbody');
+        var y, x;
+        var tr, td;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            tr = document.createElement('tr');
+            astar_tbody.appendChild( tr );
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                td = document.createElement('td');
+                tr.appendChild( td );
+                td.setAttribute( 'id', y + '_' + x );
+                td.innerHTML = y + ' ' + x;
+            } // end for x
+        } // end for y
+    }
+
+    function as_TableReset()
+    {
+        var y, x;
+        var td;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                td = document.getElementById(y+'_'+x);
+                td.style.backgroundColor = 'white';
+            } // end for x
+        } // end for y
+    }
+
+    as_CreateTable();
+    as_TableReset();
 </script>
 
 </body>
