@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    var pqArr;
+    var pqCount;
+
+    function pq_Init( queueSize )
+    {
+        pqArr = new Array( queueSize+1 );
+        pqCount = 0;
+    }
+
+    function pq_Enqueue( e )
+    {
+        var parent, child;
+        pqCount++;
+        parent = Math.floor( pqCount/2 );
+        child = pqCount;
+
+        while ( parent > 0 )
+        {
+            if ( pqArr[parent].f > e.f )
+            {
+                pqArr[child] = pqArr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+
+        pqArr[child] = e;
+    }
+
+    function pq_Dequeue( idx )
+    {
+        var parent, child;
+        var e;
+        pqArr[idx] = pqArr[pqCount];
+        e = pqArr[idx];
+        parent = idx;
+        child = idx*2;
+
+        while ( pqCount > child )
+        {
+            if ( pqCount-1 > child )
+                if ( pqArr[child].f > pqArr[child+1].f )
+                    child++;
+
+            if ( e.f > pqArr[child].f )
+            {
+                pqArr[parent] = pqArr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        } // end while
+        pqArr[parent] = e;
+        pqCount--;
+    }
+
+    function pq_GetIdx( e )
+    {
+        var i;
+        for ( i = 1; i <= pqCount; i++ )
+            if ( pqArr[i].f == e.f )
+                return i;
+        return -1;
+    }
+
+    function pq_Test()
+    {
+        var i;
+        var e;
+        pq_Init( 10 );
+        for ( i = 0; i < 10; i++ )
+        {
+            e = { f: i };
+            pq_Enqueue( e );
+        } // end for i
+
+        i = pq_GetIdx( e );
+        pq_Dequeue( i );
+
+        while ( pqCount )
+        {
+            e = pqArr[1];
+            console.log(e.f);
+            pq_Dequeue( 1 );
+        }
+    }
+
+    pq_Test();
+</script>
+
+</body>
+</html>
