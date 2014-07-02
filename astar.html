@@ -101,6 +101,7 @@
 //    pq_Test();
 </script>
 
+<input type="button" value="Search" onclick="as_Search();">
 <style type="text/css">
     .asTable { border: 1px solid black; font-size: 10px; }
     .asTable td { border: 1px solid black; height: 25px; width: 25px; }
@@ -128,7 +129,7 @@
                 td = document.createElement('td');
                 tr.appendChild( td );
                 td.setAttribute( 'id', y + '_' + x );
-                td.innerHTML = y + ' ' + x;
+//                td.innerHTML = y + ' ' + x;
             } // end for x
         } // end for y
     }
@@ -150,6 +151,173 @@
 
     as_CreateTable();
     as_TableReset();
+</script>
+
+<script type="text/javascript">
+
+    var astarGrid;
+
+    function as_Init()
+    {
+        var y, x;
+        astarGrid = new Array( AS_MAXY );
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            for ( x = 0; x < AS_MAXX; x++ )
+                astarGrid[y] = new Array( AS_MAXX );
+        } // end for y
+    }
+
+    function as_CreateElement()
+    {
+        return {
+            y: -1, x: -1,
+            closed: 0, visited: 0, passable: 1,
+            cost: 1,
+            h: 0, f: 0, g: 0,
+            parent: null
+        };
+    }
+
+    function RAND_INT( x, y )
+    {
+        return Math.floor( Math.random() * ( y - x + 1 ) + x );
+    }
+
+    function as_Reset()
+    {
+        var y, x;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                astarGrid[y][x] = as_CreateElement();
+                astarGrid[y][x].y = y;
+                astarGrid[y][x].x = x;
+                var td = as_SearchGetTD( astarGrid[y][x] );
+                if ( RAND_INT( 0, 3 ) == 2 )
+                {
+                    td.style.backgroundColor = 'black';
+                    astarGrid[y][x].passable = 0;
+                }
+                else
+                {
+                    td.style.backgroundColor = 'white';
+                    astarGrid[y][x].passable = 1;
+                }
+            } // end for x
+        } // end for y
+    }
+
+    function as_Manhatan( p0, p1 )
+    {
+        var y = Math.abs( p0.y - p1.y );
+        var x = Math.abs( p0.x - p1.x );
+        return y + x;
+    }
+
+    var dirY = [ -1, +1, -0, +0, -1, +1, -1, +1 ];
+    var dirX = [ -0, +0, -1, +1, -1, -1, +1, +1 ];
+
+    function as_Heur( node, goal )
+    {
+        node.h = as_Manhatan( node, goal );
+        node.f = node.h + node.g;
+    }
+
+    function as_SearchGetTD( node )
+    {
+        return document.getElementById( node.y + '_' + node.x );
+    }
+    function as_SearchOnNode( node )
+    {
+        var td = as_SearchGetTD( node );
+        td.style.backgroundColor = 'gray';
+    }
+    function as_SearchOnCurrNode( node )
+    {
+        var td = as_SearchGetTD( node );
+        td.style.backgroundColor = 'green';
+    }
+    function as_SearchOnFind( node )
+    {
+        var td = as_SearchGetTD( node );
+        td.style.backgroundColor = 'red';
+    }
+
+    function as_SearchT( goal )
+    {
+        if ( pqCount == 0 )
+        {
+            alert('nerasta');
+            return;
+        }
+
+        var currNode = pqArr[1];
+        pq_Dequeue( 1 );
+        if ( currNode.y == goal.y && currNode.x == goal.x )
+        {
+            as_SearchOnFind( currNode );
+            return;
+        }
+
+        currNode.closed = 1;
+        as_SearchOnCurrNode( currNode );
+
+        for ( var dir = 0; dir < dirY.length; dir++ )
+        {
+            var y = currNode.y + dirY[dir];
+            var x = currNode.x + dirX[dir];
+            if ( 0 > y || y >= AS_MAXY ) continue;
+            if ( 0 > x || x >= AS_MAXX ) continue;
+
+            var node = astarGrid[y][x];
+            if ( node.passable == 0 ) continue;
+            if ( node.closed == 1 ) continue;
+
+            var g = node.cost + currNode.g;
+            var visited = node.visited;
+            if ( visited == 0 || node.g > g )
+            {
+                node.visited = 1;
+                node.parent = currNode;
+                node.g = g;
+                as_Heur( node, goal );
+
+                if ( visited == 0 )
+                    pq_Enqueue( node );
+                else
+                {
+                    var idx = pq_GetIdx( node );
+                    pq_Dequeue( idx );
+                    pq_Enqueue( node );
+                }
+
+                as_SearchOnNode( node );
+            } // end if
+        } // end for dir
+
+        setTimeout( as_SearchT( goal ), 10000 );
+
+    }
+
+    function as_Search()
+    {
+        as_Init();
+        as_Reset();
+
+        var start = astarGrid[0][0];
+        var goal = astarGrid[AS_MAXY-1][AS_MAXX-1];
+
+        as_Heur( start, goal );
+
+        pq_Init( AS_MAXY + AS_MAXX );
+        pq_Enqueue( start );
+
+        as_SearchT( goal );
+
+    }
+
 </script>
 
 </body>
