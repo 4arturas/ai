@@ -101,6 +101,7 @@
 //    pq_Test();
 </script>
 
+<input type="button" value="Search" onclick="as_Search();">
 <style type="text/css">
     .asTable { border: 1px solid black; font-size: 10px; }
     .asTable td { border: 1px solid black; height: 25px; width: 25px; }
@@ -112,7 +113,7 @@
 
 <script type="text/javascript">
     var AS_MAXY = 20;
-    var AS_MAXX = 20;
+    var AS_MAXX = 30;
 
     function as_CreateTable()
     {
@@ -128,10 +129,11 @@
                 td = document.createElement('td');
                 tr.appendChild( td );
                 td.setAttribute( 'id', y + '_' + x );
-                td.innerHTML = y + ' ' + x;
+//                td.innerHTML = y + ' ' + x;
             } // end for x
         } // end for y
     }
+
 
     function as_TableReset()
     {
@@ -148,8 +150,188 @@
         } // end for y
     }
 
+
     as_CreateTable();
     as_TableReset();
+</script>
+
+<script type="text/javascript">
+
+    var asGrid;
+
+    function as_CreateNode( y, x )
+    {
+        return {
+            y: y, x: x,
+            g: 0, h: 0, f: 0,
+            cost: 0,
+            closed: 0, visited: 0, passable: 1,
+            parent: null
+        };
+    }
+
+    function RAND_INT( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+
+    var asStart = as_CreateNode( 0, 0 );
+    var asEnd = as_CreateNode( AS_MAXY-1, AS_MAXX-1 );
+
+    asStart.h = as_Manhattan( asStart, asEnd );
+    asStart.f = asStart.h;
+
+    function as_Init()
+    {
+        var y, x;
+        var r;
+        asGrid = new Array( AS_MAXY );
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            asGrid[y] = new Array( AS_MAXX );
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                asGrid[y][x] = as_CreateNode( y, x );
+                if ( asStart.y == y && asStart.x == x ) continue;
+                if ( asEnd.y == y && asEnd.x == x ) continue;
+                var rMax = 4;
+                r = RAND_INT( 0, rMax );
+                if ( r == rMax )
+                    asGrid[y][x].passable = 0;
+            } // end for x
+        } // end for y
+    }
+    as_Init();
+
+    function as_GetTD( node )
+    {
+        return document.getElementById(node.y + '_' + node.x );
+    }
+    function as_ResetTable()
+    {
+        var y, x;
+        var td;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                td = as_GetTD( asGrid[y][x] );
+                var passable = asGrid[y][x].passable;
+                asGrid[y][x] = as_CreateNode( y, x );
+                asGrid[y][x].passable = passable;
+                if ( passable == 0 )
+                    td.style.backgroundColor = 'black';
+                else
+                    td.style.backgroundColor = 'white';
+            } // end for td
+        } // end for y
+        td = as_GetTD( asStart );
+        td.style.backgroundColor = 'yellow';
+        td = as_GetTD( asEnd );
+        td.style.backgroundColor = 'red';
+    }
+    as_ResetTable();
+
+    function as_Manhattan( p0, p1 )
+    {
+        var y = Math.abs( p0.y - p1.y );
+        var x = Math.abs( p0.x - p1.x );
+//        return y + x;
+        return y*y + x*x;
+//        return Math.sqrt( y*y + x*x );
+    }
+
+    var dirY = [ -1, +1, +0, -0 ];
+    var dirX = [ -0, +0, -1, +1 ];
+
+    function as_NodesEqual( n0, n1 )
+    {
+        if ( n0.y == n1.y && n0.x == n1.x ) return 1;
+        return 0;
+    }
+
+    function as_SearchOnFind( node )
+    {
+        if ( node == null ) return;
+
+            var td = as_GetTD( node );
+
+            if ( 0 == as_NodesEqual( node, asStart ) )
+                if ( 0 == as_NodesEqual( node, asEnd ) )
+                    td.style.backgroundColor = 'gray';
+
+        setTimeout(
+                function()
+                {
+                    as_SearchOnFind( node.parent )
+                },
+                10 );
+    }
+
+    function as_OnNode( node )
+    {
+        if ( asStart.y == node.y && asStart.x == node.x ) return;
+        if ( asEnd.y == node.y && asEnd.x == node.x ) return;
+        var td = as_GetTD( node );
+        td.style.backgroundColor = 'lightblue';
+    }
+
+    function as_Search()
+    {
+        pq_Init( AS_MAXY * AS_MAXX );
+        as_ResetTable();
+        pq_Enqueue( asStart );
+
+        while ( pqCount > 0 )
+        {
+            var currNode = pqArr[1];
+            pq_Dequeue( 1 );
+
+            if ( currNode.y == asEnd.y && currNode.x == asEnd.x )
+            {
+                as_SearchOnFind( currNode );
+                return;
+            }
+
+            currNode.closed = 1;
+            var dir;
+            for ( dir = 0; dir < dirY.length; dir++ )
+            {
+                var y = currNode.y + dirY[dir];
+                var x = currNode.x + dirX[dir];
+                if ( 0 > y || y >= AS_MAXY ) continue;
+                if ( 0 > x || x >= AS_MAXX ) continue;
+
+                var node = asGrid[y][x];
+                if ( node.closed == 1 ) continue;
+                if ( node.passable == 0 ) continue;
+
+                as_OnNode( node );
+
+                var g = node.cost + currNode.g;
+                var visited = node.visited;
+                if ( visited == 0 || g > node.g )
+                {
+                    node.visited = 1;
+                    node.parent = currNode;
+                    node.g = g;
+                    node.h = as_Manhattan( node, asEnd );
+                    node.f = node.g + node.h;
+                    if ( visited == 0 )
+                        pq_Enqueue( node );
+                    else
+                    {
+                        var idx = pq_GetIdx( node );
+                        pq_Dequeue( idx );
+                        pq_Enqueue( node );
+                    }
+                } // end if
+            } // end for dir
+        } // end while
+    }
+
 </script>
 
 </body>
