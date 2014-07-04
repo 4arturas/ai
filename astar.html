@@ -101,7 +101,7 @@
 //    pq_Test();
 </script>
 
-<input type="button" value="Search" onclick="as_Search();">
+
 <style type="text/css">
     .asTable { border: 1px solid black; font-size: 10px; }
     .asTable td { border: 1px solid black; height: 25px; width: 25px; }
@@ -110,6 +110,7 @@
 <table class="asTable" cellpadding="0" cellspacing="0">
     <tbody id="astar_tbody"></tbody>
 </table>
+<input type="button" value="Search" onclick="as_Search();">
 
 <script type="text/javascript">
     var AS_MAXY = 20;
@@ -159,6 +160,203 @@
 
 
     var asGrid;
+
+    function as_CreateNode( y, x )
+    {
+        return {
+            y: y, x: x,
+            g: 0, h:0, f: 0,
+            cost: 0,
+            visited: 0, closed: 0,
+            passable: 1,
+            parent: null
+        };
+    }
+
+    function RAND_INT( a, b )
+    {
+        return Math.floor(
+            Math.random() * ( b - a + 1 ) + a
+        );
+    }
+
+
+    function as_Heuristics( n0, n1 )
+    {
+        var y = Math.abs( n0.y - n1.y );
+        var x = Math.abs( n0.x - n1.x );
+        return Math.sqrt( (y*y)+(x*x) );
+    }
+
+    var asStart = as_CreateNode( 0, 0 );
+    var asEnd = as_CreateNode( AS_MAXY-1, AS_MAXX-1 );
+
+    asStart.g = 0;
+    asStart.h = as_Heuristics( asStart, asEnd );
+    asStart.f = asStart.g + asStart.h;
+
+
+    function as_NodeEqual( n0, n1 )
+    {
+        if ( n0.y == n1.y && n0.x == n1.x ) return 1;
+        return 0;
+    }
+
+    function as_GridInit()
+    {
+        var y, x;
+        asGrid = new Array( AS_MAXY*AS_MAXX );
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            asGrid[y] = new Array( AS_MAXX );
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                var p = 5;
+                var passable = RAND_INT( 0, p );
+                asGrid[y][x] = as_CreateNode( y, x );
+                if ( 1 == as_NodeEqual( asGrid[y][x], asStart ) ) continue;
+                if ( 1 == as_NodeEqual( asGrid[y][x], asEnd  ) ) continue;
+                if ( passable == p )
+                    asGrid[y][x].passable = 0;
+            } // end for x
+        } // end for y
+    }
+    as_GridInit();
+
+    function as_GetTD( node )
+    {
+        return document.getElementById(node.y+'_'+node.x);
+    }
+
+    function as_ResetTable()
+    {
+        var y, x;
+        var td;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                var passable = asGrid[y][x].passable;
+                asGrid[y][x] = as_CreateNode( y, x );
+                asGrid[y][x].passable = passable;
+                td = as_GetTD( asGrid[y][x] );
+                if ( passable != 0 )
+                {
+                    td.style.backgroundColor = 'white';
+                }
+                else
+                    td.style.backgroundColor = 'black';
+            }
+        } // end for y
+        td = as_GetTD( asStart );
+        td.style.backgroundColor = 'yellow';
+        td = as_GetTD( asEnd );
+        td.style.backgroundColor = 'red';
+    }
+    as_ResetTable();
+
+    function as_OnFound( node )
+    {
+        alert( node.y );
+    }
+
+    var dirY = [ -1, +1, -0, +0 ];
+    var dirX = [ -0, +0, -1, +1 ];
+    var timeout = 50;
+
+    function as_OnSearchAround( currNode, dir )
+    {
+        var td;
+        td = as_GetTD( currNode );
+        td.style.backgroundColor = 'gray';
+        if ( dir >= dirY.length )
+        {
+            setTimeout(
+                    function()
+                    {
+                        as_Test();
+                    }, timeout
+            );
+            return;
+        }
+
+        var y = dirY[dir] + currNode.y;
+        var x = dirX[dir] + currNode.x;
+
+
+        if ( y >= 0 && AS_MAXY > y )
+        if ( x >= 0 && AS_MAXX > x )
+        {
+
+
+
+            var node = asGrid[y][x];
+            if ( node.closed == 0 && node.passable == 1 )
+            {
+                var g = node.cost + currNode.g;
+                var visited = node.visited;
+                if ( visited == 0 || node.g > g )
+                {
+                    td = as_GetTD( node );
+                    td.style.backgroundColor = 'lightblue';
+                    node.visited = 1;
+                    node.parent = currNode;
+                    node.g = g;
+                    node.h = as_Heuristics( node, asEnd );
+                    node.f = node.g + node.h;
+
+                    if ( visited == 0 )
+                        pq_Enqueue( node );
+                    else
+                    {
+                        var idx = pq_GetIdx( node );
+                        pq_Dequeue( idx );
+                        pq_Enqueue( node );
+                    } // end else
+                } // end if
+            } // end if
+        } // end if
+
+        setTimeout(
+                function ()
+                {
+                    as_OnSearchAround( currNode, dir+1 );
+                }, timeout
+        );
+    }
+
+    function as_Test()
+    {
+        if ( pqCount == 0 )
+        {
+            alert( 'Not found' );
+            return;
+        }
+
+
+        var currNode = pqArr[1];
+        pq_Dequeue(1);
+
+        if (as_NodeEqual(currNode, asEnd) == 1)
+        {
+            return;
+        } // end if
+
+        currNode.closed = 1;
+
+        as_OnSearchAround(currNode, 0);
+    }
+
+    function as_Search()
+    {
+        pq_Init( AS_MAXY*AS_MAXX );
+        as_ResetTable();
+
+        pq_Enqueue( asStart );
+
+        as_Test();
+
+    }
 
 
 </script>
