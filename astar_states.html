@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    var pqArr;
+    var pqCount;
+    function pq_Init( size )
+    {
+        pqArr = new Array( size+1 );
+        pqCount = 0;
+    }
+
+    function pq_Enqueue( e )
+    {
+        var parent, child;
+        pqCount++;
+        parent = Math.floor( pqCount/2 );
+        child = pqCount;
+        while ( parent > 0 )
+        {
+            if ( pqArr[parent].f > e.f )
+            {
+                pqArr[child] = pqArr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+        pqArr[child] = e;
+    }
+
+    function pq_Dequeue( idx )
+    {
+        var parent, child;
+        var e;
+        pqArr[idx] = pqArr[pqCount];
+        e = pqArr[idx];
+        parent = idx;
+        child = idx * 2;
+        while ( pqCount > child )
+        {
+            if ( pqCount-1 > child )
+                if ( pqArr[child].f > pqArr[child+1].f )
+                    child++;
+
+            if ( e.f > pqArr[child].f  )
+            {
+                pqArr[parent] = pqArr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        } // end while
+        pqCount--;
+        pqArr[parent] = e;
+    }
+
+    function pq_GetIdx( e )
+    {
+        var i = -1;
+        for ( i = 1; i <= pqCount; i++ )
+        {
+            if (e.f == pqArr[i].f)
+                return i;
+        }
+        alert( 'Klaida: Toks elementas nerastas!' );
+        return -1;
+    }
+
+    function pq_Test()
+    {
+        var i;
+        var e;
+        pq_Init( 10 );
+        for ( i = 0; i < 10; i++ )
+        {
+            e = { f: i };
+            pq_Enqueue( e );
+        } // end for i
+
+        e = { f: 0 };
+        i = pq_GetIdx( e );
+        pq_Dequeue( i );
+
+        while ( pqCount > 0 )
+        {
+            e = pqArr[1];
+            console.log(e.f);
+            pq_Dequeue( 1 );
+        } // end while
+    }
+//    pq_Test();
+</script>
+
+<style type="text/css">
+    .astarTable { border: 1px solid black; }
+    .astarTable td { border: 1px solid black; height:25px; width:25px }
+</style>
+
+<table class="astarTable" cellpadding="0" cellspacing="0">
+    <tbody id="astarTbody"></tbody>
+</table>
+
+<input type="button" value="Search" onclick="as_Search();">
+
+<script type="text/javascript">
+    var AS_MAXY = 20;
+    var AS_MAXX = 20;
+    function as_TableInit()
+    {
+        var td, tr;
+        var astarTbody = document.getElementById('astarTbody');
+        var y, x;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            tr = document.createElement('tr');
+            astarTbody.appendChild( tr );
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                td = document.createElement('td');
+                tr.appendChild( td );
+                td.setAttribute( 'id', y+'_'+x);
+            } // end for x
+        } // end for y
+    }
+    as_TableInit();
+</script>
+
+<script type="text/javascript">
+
+    function as_CreateNode( y, x )
+    {
+        return {
+            y: y, x: x,
+            g: 0, h: 0, f: 0,
+            closed: 0, visited: 0,
+            passable: 1,
+            parent: null
+        };
+    }
+
+    var asGrid;
+
+    function RAND_INT( a, b )
+    {
+        return Math.floor(
+            Math.random() * ( b - a + 1 ) + a
+        );
+    }
+
+    function as_Manhatan( p0, p1 )
+    {
+        var y = Math.abs( p0.y - p1.y );
+        var x = Math.abs( p0.x - p1.x );
+        return (y*y) + (x*x);
+    }
+
+    var asStart = as_CreateNode( 0, 0 );
+    var asEnd = as_CreateNode( AS_MAXY-1, AS_MAXX-1 );
+
+    asStart.h = as_Manhatan( asStart, asEnd );
+    asStart.f = asStart.h;
+
+    function as_NodesEqual( n0, n1 )
+    {
+        if ( n0.y == n1.y && n0.x == n1.x )
+            return 1;
+        return 0;
+    }
+
+    function as_Init()
+    {
+        var y, x;
+
+        asGrid = new Array( AS_MAXY );
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            asGrid[y] = new Array( AS_MAXX );
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                asGrid[y][x] = as_CreateNode( y, x );
+                if ( as_NodesEqual( asGrid[y][x], asStart ) == 1 ) continue;
+                if ( as_NodesEqual( asGrid[y][x], asEnd ) == 1 ) continue;
+                var p = 1000;
+                if ( p == RAND_INT( 0, p ) )
+                    asGrid[y][x].passable = 0;
+
+            } // end for x
+        } // end for y
+    }
+    as_Init();
+
+    function as_GetTD( node )
+    {
+        return document.getElementById(node.y+'_'+node.x);
+    }
+
+    function as_TableReset()
+    {
+        var y, x;
+        var passable;
+        var td;
+        for ( y = 0; y < AS_MAXY; y++ )
+        {
+            for ( x = 0; x < AS_MAXX; x++ )
+            {
+                passable = asGrid[y][x].passable;
+                asGrid[y][x] = as_CreateNode( y, x );
+                asGrid[y][x].passable = passable;
+                td = as_GetTD( asGrid[y][x] );
+                if ( passable == 0 )
+                    td.style.backgroundColor = 'black';
+                else
+                    td.style.backgroundColor = 'white';
+            } // end for x
+        } // end for y
+        td = as_GetTD( asStart );
+        td.style.backgroundColor = 'yellow';
+        td = as_GetTD( asEnd );
+        td.style.backgroundColor = 'red';
+    }
+    as_TableReset();
+
+    function as_Search()
+    {
+        alert( 'Not implemented' );
+    }
+
+</script>
+
+</body>
+</html>
