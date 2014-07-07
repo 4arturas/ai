@@ -140,7 +140,7 @@
         return {
             y: y, x: x,
             g: 0, h: 0, f: 0,
-            closed: 0, visited: 0,
+            closed: 0, visited: 0, cost: 0,
             passable: 1,
             parent: null
         };
@@ -188,7 +188,7 @@
                 asGrid[y][x] = as_CreateNode( y, x );
                 if ( as_NodesEqual( asGrid[y][x], asStart ) == 1 ) continue;
                 if ( as_NodesEqual( asGrid[y][x], asEnd ) == 1 ) continue;
-                var p = 1000;
+                var p = 2;
                 if ( p == RAND_INT( 0, p ) )
                     asGrid[y][x].passable = 0;
 
@@ -228,10 +228,128 @@
     }
     as_TableReset();
 
+    var S_AS_START = 0;
+    var S_AS_END = 1;
+    var S_AS_SELECT_CURR_NODE = 2;
+    var S_AS_FOUND_END = 3;
+    var S_AS_SELECT_NEIGHBOUR_NODE = 4;
+
+    var state = S_AS_START;
+    var dirY = [ -1, +1, -0, +0 ];
+    var dirX = [ -0, +0, -1, +1 ];
+    var dir = 0;
+
+    var timeout = 5;
+    var currNode;
     function as_Search()
     {
-        alert( 'Not implemented' );
+        var td;
+        switch( state )
+        {
+            ////////////////////////////////////////////////////////
+            case S_AS_START:
+                as_TableReset();
+                state = S_AS_SELECT_CURR_NODE;
+                pq_Init( AS_MAXY*AS_MAXX );
+                pq_Enqueue( asStart );
+                break;
+
+            ////////////////////////////////////////////////////////
+            case S_AS_END:
+                console.log('Neradau');
+                return;
+
+            ////////////////////////////////////////////////////////
+            case S_AS_FOUND_END:
+                state = S_AS_START;
+                return;
+            ////////////////////////////////////////////////////////
+            case S_AS_SELECT_CURR_NODE:
+                if ( pqCount == 0 )
+                {
+                    state = S_AS_END;
+                    break;
+                }
+                currNode = pqArr[1];
+                pq_Dequeue( 1 );
+
+                if ( as_NodesEqual( asEnd, currNode ) == 1 )
+                {
+                    state = S_AS_FOUND_END;
+                    break;
+                }
+
+                currNode.closed = 1;
+                dir = 0;
+                state = S_AS_SELECT_NEIGHBOUR_NODE;
+                if ( as_NodesEqual( asStart, currNode ) == 1 )
+                    break;
+                td = as_GetTD( currNode );
+                td.style.backgroundColor = 'gray';
+                break;
+
+            ////////////////////////////////////////////////////////
+            case S_AS_SELECT_NEIGHBOUR_NODE:
+
+                if ( dir >= dirY.length )
+                {
+                    state = S_AS_SELECT_CURR_NODE;
+                    break;
+                }
+
+                var y = currNode.y + dirY[dir];
+                var x = currNode.x + dirX[dir];
+
+                dir++;
+                if ( 0 > y || y >= AS_MAXY ) break;
+                if ( 0 > x || x >= AS_MAXX ) break;
+
+                var node = asGrid[y][x];
+                if ( node.passable == 0 ) break;
+                if ( node.closed == 1 ) break;
+
+                if ( as_NodesEqual( asStart, node ) == 0 &&
+                    as_NodesEqual( asEnd, node ) == 0 )
+                {
+                    td = as_GetTD(node);
+                    td.style.backgroundColor = 'lightblue';
+                }
+
+                var visited = node.visited;
+                var g = node.cost + currNode.g;
+
+                if ( visited == 0 || g > node.g )
+                {
+                    node.visited = 1;
+                    node.parent = currNode;
+                    node.g = g;
+                    node.h = as_Manhatan( node, asEnd );
+                    node.f = node.g + node.h;
+                    if ( visited == 0 )
+                        pq_Enqueue( node );
+                    else
+                    {
+                        var idx = pq_GetIdx( node );
+                        pq_Dequeue( idx );
+                        pq_Enqueue( node );
+                    }
+                } // end if
+
+                break;
+        }
+
+        setTimeout(
+                function()
+                {
+                    as_Search();
+                },
+                timeout
+        );
     }
+
+</script>
+
+<script type="text/javascript">
 
 </script>
 
