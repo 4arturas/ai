@@ -12,19 +12,19 @@
     ];
 
     var x, y;
-    var theta0 = 0.0, theta1 = 0.0;
+    var _theta = [0,0];
+
     function gradient_descent_SetData()
     {
         var i;
         var m = data.length;
-        theta0 = 0.0;
-        theta1 = 0.0;
+        _theta = [0,0];
         x = new Array( m );
         y = new Array( m );
         for ( i = 0; i < m; i++ )
         {
-            x[i] = data[0][0];
-            y[i] = data[0][1];
+            x[i] = data[i][0];
+            y[i] = data[i][1];
         } // end for i
     }
 
@@ -33,28 +33,47 @@
 
 <script type="text/javascript">
 
+    function product( v, theta )
+    {
+        return 1.0 * theta[0] + v * theta[1];
+    }
     function compute_Cost()
     {
         var J;
         var s = 0.0;
         var m = y.length;
         var i;
-        console.log( x[0] );
-        console.log( 1.0 * theta0 + x[0] * theta1 );
         for ( i = 0; i < m; i++ )
         {
-            var x_theta = 1.0 * theta0 + x[i] * theta1;
-
+            var x_theta = product( x[i], _theta );
             var tmp = x_theta - y[i];
             tmp = Math.pow( tmp, 2.0 );
             s = s + tmp;
         } // end for i
-        console.log( s );
         J = 1.0 / ( 2.0 * m ) * s;
-        console.log( J );
-
+//        console.log( J );
+        return J;
     }
     compute_Cost();
+
+    var num_iterations = 10;
+    var alpha = 0.01;
+    var J_hist = new Array( num_iterations );
+    function gradient_Descent()
+    {
+        var iter;
+        var i, j;
+        var hip = new Array(x.length);
+        var m = y.length;
+        var sum;
+        for ( iter = 0; iter < num_iterations; iter++ )
+        {
+            for ( i = 0; i < x.length; i++ )
+                hip[i] = product( x[i], _theta );
+
+            sum = 0;
+        } // end for iter
+    }
 </script>
 
 </body>
