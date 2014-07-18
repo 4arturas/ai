@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+//    http://jsfiddle.net/mcrss/KwGK5/
+//    http://jsfiddle.net/mcrss/KwGK5/13/
+
+    function parseInt( v )
+    {
+        if ( v == '0' )
+            return 0x0;
+        if ( v == 'f' )
+            return 0xf;
+
+        alert( 'Klaida' );
+    }
+
+    var height = 100;
+    var width = 100;
+    var field = [];
+    function test()
+    {
+        // Color states
+        var states = ['#000', '#000', '#000', '#000', '#000', '#000', '#000', '#000', '#000', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff'];
+
+        // Color states (byte triplets)
+        var byteStates = [];
+
+        for ( var a = 0; a < states.length; a++ )
+        {
+            byteStates[a] = [
+                parseInt( states[a].charAt(1) ),
+                parseInt( states[a].charAt(2) ),
+                parseInt( states[a].charAt(3) )
+            ];
+        }
+
+
+        for ( var y = 0; y < height; y++ )
+        {
+            var row = [];
+            for ( var x = 0; x < width; x++ )
+            {
+                row[x] = Math.floor(
+                    Math.random() * byteStates.length
+                );
+            } // end for x
+        } // end for y
+        field[y] = row;
+    }
+    test();
+
+    var imageData;
+    function init()
+    {
+        var y, x;
+        imageData = [];
+        for ( y = 0; y < height; y++ )
+        {
+            imageData[y] = [];
+            for ( x = 0; x < width; x++ )
+            {
+                var offset = ( width * y + x ) * 4;
+
+            } // end for x
+        } // end for y
+    }
+
+</script>
+
+</body>
+</html>
