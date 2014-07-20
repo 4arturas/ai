@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+</head>
+<script type="text/javascript" language="JavaScript" src="matrix.js"></script>
+<body>
+
+<script type="text/javascript">
+
+    function matrix_Test()
+    {
+        var i = matrix_Identitiy( 3 );
+        var m = matrix_Identitiy( 3 );
+        m[1][0] = 10;
+        m[1][1] = 10;
+        var a = matrix_Mul( i, m );
+
+        var s = matrix_CreateSubMatrix( i, 1, 1 );
+        matrix_Print( s );
+    }
+    matrix_Test();
+</script>
+
+</body>
+</html>
