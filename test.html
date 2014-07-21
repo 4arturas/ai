@@ -5,6 +5,7 @@
     <title></title>
 </head>
 <script type="text/javascript" language="JavaScript" src="matrix.js"></script>
+<script type="text/javascript" language="JavaScript" src="gradient_descent.js"></script>
 <body>
 
 <script type="text/javascript">
@@ -20,7 +21,13 @@
         var s = matrix_CreateSubMatrix( i, 1, 1 );
         matrix_Print( s );
     }
-    matrix_Test();
+//    matrix_Test();
+
+    function gradientDescent_Test()
+    {
+        gd_Test();
+    }
+    gradientDescent_Test()
 </script>
 
 </body>
