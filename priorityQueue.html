@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script>
+
+    function pq_Create()
+    {
+        return { count: 0, arr:[] };
+    }
+
+    function pq_Compare_Test( e0, e1 )
+    {
+        return ( e0.f < e1.f );
+    }
+
+    function pq_Enqueue( pq, e, fnCmp )
+    {
+        var parent;
+        var child;
+        pq.count++;
+        parent = Math.floor( pq.count/2 );
+        child = pq.count;
+        while ( parent > 0 )
+        {
+//            if ( pq.arr[parent].f > e.f )
+            if ( fnCmp( pq.arr[parent], e ) )
+            {
+                pq.arr[child] = pq.arr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+        pq.arr[child] = e;
+    }
+
+    function pq_Dequeue( pq, idx, fnCmp )
+    {
+        var parent, child;
+        var e;
+        pq.arr[idx] = pq.arr[pq.count];
+        e = pq.arr[idx];
+        parent = idx;
+        child = idx * 2;
+        while ( pq.count > child )
+        {
+            if ( pq.count-1 > child )
+            {
+                if ( fnCmp( pq.arr[child], pq.arr[child+1] ) )
+                    child++;
+            } // end if
+            if ( fnCmp( e, pq.arr[child] ) )
+            {
+                pq.arr[parent] = pq.arr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        } // end while
+        pq.arr[parent] = e;
+        pq.count--;
+    }
+
+    function pq_Test()
+    {
+        var i;
+        var e;
+        var pq = pq_Create();
+        for ( i = 0; i < 10; i++ )
+        {
+            e = { f: i };
+            pq_Enqueue( pq, e, pq_Compare_Test );
+        }
+
+        while ( pq.count != 0 )
+        {
+            e = pq.arr[1];
+            console.log(e.f);
+            pq_Dequeue( pq, 1, pq_Compare_Test );
+
+        }
+    }
+        pq_Test();
+</script>
+
+</body>
+</html>
