@@ -89,33 +89,23 @@
     }
 //    pq_Test();
 </script>
-<!--end priority queue-->
-
 <!--utils-->
 <script type="text/javascript">
     function _log( l )
     {
         console.log( l );
     }
-</script>
-<!--end utils-->
-
-<!--utils-->
-<script type="text/javascript">
-    function _log( l )
-    {
-        console.log( l );
-    }
-
     function _random( x, y )
     {
         return Math.floor(
                 Math.random() * ( y - x + 1 ) + x
         );
     }
+    function _cloneJSon( o )
+    {
+        return JSON.parse(JSON.stringify(o));
+    }
 </script>
-<!--end utils-->
-
 <!--vec2D-->
 <script type="text/javascript">
     function vec2D_Create( x, y )
@@ -123,74 +113,129 @@
         return { x: x, y: y };
     }
 </script>
-<!--end vec2D-->
+<!--geom-->
+<script>
+    var geomPI = 3.14;
 
-<!--utils-->
-<script type="text/javascript">
-
-    function odobo_CreateRndCell( _startX )
+</script>
+<!--draw-->
+<script>
+    function draw_Point( p, size )
     {
-        var rndX = 30, rndY = 70;
-        var x = _random( rndX, rndY );
-        var y = _random( rndX, rndY );
-        var v0 = vec2D_Create( _startX, y ); // start
-        var v1 = vec2D_Create( v0.x, v0.y+y ); // up
-        var v2 = vec2D_Create( v1.x+x, v1.y ); // right
-        var v3 = vec2D_Create( v2.x, v0.y ); // down
-        return [ v0, v1, v2, v3 ];
-//        return [ v0, v1, v2 ];
+        ellipse(p.x, p.y, size, size );
     }
-
-    function odobo_DrawCell( c )
+    function draw_Points( p, size )
     {
         var i;
-        var v0, v1;
-        for ( i = 0; i < c.length-1; i++ )
+        for ( i = 0; i < p.length; i++ )
+            ellipse(p[i].x, p[i].y, size, size );
+    }
+    function draw_Line( p0, p1 )
+    {
+        line( p0.x, p0.y, p1.x, p1.y );
+    }
+    function draw_Poly( poly )
+    {
+        var i;
+        var p0, p1;
+        for ( i = 0; i < poly.length-1; i++ )
         {
-            v0 = c[i];
-            v1 = c[i+1];
-            line( v0.x, v0.y, v1.x, v1.y );
+            p0 = poly[i];
+            p1 = poly[i+1];
+            line( p0.x, p0.y, p1.x, p1.y );
         }
-        v0 = c[i];
-        v1 = c[0];
+        p0 = poly[i];
+        p1 = poly[0];
+        line( p0.x, p0.y, p1.x, p1.y );
+    }
+
+    function cell_Constr( a, b )
+    {
+
+    }
+</script>
+<script type="text/javascript">
+
+    function odobo_Test()
+    {
+        var num = 10;
+        var radius;
+        var i, j, k;
+        var x, y, z;
+
+        var center = vec2D_Create( 300, 300 );
+        var v0, v1, v2, v3, vNext;
+        var min, max;
+        var angle = 0;
+        var step = 2*geomPI/num;
+        // Create points
+        var points = new Array( num );
+        {
+            for ( i = 0; i < num; i++ )
+            {
+                radius = _random( 100, 150 );
+                x = Math.sin( angle ) * radius + center.x;
+                y = Math.cos( angle ) * radius + center.y;
+                v0 = vec2D_Create( x, y );
+                angle += step;
+                points[i] = v0;
+            } // end for i
+        } // end Create points
+
+        var points2 = [];
+        var segments = [];
+        {
+            for ( i = 0; i < points.length-1; i++ )
+            {
+                v0 = points[i];
+                vNext = points[i+1];
+                v1 = vec2D_Create( v0.x, vNext.y );
+                points2.push( v0 );
+                points2.push( v1 );
+            } // end for i
+            v0 = points[i];
+            vNext = points[0];
+            v1 = vec2D_Create( v0.x, vNext.y );
+            points2.push( v0 );
+            points2.push( v1 );
+        } //
+
+
+
+        textSize( 20 );
+        for ( i = 0; i < points2.length-1; i++ )
+        {
+
+            v0 = points2[i];
+            text('' + i, v0.x, v0.y );
+            v1 = points2[i+1];
+            text('' + (i+1), v1.x, v1.y );
+            if ( v0.x == v1.x )
+                stroke( 255, 0, 0 );
+            else
+                stroke( 0, 0, 255 );
+            line( v0.x, v0.y, v1.x, v1.y );
+        } // end for i
+
+        v0 = points2[i];
+//            text('' + i, v0.x, v0.y );
+        v1 = points2[0];
+        if ( v0.x == v1.x )
+            stroke( 255, 0, 0 );
+        else
+            stroke( 0, 0, 255 );
         line( v0.x, v0.y, v1.x, v1.y );
     }
 
-    function odobo_CreateCellArray( _startX, num )
-    {
-        var cell = new Array( num );
-        var i;
-        for ( i = 0; i < num; i++ )
-        {
-            var c = odobo_CreateRndCell( _startX );
-            cell[i] = c;
-            _startX = c[3].x;
-        }
-        return cell;
-    }
-
-    function odobo_DrawCells( cell )
-    {
-        var i;
-        var c;
-        for ( i = 0; i < cell.length; i++ )
-            odobo_DrawCell( cell[i] );
-    }
-
     function setup() {
-//        createCanvas(640, 480);
-        createCanvas(800, 600);
+        createCanvas(800, 800);
     }
-
     var p5Done = 0;
     function draw() {
         if ( p5Done != 0 ) return;
         p5Done = 1;
 
-//        line( 0, 0, 100, 100 );
-
-        var cell = odobo_CreateCellArray( 100, 5 );
-        odobo_DrawCells( cell );
+        odobo_Test();
     }
 </script>
 <!--end utils-->
