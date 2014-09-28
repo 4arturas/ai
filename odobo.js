@@ -45,12 +45,16 @@ function odobo_CellToJSON( cell )
         minY = _min( minY, v0.y );
         maxY = _max( maxY, v0.y );
     } // end for i
+    minX = Math.floor(minX);
+    maxX = Math.floor(maxX);
+    minY = Math.floor(minY);
+    maxY = Math.floor(maxY);
     var _jSon =
     {
-        x: Math.floor(maxX),
-        y: Math.floor(maxY),
-        width: Math.floor(maxX-minX),
-        height: Math.floor(maxY-minY)
+        x: maxX,
+        y: maxY,
+        width: Math.abs(maxX-minX),
+        height: Math.abs(maxY-minY)
     };
     return _jSon;
 }
