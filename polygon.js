@@ -3,7 +3,7 @@ function polygon_CreateRandom( tops )
     var x, y;
     var i;
     var v0, v1;
-    var _y = 150;
+    var _y = 120;
     var polygon = [];
 
     x = 0;

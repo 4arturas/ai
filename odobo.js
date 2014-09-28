@@ -61,15 +61,30 @@ function odobo_CellToJSON( cell )
 
 function odobo_SpanFromJSon( _jSon, shiftX, shiftY )
 {
-    var span = document.createElement('span');
-    span.style.position = 'absolute';
-    span.style.left = (shiftX+_jSon.x) + 'px';
-    span.style.bottom = (shiftY+_jSon.y) + 'px';
-    span.style.width = _jSon.width + 'px';
-    span.style.height = _jSon.height + 'px';
-    span.style.backgroundColor = 'lightblue';
-    span.style.border = '1px solid black';
-    return span;
+    var div = document.createElement('div');
+//    span.style.position = 'absolute';
+//    span.style.left = (shiftX+_jSon.x) + 'px';
+//    span.style.bottom = (shiftY+_jSon.y) + 'px';
+    div.style.width = _jSon.width + 'px';
+    div.style.height = _jSon.height + 'px';
+    div.style.backgroundColor = 'lightblue';
+    div.style.border = '1px solid black';
+    return div;
+}
+function odobo_SpanFromJSon_2( _jSon, shiftX, shiftY )
+{
+    var div = document.createElement('div');
+    div.style.position = 'absolute';
+    div.style.right = (shiftX+_jSon.x) + 'px';
+    div.style.top = (shiftY+_jSon.y) + 'px';
+    div.style.width = _jSon.width + 'px';
+    div.style.height = _jSon.height + 'px';
+    div.style.backgroundColor = 'lightblue';
+    div.style.border = '1px solid black';
+
+//    div.style.left = (parseInt(e.pageX, 10) + 25) + 'px';
+//    div.style.top = (parseInt(e.pageY, 10) - 10) + 'px';
+    return div;
 }
 
 

@@ -12,7 +12,7 @@ function _randomInt( x, y )
             Math.random() * ( y - x + 1 ) + x
     );
 }
-function _cloneJSon( o )
+function _clone_JSon( o )
 {
     return JSON.parse(JSON.stringify(o));
 }

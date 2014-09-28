@@ -57,8 +57,8 @@
     </script>
 </div>
 <br>
-<canvas id="myCanvas" width="300" height="150"
-        style="border:1px solid #000000; position: absolute; top: 60px; left: 5px;">
+<canvas id="myCanvas" width="600" height="800"
+        style="position: absolute; top: 60px; left: 20px;">
 </canvas>
 
 <script>
@@ -70,11 +70,13 @@
 
 
 
-
     var boxesVertical = [], boxesHorizontal = [];
+    var tableVertical = document.createElement('table'), tableHorizontal = document.createElement('table');
+    document.body.appendChild( tableVertical );
+    document.body.appendChild( tableHorizontal );
     function odobo_Main( num )
     {
-        var i;
+        var i, j;
         var polygon;
         var c = document.getElementById("myCanvas");
         var ctx = c.getContext("2d");
@@ -83,42 +85,76 @@
         ctx.fillRect(0,0, c.width, c.height);
         ctx.beginPath();
 
-        for ( i = 0; i < boxesHorizontal.length; i++ )
-            document.body.removeChild( boxesHorizontal[i] );
         for ( i = 0; i < boxesVertical.length; i++ )
             document.body.removeChild( boxesVertical[i] );
+        for ( i = 0; i < boxesHorizontal.length; i++ )
+            document.body.removeChild( boxesHorizontal[i] );
         boxesVertical = [];
         boxesHorizontal = [];
+
+        tableVertical.cellSpacing = 0;
+        tableVertical.cellPadding = 0;
+        tableHorizontal.cellSpacing = 0;
+        tableHorizontal.cellPadding = 0;
+        if ( tableVertical.firstChild )
+            tableVertical.removeChild( tableVertical.firstChild );
+        if ( tableHorizontal.firstChild )
+            tableHorizontal.removeChild( tableHorizontal.firstChild );
+
+        tableVertical.style.position = 'absolute';
+        tableVertical.style.top = '100px';
+        tableVertical.style.left = '400px';
+
+        tableHorizontal.style.position = 'absolute';
+        tableHorizontal.style.top = '400px';
+        tableHorizontal.style.left = '400px';
+
+
 
         draw_Poly( ctx, polygon );
 
         var cellArray;
-        var span;
-        var _jSon;
         cellArray = odobo_Slice(polygon, SLICE_VERTICALLY);
         var cell;
+        var cellShift;
+        var _jSon;
+        var span;
+        var tr, td;
+        tr = document.createElement('tr');
+        tableVertical.appendChild( tr );
         for ( i = 0; i < cellArray.length; i++ )
         {
 
             cell = cellArray[i];
-//            draw_Poly( ctx, cell );
+            cellShift = _clone_JSon( cell );
+            for ( j = 0; j < cellShift.length; j++ )
+                cellShift[j].y += 140;
+            draw_Poly( ctx, cellShift );
 
-            _jSon = odobo_CellToJSON( cell );
-            span = odobo_SpanFromJSon( _jSon, -10, 400 );
-            document.body.appendChild( span );
-            boxesVertical.push( span );
+            _jSon = odobo_CellToJSON( cellShift );
+            span = odobo_SpanFromJSon( _jSon, 0, 0 );
+            td = document.createElement('td');
+            tr.appendChild( td );
+            td.appendChild( span );
+            td.style.verticalAlign = 'bottom';
+            td.style.width = span.style.width;
+            td.style.height = span.style.height;
         } // end for
 
         cellArray = odobo_Slice(polygon, SLICE_HORIZONTALLY);
         for ( i = 0; i < cellArray.length; i++ )
         {
             cell = cellArray[i];
-//            draw_Poly( ctx, cell );
+            cellShift = _clone_JSon( cell );
+            for ( j = 0; j < cellShift.length; j++ )
+                cellShift[j].y += 280;
+            draw_Poly( ctx, cellShift );
 
-            _jSon = odobo_CellToJSON( cell );
-            span = odobo_SpanFromJSon( _jSon, 0, 200 );
+            _jSon = odobo_CellToJSON( cellShift );
+            span = odobo_SpanFromJSon_2( _jSon, 0, 0 );
             document.body.appendChild( span );
             boxesHorizontal.push( span );
+
         } // end for
     }
 
