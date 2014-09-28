@@ -6,379 +6,122 @@
 </head>
 <body>
 
-<script src="p5.min.js"></script>
-
-<!--priority queue-->
-<script type="text/javascript">
-
-    function pq_Create( size )
-    {
-        return {
-            count: 0,
-            arr: new Array(size+1),
-            ext1: null, ext2: null
-        };
-    }
-
-    function pq_Enqueue( pq, e, fnCmp )
-    {
-        var parent, child;
-        pq.count++;
-        parent = Math.floor( pq.count/2 );
-        child = pq.count;
-        while ( parent > 0 )
-        {
-            if ( fnCmp( pq.arr[parent], e ) )
-            {
-                pq.arr[child] = pq.arr[parent];
-                child = parent;
-                parent = Math.floor( parent/2 );
-            }
-            else
-                break;
-        } // end while
-        pq.arr[child] = e;
-    }
-
-    function pq_Dequeue( pq, idx, fnCmp )
-    {
-        var parent, child;
-        var e;
-        pq.arr[idx] = pq.arr[pq.count];
-        e = pq.arr[idx];
-        child = idx*2;
-        parent = idx;
-        while ( pq.count > child )
-        {
-            if ( pq.count-1 > child )
-                if ( fnCmp( pq.arr[child] , pq.arr[child+1] ) )
-                    child++;
-
-            if ( fnCmp( e, pq.arr[child] ) )
-            {
-                pq.arr[parent] = pq.arr[child];
-                parent = child;
-                child *= 2;
-            }
-            else
-                break;
-        } // end while
-        pq.arr[parent] = e;
-        pq.count--;
-    }
-
-    function pq_CmpTest( e0, e1 )
-    {
-        return e0.f > e1.f;
-    }
-
-    function pq_Test()
-    {
-        var i;
-        var e;
-        var n = 10;
-        var pq = pq_Create(n);
-        for ( i = 0; i < n; i++ )
-        {
-            e = { f: i };
-            pq_Enqueue( pq, e, pq_CmpTest );
-        }
-
-        while ( pq.count != 0 )
-        {
-            e = pq.arr[1];
-            console.log(e.f);
-            pq_Dequeue( pq, 1, pq_CmpTest );
-        }
-    }
-//    pq_Test();
-</script>
 <!--utils-->
-<script type="text/javascript">
-    function _log( l )
-    {
-        console.log( l );
-    }
-    function _random( x, y )
-    {
-        return Math.floor(
-                Math.random() * ( y - x + 1 ) + x
-        );
-    }
-    function _cloneJSon( o )
-    {
-        return JSON.parse(JSON.stringify(o));
-    }
-</script>
+<script type="text/javascript" src="utils.js"></script>
+<!--priority queue-->
+<script type="text/javascript" src="pq.js"></script>
 <!--vec2D-->
-<script type="text/javascript">
-    function vec2D_Create( x, y )
-    {
-        return { x: x, y: y };
-    }
-    function vec2D_Equal( a, b )
-    {
-        return ( a.x == b.x && a.y == b.y );
-    }
-</script>
+<script type="text/javascript" src="vec2D.js"></script>
 <!--geom-->
 <script>
     var geomPI = 3.14;
 
 </script>
 <!--draw-->
-<script>
-    function draw_Point( p, size )
-    {
-        ellipse(p.x, p.y, size, size );
-    }
-    function draw_Points( p, size )
-    {
-        var i;
-        for ( i = 0; i < p.length; i++ )
-            ellipse(p[i].x, p[i].y, size, size );
-    }
-    function draw_Line( p0, p1 )
-    {
-        line( p0.x, p0.y, p1.x, p1.y );
-    }
-    function draw_Poly( poly )
-    {
-        var i;
-        var p0, p1;
-        for ( i = 0; i < poly.length-1; i++ )
+<script type="text/javascript" src="draw.js"></script>
+<script type="text/javascript" src="polygon.js"></script>
+<script type="text/javascript" src="odobo.js"></script>
+
+<div>
+    Enter number of vertices:
+    <input id="txtNumVerts" type="text" value="6" style="width: 50px;" max="2">
+    <input type="button" value="Click to generate polygon" onclick="odobo_Fn();">
+    <script>
+        var errCreated = null;
+        function odobo_Fn()
         {
-            p0 = poly[i];
-            p1 = poly[i+1];
-            line( p0.x, p0.y, p1.x, p1.y );
+            var txtNumVerts = document.getElementById('txtNumVerts');
+            var numVerts = txtNumVerts.value * 1;
+            if ( isNaN(numVerts) || 5 > numVerts || numVerts > 10 )
+            {
+                if ( errCreated != null ) return;
+                var err = document.createElement('div');
+                errCreated = err;
+                err.style.color = 'red';
+                err.appendChild( document.createTextNode('Enter number between 5 and 10') );
+                txtNumVerts.parentNode.appendChild( err );
+                setTimeout(
+                    function()
+                    {
+                        err.parentNode.removeChild( err );
+                        errCreated = null;
+
+                    }, 2000
+                );
+                return
+            }
+            odobo_Main( numVerts );
+
+
         }
-        p0 = poly[i];
-        p1 = poly[0];
-        line( p0.x, p0.y, p1.x, p1.y );
-    }
+    </script>
+</div>
+<br>
+<canvas id="myCanvas" width="300" height="150"
+        style="border:1px solid #000000; position: absolute; top: 60px; left: 5px;">
+</canvas>
 
-    function cell_Constr( a, b )
-    {
+<script>
 
-    }
+
 </script>
+
 <script type="text/javascript">
 
-    function odobo_DrawPolygon( points2 )
+
+
+
+    var boxesVertical = [], boxesHorizontal = [];
+    function odobo_Main( num )
     {
         var i;
-        var v0, v1;
-        textSize( 20 );
-        for ( i = 0; i < points2.length-1; i++ )
+        var polygon;
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        polygon = polygon_CreateRandom( num );
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0,0, c.width, c.height);
+        ctx.beginPath();
+
+        for ( i = 0; i < boxesHorizontal.length; i++ )
+            document.body.removeChild( boxesHorizontal[i] );
+        for ( i = 0; i < boxesVertical.length; i++ )
+            document.body.removeChild( boxesVertical[i] );
+        boxesVertical = [];
+        boxesHorizontal = [];
+
+        draw_Poly( ctx, polygon );
+
+        var cellArray;
+        var span;
+        var _jSon;
+        cellArray = odobo_Slice(polygon, SLICE_VERTICALLY);
+        var cell;
+        for ( i = 0; i < cellArray.length; i++ )
         {
 
-            v0 = points2[i];
-//            text('' + i, v0.x, v0.y );
-            v1 = points2[i+1];
-//            text('' + (i+1), v1.x, v1.y );
-            if ( v0.x == v1.x )
-//                stroke( 255, 0, 0 );
-            stroke( 220, 220, 220 );
-            else
-//                stroke( 0, 0, 255 );
-                stroke( 220, 220, 220 );
-            line( v0.x, v0.y, v1.x, v1.y );
-        } // end for i
+            cell = cellArray[i];
+//            draw_Poly( ctx, cell );
 
-        v0 = points2[i];
-//            text('' + i, v0.x, v0.y );
-        v1 = points2[0];
-        if ( v0.x == v1.x )
-//            stroke( 255, 0, 0 );
-            stroke( 220, 220, 220 );
-        else
-//            stroke( 0, 0, 255 );
-            stroke( 220, 220, 220 );
-        line( v0.x, v0.y, v1.x, v1.y );
-    }
+            _jSon = odobo_CellToJSON( cell );
+            span = odobo_SpanFromJSon( _jSon, -10, 400 );
+            document.body.appendChild( span );
+            boxesVertical.push( span );
+        } // end for
 
-    function odobo_CreateRandomPolygon()
-    {
-        var num = 10;
-        var radius;
-        var i, j, k;
-        var x, y, z;
-
-        var center = vec2D_Create( 300, 300 );
-        var v0, v1, v2, v3, vNext;
-        var min, max;
-        var angle = 0;
-        var step = 2*geomPI/num;
-        // Create points
-        var points = new Array( num );
+        cellArray = odobo_Slice(polygon, SLICE_HORIZONTALLY);
+        for ( i = 0; i < cellArray.length; i++ )
         {
-            for ( i = 0; i < num; i++ )
-            {
-                radius = _random( 100, 150 );
-                x = Math.sin( angle ) * radius + center.x;
-                y = Math.cos( angle ) * radius + center.y;
-                v0 = vec2D_Create( x, y );
-                angle += step;
-                points[i] = v0;
-            } // end for i
-        } // end Create points
+            cell = cellArray[i];
+//            draw_Poly( ctx, cell );
 
-        var points2 = [];
-        {
-            for ( i = 0; i < points.length-1; i++ )
-            {
-                v0 = points[i];
-                vNext = points[i+1];
-                v1 = vec2D_Create( v0.x, vNext.y );
-                points2.push( v0 );
-                points2.push( v1 );
-            } // end for i
-            v0 = points[i];
-            vNext = points[0];
-            v1 = vec2D_Create( v0.x, vNext.y );
-            points2.push( v0 );
-            points2.push( v1 );
-        } //
-
-        return points2;
+            _jSon = odobo_CellToJSON( cell );
+            span = odobo_SpanFromJSon( _jSon, -10, 200 );
+            document.body.appendChild( span );
+            boxesHorizontal.push( span );
+        } // end for
     }
 
-    function odobo_HeuristicMaxY( e0, e1 )
-    {
-        var b1;
-        if ( globalPolyCenter.y > e0.y )
-            b1 = ( e0.y > e1.y ) ? 1 : 0;
-        else
-            b1 = ( e0.y < e1.y ) ? 1 : 0;
-        var b = ( b1 == 1 );
-        return b;
-    }
-    var globalX1, glogalX2;
-    var globalPolyCenter;
-    function odobo_HeuristicEqualX( e0, e1 )
-    {
-//        return ( (e0.y > e1.y)  && ( e0.x == globalX1 || e0.x == glogalX2 ) );
-        var b1 = ( e0.x == globalX1 || e0.x == glogalX2 ) ? 0 : 1;
-        var b2;
-        if ( globalPolyCenter.y > e0.y )
-            b2 = ( e0.y > e1.y ) ? 0 : 1;
-        else
-            b2 = ( e0.y < e1.y ) ? 0 : 1;
-        var b = ( b1 == 1 && b2 == 1 );
-        return b;
-    }
-    function vec2D_Log( v )
-    {
-        _log( 'v.x='+ v.x + ' v.y='+ v.y);
-    }
-    function vec2D_LogTxt( txt, v )
-    {
-        _log( txt + ' v.x='+ v.x + ' v.y='+ v.y);
-    }
-    function odobo_Alg( polygon )
-    {
-        var i, j, k;
-        var dirtyTable;
-        var pqMaxY, pqEqualX;
-        var DIRTY = 0;
-        var v0, v1, v2, v3;
-        globalPolyCenter = vec2D_Create(0, 0);
-        // init
-        {
-            pqMaxY = pq_Create(polygon.length);
-            pqEqualX = pq_Create(polygon.length);
-            dirtyTable = new Array(polygon.length);
-            for ( i = 0; i < dirtyTable.length; i++ )
-                dirtyTable[i] = DIRTY+1;
-
-            for ( i = 0; i < polygon.length; i++ )
-            {
-                v0 =  _cloneJSon( polygon[i] );
-                globalPolyCenter.x += v0.x;
-                globalPolyCenter.y += v0.y;
-                vec2D_Log( v0 );
-                pq_Enqueue( pqMaxY, v0, odobo_HeuristicMaxY );
-            } // end for i
-            globalPolyCenter.x /= polygon.length;
-            globalPolyCenter.y /= polygon.length;
-            draw_Point(  globalPolyCenter, 5 );
-        } // end init
-
-        // algo
-        {
-            var ctx = pqMaxY.count/2;
-            while ( pqMaxY.count > 1 )
-            {
-                if ( pqMaxY.count == ctx ) break;
-                // 1. Ieskome dvieju auksciausiu
-                v0 = pqMaxY.arr[1];
-                pq_Dequeue( pqMaxY, 1, odobo_HeuristicMaxY );
-                v1 = pqMaxY.arr[1];
-                pq_Dequeue( pqMaxY, 1, odobo_HeuristicMaxY );
-
-                // 2. Ieskome trecio tasko kur v2.x == (v0.x|v1.x) ir kur v2.y auksciausias
-                pqEqualX = pq_Create( pqMaxY.count );
-                globalX1 = v0.x;
-                glogalX2 = v1.x;
-
-                for ( i = 1; i <= pqMaxY.count; i++ )
-                {
-                    pq_Enqueue( pqEqualX, pqMaxY.arr[i], odobo_HeuristicEqualX );
-                } // end for i
-                v2 = pqEqualX.arr[1];
-
-
-
-                text('v0', v0.x,v0.y);
-                vec2D_LogTxt( 'v0', v0 );
-
-                text('v1', v1.x,v1.y);
-                vec2D_LogTxt( 'v1', v1 );
-
-                text('v2', v2.x,v2.y);
-                vec2D_LogTxt( 'v2', v2 );
-
-                draw_Point( v0, 5 );
-                draw_Point( v1, 5 );
-                draw_Point( v2, 5 );
-
-
-                // 3. Sukurime dar viena taskas
-                if ( v0.x == v2.x )
-                    v3 = vec2D_Create( v1.x, v2.y );
-                else if ( v1.x == v2.x )
-                    v3 = vec2D_Create( v0.x, v2.y );
-                else
-                    _log( 'error' );
-
-                text('v3', v3.x,v3.y);
-                vec2D_LogTxt( 'v3', v3 );
-                stroke( 255, 0, 0 );
-                draw_Point( v3, 5 );
-
-                // 4. Idedame taska
-                pq_Enqueue( pqMaxY, v3, odobo_HeuristicMaxY );
-
-//                return;
-
-            } // end while
-
-        } // end algo
-
-    }
-
-    function setup() {
-        createCanvas(800, 800);
-    }
-    var p5Done = 0;
-    function draw() {
-        if ( p5Done != 0 ) return;
-        p5Done = 1;
-
-        var polygon = odobo_CreateRandomPolygon();
-        odobo_DrawPolygon(polygon);
-        odobo_Alg( polygon );
-    }
 </script>
 <!--end utils-->
 
