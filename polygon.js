@@ -3,7 +3,7 @@ function polygon_CreateRandom( tops )
     var x, y;
     var i;
     var v0, v1;
-    var _y = 120;
+    var _y = 0;
     var polygon = [];
 
     x = 0;
@@ -40,4 +40,14 @@ function polygon_Center( polygon )
     center.x /= polygon.length;
     center.y /= polygon.length;
     return center;
+}
+
+function polygon_Shift( polygon, shiftX, shiftY )
+{
+    var i;
+    for ( i = 0; i < polygon.length; i++ )
+    {
+        polygon[i].x += shiftX;
+        polygon[i].y += shiftY;
+    } // end for i
 }

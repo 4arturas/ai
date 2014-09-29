@@ -45,13 +45,9 @@ function odobo_CellToJSON( cell )
         minY = _min( minY, v0.y );
         maxY = _max( maxY, v0.y );
     } // end for i
-    minX = Math.floor(minX);
-    maxX = Math.floor(maxX);
-    minY = Math.floor(minY);
-    maxY = Math.floor(maxY);
     var _jSon =
     {
-        x: maxX,
+        x: minX,
         y: maxY,
         width: Math.abs(maxX-minX),
         height: Math.abs(maxY-minY)
@@ -59,34 +55,44 @@ function odobo_CellToJSON( cell )
     return _jSon;
 }
 
-function odobo_SpanFromJSon( _jSon, shiftX, shiftY )
+function odobo_DomBox()
 {
-    var div = document.createElement('div');
-//    span.style.position = 'absolute';
-//    span.style.left = (shiftX+_jSon.x) + 'px';
-//    span.style.bottom = (shiftY+_jSon.y) + 'px';
-    div.style.width = _jSon.width + 'px';
-    div.style.height = _jSon.height + 'px';
-    div.style.backgroundColor = 'lightblue';
-    div.style.border = '1px solid black';
-    return div;
-}
-function odobo_SpanFromJSon_2( _jSon, shiftX, shiftY )
-{
-    var div = document.createElement('div');
-    div.style.position = 'absolute';
-    div.style.right = (shiftX+_jSon.x) + 'px';
-    div.style.top = (shiftY+_jSon.y) + 'px';
-    div.style.width = _jSon.width + 'px';
-    div.style.height = _jSon.height + 'px';
-    div.style.backgroundColor = 'lightblue';
-    div.style.border = '1px solid black';
-
-//    div.style.left = (parseInt(e.pageX, 10) + 25) + 'px';
-//    div.style.top = (parseInt(e.pageY, 10) - 10) + 'px';
-    return div;
+    var box = document.createElement('div');
+    box.style.position = 'absolute';
+    box.style.padding = '0';
+    box.style.margin = '0';
+    box.style.backgroundColor = 'lightblue';
+    box.style.border = '1px solid black';
+    return box;
 }
 
+function odobo_SpanFromJSonVertical( _jSon )
+{
+    var box = odobo_DomBox();
+
+    box.style.left = Math.floor(_jSon.x) + 'px';
+    //    div.style.left = Math.floor((_jSon.x+Math.abs(_jSon.width-_jSon.x))) + 'px';
+
+//    div.style.top = Math.floor(_jSon.y) + 'px';
+    box.style.top = Math.floor((_jSon.y+Math.abs(_jSon.height-_jSon.y))) + 'px';
+    box.style.width = Math.floor(_jSon.width) + 'px';
+    box.style.height = Math.floor(_jSon.height) + 'px';
+    return box;
+}
+
+function odobo_SpanFromJSonHorizontal( _jSon )
+{
+    var box = odobo_DomBox();
+
+    box.style.left = Math.floor(_jSon.x) + 'px';
+    //    box.style.left = Math.floor((_jSon.x+Math.abs(_jSon.width-_jSon.x))) + 'px';
+
+//    box.style.top = Math.floor(_jSon.y) + 'px';
+    box.style.top = Math.floor((Math.abs(_jSon.height-_jSon.y))) + 'px';
+    box.style.width = Math.floor(_jSon.width) + 'px';
+    box.style.height = Math.floor(_jSon.height) + 'px';
+    return box;
+}
 
 var SLICE_VERTICALLY = 1;
 var SLICE_HORIZONTALLY = 2;
@@ -185,16 +191,6 @@ function odobo_Slice( polygon, sliceType )
             {
                 v2 = pqTmp.arr[1];
                 pq_Dequeue( pqTmp, 1 );
-                /*if ( fnEqualVerticalOrHorizontal( v2, vLeft ) )
-                {
-                    v3 = vec2D_Create( vRight.x, v2.y );
-                    break;
-                }
-                else if ( fnEqualVerticalOrHorizontal( v2, vRight ) )
-                {
-                    v3 = vec2D_Create( vLeft.x, v2.y );
-                    break;
-                }*/
                 if ( fnEqualVerticalOrHorizontal( v2, vLeft ) )
                 {
                     v3 = fnCreateV3( v2, vRight );

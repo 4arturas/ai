@@ -2,44 +2,45 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>Odobo</title>
 </head>
 <body>
 
-<!--utils-->
+<style type="text/css">
+    body { margin: 0; padding: 0; top:0; right: 0; bottom: 0; left: 0; }
+</style>
+
 <script type="text/javascript" src="utils.js"></script>
-<!--priority queue-->
 <script type="text/javascript" src="pq.js"></script>
-<!--vec2D-->
 <script type="text/javascript" src="vec2D.js"></script>
 <!--geom-->
 <script>
     var geomPI = 3.14;
 
 </script>
-<!--draw-->
 <script type="text/javascript" src="draw.js"></script>
 <script type="text/javascript" src="polygon.js"></script>
 <script type="text/javascript" src="odobo.js"></script>
 
-<div>
-    Enter number of vertices:
-    <input id="txtNumVerts" type="text" value="6" style="width: 50px;" max="2">
-    <input type="button" value="Click to generate polygon" onclick="odobo_Fn();">
+
+<div style="padding-left: 10px; padding-top: 10px;">
+    Enter number of rectangles:
+    <input id="txtNumRectangles" type="text" value="" style="width: 50px;" max="2">
+    <input type="button" value="Click me to generate random polygon and slice it vertically and horizontally" onclick="odobo_Fn();">
     <script>
         var errCreated = null;
         function odobo_Fn()
         {
-            var txtNumVerts = document.getElementById('txtNumVerts');
-            var numVerts = txtNumVerts.value * 1;
-            if ( isNaN(numVerts) || 5 > numVerts || numVerts > 10 )
+            var txtNumRectangles = document.getElementById('txtNumRectangles');
+            var numRects = txtNumRectangles.value * 1;
+            if ( isNaN(numRects) || 5 > numRects || numRects > 10 )
             {
                 if ( errCreated != null ) return;
                 var err = document.createElement('div');
                 errCreated = err;
                 err.style.color = 'red';
                 err.appendChild( document.createTextNode('Enter number between 5 and 10') );
-                txtNumVerts.parentNode.appendChild( err );
+                txtNumRectangles.parentNode.appendChild( err );
                 setTimeout(
                     function()
                     {
@@ -50,116 +51,188 @@
                 );
                 return
             }
-            odobo_Main( numVerts );
-
-
+            odobo_Main( numRects );
         }
     </script>
 </div>
 <br>
+
 <canvas id="myCanvas" width="600" height="800"
-        style="position: absolute; top: 60px; left: 20px;">
+        style="position: absolute; top: 60px; left: 0;">
 </canvas>
-
-<script>
-
-
-</script>
 
 <script type="text/javascript">
 
 
-
-    var boxesVertical = [], boxesHorizontal = [];
-    var tableVertical = document.createElement('table'), tableHorizontal = document.createElement('table');
-    document.body.appendChild( tableVertical );
-    document.body.appendChild( tableHorizontal );
-    function odobo_Main( num )
+    var gOverlapMsg = null;
+    var gOdoboJSONCont = document.createElement('div');
+    var gBoxesVertical = [], gBoxesHorizontal = [];
+    function odobo_Main( numRects )
     {
         var i, j;
-        var polygon;
+        var polygon, polygonTmp;
         var c = document.getElementById("myCanvas");
         var ctx = c.getContext("2d");
-        polygon = polygon_CreateRandom( num );
+
+        var shiftX = 10;
+        var shiftY = 120;
+
+        var cellArray;
+        var cell;
+        var cellTmp;
+        var _jSon;
+        var span;
+
+        var odoboStruct =
+        {
+            numRects: numRects,
+            sourceRectangles: [],
+            rectangles: []
+        };
+
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0,0, c.width, c.height);
         ctx.beginPath();
 
-        for ( i = 0; i < boxesVertical.length; i++ )
-            document.body.removeChild( boxesVertical[i] );
-        for ( i = 0; i < boxesHorizontal.length; i++ )
-            document.body.removeChild( boxesHorizontal[i] );
-        boxesVertical = [];
-        boxesHorizontal = [];
+        if ( gOverlapMsg == null )
+        {
+            gOverlapMsg = document.createElement('div');
+            gOverlapMsg.style.color = 'green';
+            gOverlapMsg.innerHTML = '<strong>Attention:</strong><br>';
+            gOverlapMsg.innerHTML += '1. The code works differently than was required in documentation,<br> it generates polygon and then slices it vertically and horizontally.<br>';
+            gOverlapMsg.innerHTML += '2. The boxes are a little bit smaller than was required<br>in documentation, for better visualisation.<br>';
+            gOverlapMsg.innerHTML += '3. You can notice a small overlap of boxes because of floor function.<br>';
+            gOverlapMsg.style.position = 'absolute';
+            gOverlapMsg.style.top = '60px';
+            gOverlapMsg.style.left = '300px';
+            document.body.appendChild( gOverlapMsg );
+        }
 
-        tableVertical.cellSpacing = 0;
-        tableVertical.cellPadding = 0;
-        tableHorizontal.cellSpacing = 0;
-        tableHorizontal.cellPadding = 0;
-        if ( tableVertical.firstChild )
-            tableVertical.removeChild( tableVertical.firstChild );
-        if ( tableHorizontal.firstChild )
-            tableHorizontal.removeChild( tableHorizontal.firstChild );
-
-        tableVertical.style.position = 'absolute';
-        tableVertical.style.top = '100px';
-        tableVertical.style.left = '400px';
-
-        tableHorizontal.style.position = 'absolute';
-        tableHorizontal.style.top = '400px';
-        tableHorizontal.style.left = '400px';
+        for ( i = 0; i < gBoxesVertical.length; i++ )
+            document.body.removeChild( gBoxesVertical[i] );
+        for ( i = 0; i < gBoxesHorizontal.length; i++ )
+            document.body.removeChild( gBoxesHorizontal[i] );
+        gBoxesVertical = [];
+        gBoxesHorizontal = [];
 
 
+        polygon = polygon_CreateRandom( numRects );
+        polygonTmp = _clone_JSon( polygon );
+        polygon_Shift( polygonTmp, shiftX, shiftY );
+        draw_Poly( ctx, polygonTmp );
 
-        draw_Poly( ctx, polygon );
 
-        var cellArray;
+
         cellArray = odobo_Slice(polygon, SLICE_VERTICALLY);
-        var cell;
-        var cellShift;
-        var _jSon;
-        var span;
-        var tr, td;
-        tr = document.createElement('tr');
-        tableVertical.appendChild( tr );
         for ( i = 0; i < cellArray.length; i++ )
         {
 
             cell = cellArray[i];
-            cellShift = _clone_JSon( cell );
-            for ( j = 0; j < cellShift.length; j++ )
-                cellShift[j].y += 140;
-            draw_Poly( ctx, cellShift );
+            cellTmp = _clone_JSon( cell );
+            polygon_Shift( cellTmp, shiftX, shiftY+140 );
+            draw_Poly( ctx, cellTmp );
 
-            _jSon = odobo_CellToJSON( cellShift );
-            span = odobo_SpanFromJSon( _jSon, 0, 0 );
-            td = document.createElement('td');
-            tr.appendChild( td );
-            td.appendChild( span );
-            td.style.verticalAlign = 'bottom';
-            td.style.width = span.style.width;
-            td.style.height = span.style.height;
+            cellTmp = _clone_JSon( cell );
+            polygon_Shift( cellTmp, 300, 160 );
+            _jSon = odobo_CellToJSON( cellTmp );
+            span = odobo_SpanFromJSonVertical( _jSon );
+            document.body.appendChild( span );
+            gBoxesVertical.push( span );
+            odoboStruct.sourceRectangles.push( _jSon );
         } // end for
 
         cellArray = odobo_Slice(polygon, SLICE_HORIZONTALLY);
         for ( i = 0; i < cellArray.length; i++ )
         {
             cell = cellArray[i];
-            cellShift = _clone_JSon( cell );
-            for ( j = 0; j < cellShift.length; j++ )
-                cellShift[j].y += 280;
-            draw_Poly( ctx, cellShift );
+            cellTmp = _clone_JSon( cell );
+            polygon_Shift( cellTmp, shiftX, shiftY+280 );
+            draw_Poly( ctx, cellTmp );
 
-            _jSon = odobo_CellToJSON( cellShift );
-            span = odobo_SpanFromJSon_2( _jSon, 0, 0 );
+            cellTmp = _clone_JSon( cell );
+            polygon_Shift( cellTmp, 300, 460 );
+            _jSon = odobo_CellToJSON( cellTmp );
+            span = odobo_SpanFromJSonHorizontal( _jSon );
             document.body.appendChild( span );
-            boxesHorizontal.push( span );
-
+            gBoxesHorizontal.push( span );
+            odoboStruct.rectangles.push( _jSon );
         } // end for
+
+
+        gOdoboJSONCont.innerHTML = odobo_JSONVisualisation( odoboStruct );
+    }
+
+
+    gOdoboJSONCont.style.position = 'absolute';
+    gOdoboJSONCont.style.top = '500px';
+    gOdoboJSONCont.style.left = '10px';
+    gOdoboJSONCont.style.width = '400px';
+    gOdoboJSONCont.style.height = '600px';
+    document.body.appendChild( gOdoboJSONCont );
+    function odobo_JSONVisualisation( odoboStruct )
+    {
+        var i, js;
+        var jSonStr = '<u>JSON visualisation</u>:<br>';
+        var space = '&nbsp;&nbsp;&nbsp;';
+        var pattern = '{\"x\":_x, \"y\":_y, \"width\":_w, \"height\":_h}';
+        jSonStr += '{<br>';
+        jSonStr += space + '\"numRects\": '+odoboStruct.numRects+',<br>';
+
+        // sourceRectangles
+        {
+            jSonStr += space + '\"sourceRectangles\": [<br>';
+            for (i = 0; i < odoboStruct.numRects - 1; i++)
+            {
+                js = odoboStruct.sourceRectangles[i];
+                jSonStr += space + space + space+space + space + space;
+                jSonStr +=
+                        pattern.replace('_x', Math.floor(js.x)).
+                                replace('_y', Math.floor(js.y)).
+                                replace('_w', Math.floor(js.width)).
+                                replace('_h', Math.floor(js.height));
+                jSonStr += ',<br>';
+            } // end for i
+            js = odoboStruct.sourceRectangles[i];
+            jSonStr += space + space + space+space + space + space;
+            jSonStr +=
+                    pattern.replace('_x', Math.floor(js.x)).
+                            replace('_y', Math.floor(js.y)).
+                            replace('_w', Math.floor(js.width)).
+                            replace('_h', Math.floor(js.height));
+            jSonStr += '<br>';
+            jSonStr += space+'],<br>';
+        } // end block sourceRectangles
+
+        // rectangles
+        {
+            jSonStr += space + '\"rectangles\": [<br>';
+            for (i = 0; i < odoboStruct.numRects - 1; i++)
+            {
+                js = odoboStruct.rectangles[i];
+                jSonStr += space + space + space+space + space + space;
+                jSonStr +=
+                        pattern.replace('_x', Math.floor(js.x)).
+                                replace('_y', Math.floor(js.y)).
+                                replace('_w', Math.floor(js.width)).
+                                replace('_h', Math.floor(js.height));
+                jSonStr += ',<br>';
+            } // end for i
+            js = odoboStruct.rectangles[i];
+            jSonStr += space + space + space+space + space + space;
+            jSonStr +=
+                    pattern.replace('_x', Math.floor(js.x)).
+                            replace('_y', Math.floor(js.y)).
+                            replace('_w', Math.floor(js.width)).
+                            replace('_h', Math.floor(js.height));
+            jSonStr += '<br>';
+            jSonStr += space+']<br>';
+        } // end block rectangles
+
+        jSonStr += '}';
+        return jSonStr;
     }
 
 </script>
-<!--end utils-->
 
 </body>
 </html>
