@@ -31,7 +31,7 @@ function videobuff_Clear( videobuff )
 
 function videobuff_SetPixel( videobuff, ptr, pixel )
 {
-    _assert( (ptr >= 0 && videobuff.size > ptr), 'videobuff_SetPixel: wrong ptr' );
+    _assert( (ptr >= 0 && videobuff.size > ptr), 'videobuff_SetPixel: wrong ptr = ' + ptr );
     videobuff.buff[ptr] = pixel;
 }
 

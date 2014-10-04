@@ -49,14 +49,9 @@
     }
     odobo2D_Init();
     videobuff_Clear( gVideobuff );
-//    videobuff_SetYXPixel( gVideobuff, 49, 49, gTestPixelRed );
-//    line_Draw( gVideobuff, 0, 0, 5, 5, gTestPixelRed );
-//    line_Draw( gVideobuff, 5, 5, 0, 0, gTestPixelGreen );
-//    line_Draw( gVideobuff, 30, 0, 5, 5, gTestPixelGreen );
-    line_Draw( gVideobuff, 0, 0, 110, 10, gTestPixelGreen );
 //    line_Draw( gVideobuff, 0, 0, 10, 10, gTestPixelGreen );
 //    videobuff_SetPixel( gVideobuff, 255, gTestPixelGreen );
-
+    line_Test( gVideobuff );
     viewer_Draw( gViewer, gVideobuff );
 
 
