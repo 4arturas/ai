@@ -24,3 +24,13 @@ function _max( x, y )
 {
     return x > y ? x : y;
 }
+
+function _assert( a, msg )
+{
+    if ( !a )
+    {
+        alert( '!Assert: ' + msg );
+//        console.log(msg);
+    }
+}
+

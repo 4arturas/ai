@@ -1,42 +1,44 @@
 function videobuff_Create( width, height, bgColor )
 {
-    var y, x;
-    var buff = new Array( height );
-    var zbuff = new Array( height );
-    for ( y = 0; y < height; y++ )
+    var i;
+    var size = height*width;
+    var buff = new Array( size );
+    var zbuff = new Array( size );
+    for ( i = 0; i < size; i++ )
     {
-        buff[y] = new Array(width);
-        zbuff[y] = new Array(width);
-        for ( x = 0; x < width; x++ )
-        {
-            buff[y][x] = bgColor;
-        } // end for x
+        buff[i] = bgColor;
     } // end for y
 
     var videobuff = {
+        size: (height*width),
         width: width, height: height,
-        minx: 0, maxx: width-1, miny: 0, miny: height-1,
+        minx: 0, maxx: (width-1), miny: 0, maxy: (height-1),
         bgColor: bgColor,
         buff: buff, zbuff: zbuff
     };
+    _assert( (videobuff.size==size), 'videobuff_Create' );
     return videobuff;
 }
 
 function videobuff_Clear( videobuff )
 {
-    var y, x;
-    for ( y = 0; y < videobuff.height; y++ )
+    var i;
+    for ( i = 0; i < videobuff.size; i++ )
     {
-        for ( x = 0; x < videobuff.width; x++ )
-        {
-            videobuff.buff[y][x] = videobuff.bgColor;
-        } // end for x
+        videobuff.buff[i] = videobuff.bgColor;
     } // end for y
 }
 
-function videobuff_SetPixel( videobuff, y, x, pixel )
+function videobuff_SetPixel( videobuff, ptr, pixel )
 {
-    videobuff.buff[y][x] = pixel;
+    _assert( (ptr >= 0 && videobuff.size > ptr), 'videobuff_SetPixel: wrong ptr' );
+    videobuff.buff[ptr] = pixel;
+}
+
+function videobuff_SetYXPixel( videobuff, y, x, pixel )
+{
+    var ptr = y *videobuff.width + x;
+    videobuff_SetPixel( videobuff, ptr, pixel );
 }
 
 

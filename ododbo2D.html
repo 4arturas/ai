@@ -6,20 +6,26 @@
 </head>
 <body style="text-align: center;">
 
+<script type="text/javascript" src="utils.js"></script>
 <script type="text/javascript" src="2D/pixel.js"></script>
 <script type="text/javascript" src="2D/videobuff.js"></script>
+<script type="text/javascript" src="2D/line.js"></script>
 <script type="text/javascript" src="2D/viewer.js"></script>
 
 
 <style type="text/css">
     #viewer { border: 1px solid black; margin-left: 400px; margin-top: 100px; }
-    #viewer td { width: 2px; height: 2px; font-size: 1px; }
+    /*#viewer td { width: 5px; height: 5px; font-size: 1px; }*/
 
 </style>
 <script type="text/javascript">
 
     var gViewer;
     var gVideobuff;
+    var gTestPixelRed;
+    var gTestPixelGreen;
+    var gTestPixelBlue;
+    var gPixelSize = 2;
     function odobo2D_Init()
     {
         var width, height;
@@ -28,7 +34,7 @@
         height = 50;
         bgColor = pixel_Create( 200, 200, 200 );
 
-        gViewer = viewer_Create( width, height );
+        gViewer = viewer_Create( width, height, gPixelSize );
         gViewer.setAttribute( 'id', 'viewer' );
         gViewer.cellSpacing = '0';
         gViewer.cellPadding = '0';
@@ -36,10 +42,23 @@
 
         gVideobuff = videobuff_Create( width, height, bgColor );
 
+        gTestPixelRed = pixel_Create( 255, 0, 0 );
+        gTestPixelGreen = pixel_Create( 0, 255, 0 );
+        gTestPixelBlue = pixel_Create( 0, 0, 255 );
+
     }
     odobo2D_Init();
     videobuff_Clear( gVideobuff );
-    viewer_Clear( gViewer, gVideobuff );
+//    videobuff_SetYXPixel( gVideobuff, 49, 49, gTestPixelRed );
+//    line_Draw( gVideobuff, 0, 0, 5, 5, gTestPixelRed );
+//    line_Draw( gVideobuff, 5, 5, 0, 0, gTestPixelGreen );
+//    line_Draw( gVideobuff, 30, 0, 5, 5, gTestPixelGreen );
+    line_Draw( gVideobuff, 0, 0, 110, 10, gTestPixelGreen );
+//    line_Draw( gVideobuff, 0, 0, 10, 10, gTestPixelGreen );
+//    videobuff_SetPixel( gVideobuff, 255, gTestPixelGreen );
+
+    viewer_Draw( gViewer, gVideobuff );
+
 
 </script>
 </body>
