@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body style="text-align: center;">
+
+<script type="text/javascript" src="2D/pixel.js"></script>
+<script type="text/javascript" src="2D/videobuff.js"></script>
+<script type="text/javascript" src="2D/viewer.js"></script>
+
+
+<style type="text/css">
+    #viewer { border: 1px solid black; margin-left: 400px; margin-top: 100px; }
+    #viewer td { width: 2px; height: 2px; font-size: 1px; }
+
+</style>
+<script type="text/javascript">
+
+    var gViewer;
+    var gVideobuff;
+    function odobo2D_Init()
+    {
+        var width, height;
+        var bgColor;
+        width = 50;
+        height = 50;
+        bgColor = pixel_Create( 200, 200, 200 );
+
+        gViewer = viewer_Create( width, height );
+        gViewer.setAttribute( 'id', 'viewer' );
+        gViewer.cellSpacing = '0';
+        gViewer.cellPadding = '0';
+        document.body.appendChild( gViewer );
+
+        gVideobuff = videobuff_Create( width, height, bgColor );
+
+    }
+    odobo2D_Init();
+    videobuff_Clear( gVideobuff );
+    viewer_Clear( gViewer, gVideobuff );
+
+</script>
+</body>
+</html>
