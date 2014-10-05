@@ -12,13 +12,22 @@ function vec3D_Dot( a, b )
 
 function vec3D_Length( v )
 {
-    return vec3D_Dot( v, v );
+    return Math.sqrt( vec3D_Dot( v, v ) );
 }
 
 function vec3D_Normalize( v )
 {
     var oneOverLength = 1.0 / vec3D_Length( v );
     return vec3D_Create( (v.x*oneOverLength), (v.y*oneOverLength), (v.z*oneOverLength) );
+}
+
+function vec3D_Cross( a, b )
+{
+    return vec3D_Create(
+        (a.y*b.z)-(a.z*b.y),
+        (a.x*b.z)-(a.z*b.x),
+        (a.x*b.y)-(a.y*b.x)
+    );
 }
 
 function vertex_Create()
@@ -99,9 +108,9 @@ function mat4x3_Mul( a, b )
     r._22 = (a._21 * b._12) + (a._22 * b._22) + (a._23 * b._32);
     r._23 = (a._21 * b._13) + (a._22 * b._23) + (a._23 * b._33);
 
-    r._21 = (a._31 * b._11) + (a._32 * b._21) + (a._33 * b._31);
-    r._22 = (a._31 * b._12) + (a._32 * b._22) + (a._33 * b._32);
-    r._23 = (a._31 * b._13) + (a._32 * b._23) + (a._33 * b._33);
+    r._31 = (a._31 * b._11) + (a._32 * b._21) + (a._33 * b._31);
+    r._32 = (a._31 * b._12) + (a._32 * b._22) + (a._33 * b._32);
+    r._33 = (a._31 * b._13) + (a._32 * b._23) + (a._33 * b._33);
 
     r.tx = (a.tx * b._11) + (a.ty * b._21) + (a.tz * b._31) + b.tx;
     r.ty = (a.tx * b._12) + (a.ty * b._22) + (a.tz * b._32) + b.ty;
@@ -110,20 +119,78 @@ function mat4x3_Mul( a, b )
     return r;
 }
 
-
-function mat4x3_Test()
+function mat4x3_MulVec( m, v )
 {
-    // test multiplication
+    return vec3D_Create(
+        v.x * m._11 + v.y * m._21 + v.z * m._31 + m.tx,
+        v.x * m._12 + v.y * m._22 + v.z * m._32 + m.ty,
+        v.x * m._13 + v.y * m._23 + v.z * m._33 + m.tz
+    );
+}
+
+function mat4x3_Log( m )
+{
+    var s = '';
+    s += m._11 + ' ' + m._12 + ' ' + m._13 + '\n';
+    s += m._21 + ' ' + m._22 + ' ' + m._23 + '\n';
+    s += m._31 + ' ' + m._32 + ' ' + m._33 + '\n';
+    s += m.tx + ' ' + m.ty + ' ' + m.tz;
+    console.log( s );
+}
+
+function vec3D_Log( v )
+{
+    console.log( v.x + ' ' + v.y + ' ' + v.z );
+}
+
+function vector_Test()
+{
+    // vector length test
     {
+        console.log( 'vector length test' );
+        var v0 = vec3D_Create( 1.0, 0.0, 0.0 );
+        var l0 = vec3D_Length( v0 );
+        console.log( l0 );
+        _assert( (l0==1.0), 'vector length test failed' );
+        var v1 = vec3D_Create( 0.0, 2.0, 0.0 );
+        var l1 = vec3D_Length( v1 );
+        console.log( l1 );
+        _assert( (l1==2.0), 'vector length test failed' );
+    }
+
+    // vector cross product test
+    {
+        console.log( 'vector cross product test' );
+        var _v2 = vec3D_Create( 1,0,0 );
+        var _v3 = vec3D_Create( 0,1,0 );
+        var _v4 = vec3D_Cross( _v2, _v3 );
+        vec3D_Log( _v4 );
+        _assert( (_v4.x==0.0 && _v4.y==0.0 && _v4.z==1.0 ), 'vector cross product test failed' );
+    }
+
+    // test matrix multiplication
+    {
+        console.log( 'test matrix multiplication' );
         var m0 = mat4x3_CreateIdentity();
         var m1 = mat4x3_CreateIdentity();
         var m2 = mat4x3_Mul( m0, m1 );
         var a0 = true;
-//        a0 &= (m2._11 == 1.0); a0 &= (m2._12 == 0.0); a0 &= (m2._13 == 0.0);
-//        a0 &= (m2._21 == 0.0); a0 &= (m2._22 == 1.0); a0 &= (m2._23 == 0.0);
-//        a0 &= (m2._31 == 0.0); a0 &= (m2._32 == 0.0); a0 &= (m2._33 == 1.0);
-//        a0 &= (m2.tx == 0.0); a0 &= (m2.ty == 0.0); a0 &= (m2.tz == 0.0);
+        a0 &= (m2._11 == 1.0); a0 &= (m2._12 == 0.0); a0 &= (m2._13 == 0.0);
+        a0 &= (m2._21 == 0.0); a0 &= (m2._22 == 1.0); a0 &= (m2._23 == 0.0);
+        a0 &= (m2._31 == 0.0); a0 &= (m2._32 == 0.0); a0 &= (m2._33 == 1.0);
+        a0 &= (m2.tx == 0.0); a0 &= (m2.ty == 0.0); a0 &= (m2.tz == 0.0);
+        mat4x3_Log( m2 );
         _assert( a0, 'matrix multiplication test failed' );
     }
+
+    // test matrix by vector multiplication
+    {
+        console.log( 'test matrix by vector multiplication' );
+        var v2 = vec3D_Create( 1.0, 0.0, 1.0 );
+        var m3 = mat4x3_CreateIdentity();
+        var v3 = mat4x3_MulVec( m3, v2 );
+        var a1 = v2.x == 1.0 && v2.y == 0.0 && v2.z == 1.0;
+        vec3D_Log( v3 );
+        _assert( a0, 'matrix multiplication by vector test failed' );
+    }
 }
-mat4x3_Test();

@@ -13,20 +13,20 @@
 <script type="text/javascript" src="2D/line.js"></script>
 <script type="text/javascript" src="2D/viewer.js"></script>
 
-<script type="text/javascript" src="3D/vec3D.js"></script>
+<script type="text/javascript" src="3D/geom.js"></script>
+<script type="text/javascript" src="3D/vector.js"></script>
 <script type="text/javascript" src="3D/poly.js"></script>
-<script type="text/javascript" src="3D/quad.js"></script>
+<script type="text/javascript" src="3D/camera.js"></script>
 
 
-<style type="text/css">
-    #viewer { border: 1px solid black; margin-left: 400px; margin-top: 100px; }
-    /*#viewer td { width: 5px; height: 5px; font-size: 1px; }*/
 
-</style>
+
 <script type="text/javascript">
 
     var gViewer;
     var gVideobuff;
+    var gCamera;
+
     var gTestPixelRed;
     var gTestPixelGreen;
     var gTestPixelBlue;
@@ -37,15 +37,21 @@
         var bgColor;
         width = 50;
         height = 50;
-        bgColor = pixel_Create( 200, 200, 200 );
+
 
         gViewer = viewer_Create( width, height, gPixelSize );
         gViewer.setAttribute( 'id', 'viewer' );
         gViewer.cellSpacing = '0';
         gViewer.cellPadding = '0';
+        gViewer.style.border = '1px solid black';
+        gViewer.style.marginLeft = '400px';
+        gViewer.style.marginTop = '100px';
         document.body.appendChild( gViewer );
 
+        bgColor = pixel_Create( 200, 200, 200 );
         gVideobuff = videobuff_Create( width, height, bgColor );
+
+        gCamera = camera_Create( 0, 0, 50, width, height, 10, 1000 );
 
         gTestPixelRed = pixel_Create( 255, 0, 0 );
         gTestPixelGreen = pixel_Create( 0, 255, 0 );
@@ -56,7 +62,14 @@
     videobuff_Clear( gVideobuff );
 //    line_Draw( gVideobuff, 0, 0, 10, 10, gTestPixelGreen );
 //    videobuff_SetPixel( gVideobuff, 255, gTestPixelGreen );
-    line_Test( gVideobuff );
+
+    // tests
+    {
+        vector_Test();
+        line_Test( gVideobuff );
+    } // end test
+
+
     viewer_Draw( gViewer, gVideobuff );
 
 
