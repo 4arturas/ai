@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <title></title>
 </head>
-<body style="text-align: center;">
+<body>
 
 <script type="text/javascript" src="utils.js"></script>
 
+<script type="text/javascript" src="2D/geom.js"></script>
 <script type="text/javascript" src="2D/pixel.js"></script>
 <script type="text/javascript" src="2D/videobuff.js"></script>
 <script type="text/javascript" src="2D/line.js"></script>
 <script type="text/javascript" src="2D/viewer.js"></script>
 
-<script type="text/javascript" src="3D/geom.js"></script>
 <script type="text/javascript" src="3D/vector.js"></script>
 <script type="text/javascript" src="3D/poly.js"></script>
 <script type="text/javascript" src="3D/camera.js"></script>
@@ -51,8 +51,9 @@
         gViewer.table.cellSpacing = '0';
         gViewer.table.cellPadding = '0';
         gViewer.table.style.border = '1px solid black';
-        gViewer.table.style.marginLeft = '400px';
-        gViewer.table.style.marginTop = '100px';
+        gViewer.table.style.position = 'absolute';
+        gViewer.table.style.top = (window.innerHeight/2-height/2) + 'px';
+        gViewer.table.style.left = (window.innerWidth/2-width/2) + 'px';
         document.body.appendChild( gViewer.table );
 
         bgColor = pixel_Create( 200, 200, 200 );
@@ -63,7 +64,7 @@
         gRlist = renderer_Create( 100 );
 
         gObject = object_CreateQuad( 100, 100, 2, 2 );
-        gObject.color = gTestPixelRed;
+        gObject.color = gPixelRed;
 
     }
     odobo2D_Init();

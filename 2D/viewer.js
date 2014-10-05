@@ -70,9 +70,41 @@ function viewer_Draw( viewer, videobuff )
 function viewerHTML5_Create( width, height )
 {
     var canvas = document.createElement( 'canvas' );
+    canvas.setAttribute('width',width);
+    canvas.setAttribute('height',height);
     canvas.style.width = width+'px';
     canvas.style.height = height+'px';
     return {
+        width: width,
+        height: height,
         canvas: canvas
     };
+}
+
+function viewerHTML5_Draw( viewer, videobuff )
+{
+    var y, x;
+    var ptr;
+    var pixel;
+    var canvasWidth = viewer.canvas.width;
+    var canvasHeight = viewer.canvas.height;
+    var ctx = viewer.canvas.getContext("2d");
+    var canvasData = ctx.getImageData( 0, 0, canvasWidth, canvasHeight );
+    var canvasPtr;
+    for ( y = 0; y < videobuff.height; y++ )
+    {
+        ptr = y * videobuff.width;
+        for ( x = 0; x < videobuff.width; x++ )
+        {
+
+            pixel = videobuff.buff[ptr+x];
+
+            canvasPtr = (ptr+x) * 4;
+            canvasData.data[canvasPtr + 0] = pixel.r;
+            canvasData.data[canvasPtr + 1] = pixel.g;
+            canvasData.data[canvasPtr + 2] = pixel.b;
+            canvasData.data[canvasPtr + 3] = pixel.a;
+        } // end for x
+    } // end for y
+    ctx.putImageData(canvasData, 0, 0);
 }

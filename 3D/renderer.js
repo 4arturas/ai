@@ -23,25 +23,9 @@ function renderer_CameraCull( rl, obj, cam )
     var t = vec3D_Create( obj.matrix.tx, obj.matrix.ty, obj.matrix.tz );
     var pos = mat4x3_MulVec( cam.matrix, t );
 
-    vec3D_Log( pos );
-//    _log( obj.maxRadius );
-
-    _log( cam.nearClipZ );
-    _log( pos.z+obj.maxRadius );
-    _log( '*****' );
-
-    _log( cam.farClipZ );
-    _log( pos.z-obj.maxRadius );
-    _log( '*****' );
-
-    _log( obj.maxRadius );
-
-    _log ( cam.nearClipZ > (pos.z+obj.maxRadius) || (pos.z-obj.maxRadius) > cam.farClipZ );
-
     if ( cam.nearClipZ > (pos.z+obj.maxRadius) || (pos.z-obj.maxRadius) > cam.farClipZ )
         return 0;
 
-    console.log( 22222 );
     zTest = pos.x * cam.zFzctorX;
     if ( -zTest > (pos.x+obj.maxRadius) || (pos.x-obj.maxRadius) > zTest )
         return 0;

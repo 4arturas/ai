@@ -6,9 +6,87 @@
 </head>
 <body>
 
-<canvas id="myCanvas" width="600" height="800"
-        style="position: absolute; top: 60px; left: 0;">
-</canvas>
+<script type="text/javascript" src="utils.js"></script>
+
+<script type="text/javascript" src="2D/geom.js"></script>
+<script type="text/javascript" src="2D/pixel.js"></script>
+<script type="text/javascript" src="2D/videobuff.js"></script>
+<script type="text/javascript" src="2D/line.js"></script>
+<script type="text/javascript" src="2D/viewer.js"></script>
+
+<script type="text/javascript" src="3D/vector.js"></script>
+<script type="text/javascript" src="3D/poly.js"></script>
+<script type="text/javascript" src="3D/camera.js"></script>
+<script type="text/javascript" src="3D/renderer.js"></script>
+<script type="text/javascript" src="3D/obj.js"></script>
+
+<script type="text/javascript">
+    var gViewerHTML5;
+    var gVideobuff;
+    var gCamera;
+    var gRlist;
+    var gObject;
+    function odobo_Init()
+    {
+        var width, height;
+        var bgColor;
+
+        width = 640/2;
+        height = 480/2;
+
+        bgColor = pixel_Create( 200, 200, 200 );
+        gVideobuff = videobuff_Create( width, height, bgColor );
+
+        gCamera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
+
+        gRlist = renderer_Create( 100 );
+
+        gObject = object_CreateQuad( 100, 100, 2, 2 );
+        gObject.color = gPixelRed;
+
+        gViewerHTML5 = viewerHTML5_Create( width, height );
+        gViewerHTML5.canvas.style.border = '1px solid black';
+        gViewerHTML5.canvas.style.position = 'absolute';
+        gViewerHTML5.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
+        gViewerHTML5.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
+
+        document.body.appendChild( gViewerHTML5.canvas );
+    }
+    odobo_Init();
+
+    var gAngle = 0.0;
+    function odobo_Run()
+    {
+        videobuff_Clear( gVideobuff );
+
+        camera_Euler( gCamera );
+        renderer_Reset( gRlist );
+
+        gObject.matrix = mat4x3_RotXX( gAngle );
+        gAngle += 0.1;
+
+
+        if ( renderer_CameraCull( gRlist, gObject, gCamera ) == 1 )
+            renderer_AddObject( gRlist, gObject, gCamera );
+
+        renderer_Render( gRlist, gVideobuff, gCamera );
+        viewerHTML5_Draw( gViewerHTML5, gVideobuff );
+
+    }
+    var gCounter = 0;
+    function odobo_Main()
+    {
+        if ( (gCounter++) == 500 ) return;
+        odobo_Run();
+        setTimeout( function() { odobo_Main(); }, 20 );
+    }
+    odobo_Main();
+</script>
+
+<fieldset style="width:150px; font-size: 10px;">
+    <legend>Tests:</legend>
+    <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
+</fieldset>
 
 </body>
 </html>
