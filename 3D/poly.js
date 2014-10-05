@@ -4,6 +4,8 @@ function poly_Create( attr, state, color, normal )
         attr: attr,
         state: state,
         color: color,
-        normal: normal
+        normal: normal,
+        vidx: new Array( 3 ),
+        tidx: new Array( 3 )
     };
 }

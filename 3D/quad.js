@@ -1,4 +1,4 @@
-function quad_Create( rows, cols )
+function quad_Create( height, width, rows, cols )
 {
 
 }
