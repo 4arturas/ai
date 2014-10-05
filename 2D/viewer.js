@@ -65,3 +65,14 @@ function viewer_Draw( viewer, videobuff )
         } // end for x
     } // end for y
 }
+
+
+function viewerHTML5_Create( width, height )
+{
+    var canvas = document.createElement( 'canvas' );
+    canvas.style.width = width+'px';
+    canvas.style.height = height+'px';
+    return {
+        canvas: canvas
+    };
+}
