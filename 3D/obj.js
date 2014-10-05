@@ -86,4 +86,6 @@ function object_CreateQuad( height, width, rows, cols )
     } // end for poly
 
     object_Radius( obj );
+
+    return obj;
 }

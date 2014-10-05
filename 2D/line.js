@@ -156,23 +156,23 @@ function line_Trim( vb, x, y, xOverY, yOverX, clipCode )
         case CC_NORTH:
             yc = vb.miny;
             xc = x + ( yc - y ) * xOverY;
-            console.log( 'N' );
+//            console.log( 'N' );
             break;
         case CC_SOUTH:
             yc = vb.maxy;
             xc = x + ( yc - y ) * xOverY;
-            console.log( 'S' );
+//            console.log( 'S' );
             break;
         case CC_EAST:
             xc = vb.minx;
             yc = y + ( xc - x ) * yOverX;
-            console.log( 'E' );
+//            console.log( 'E' );
             break;
         case CC_WEST:
             xc = vb.maxx;
             yc = y + ( xc - x ) * yOverX;
 
-            console.log( 'W' );
+//            console.log( 'W' );
             break;
 
         case CC_NORTH_EAST:
@@ -183,7 +183,7 @@ function line_Trim( vb, x, y, xOverY, yOverX, clipCode )
                 xc = vb.minx;
                 yc = y + ( xc - x ) * yOverX;
             }
-            console.log( 'NE' );
+//            console.log( 'NE' );
             break;
 
         case CC_NORTH_WEST:
@@ -194,7 +194,7 @@ function line_Trim( vb, x, y, xOverY, yOverX, clipCode )
                 xc = vb.maxx;
                 yc = y + ( xc - x ) * xOverY;
             }
-            console.log( 'NW' );
+//            console.log( 'NW' );
             break;
 
         case CC_SOUTH_EAST:
@@ -205,7 +205,7 @@ function line_Trim( vb, x, y, xOverY, yOverX, clipCode )
                 xc = vb.minx;
                 yc = y + ( xc - x ) * yOverX;
             }
-            console.log( 'SE' );
+//            console.log( 'SE' );
             break;
 
         case CC_SOUTH_WEST:
@@ -216,15 +216,15 @@ function line_Trim( vb, x, y, xOverY, yOverX, clipCode )
                 xc = vb.maxx;
                 yc = y + ( xc - x ) * xOverY;
             }
-            console.log( 'SW' );
+//            console.log( 'SW' );
             break;
 
         default:
 //            _assert( (1==0), 'line_Trim: Not defined clip code' );
             return [ x, y ];
     }
-    console.log( xc );
-    console.log( yc );
+//    console.log( xc );
+//    console.log( yc );
     return [ xc, yc ];
 }
 
@@ -274,7 +274,7 @@ function line_Test( vb )
     var x1;
     var y1;
     var i;
-    var strFn;
+    var strFn
 
     for ( i = 0; i < 300; i++ )
     {
