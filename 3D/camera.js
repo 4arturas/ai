@@ -4,11 +4,11 @@ function camera_Create( posX, posY, posZ, width, height, nearClipZ, farClipZ, fo
     var aspectRatio = width/height;
     var viewportWidth = 2.0;
     var viewportHeight = 2.0 / aspectRatio;
-    var viewDist = viewportWidth / 2.0 * geom_Tan( geomPI_OVER_180 * (fov/2) );
+    var viewDist = viewportWidth / 2.0 * geom_Tan( geom_DegToRad(fov/2.0) );
     var zFactorX = viewportWidth / 2.0 / viewDist;
     var zFactorY = viewportHeight / 2.0 / viewDist;
     var alpha = width/2.0;
-    var beta = width/2.0;
+    var beta = height/2.0;
 
     return {
         pos: vec3D_Create( posX, posY, posZ ),

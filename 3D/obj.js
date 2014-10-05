@@ -67,7 +67,7 @@ function object_CreateQuad( height, width, rows, cols )
     {
         for ( c = 0; c < cols; c++ )
         {
-            i = r * rows + c;
+            i = r * cols + c;
             obj.vertexList[i].v.x = c * vcol - ( width*0.5 );
             obj.vertexList[i].v.y = r * vrow - ( height*0.5 );
             obj.vertexList[i].v.z = 0.0;
@@ -99,10 +99,6 @@ function object_CreateQuad( height, width, rows, cols )
 //        obj.polyList[i*2+1].tidx[1] = v1;
 //        obj.polyList[i*2+1].tidx[2] = v2;
 
-        var vidx0 = obj.polyList[i*2];
-        var vidx1 = obj.polyList[i*2+1];
-        vidx0 = vidx0;
-        vidx1 = vidx1;
     } // end for poly
 
     object_Radius( obj );

@@ -39,8 +39,8 @@
     {
         var width, height;
         var bgColor;
-        width = 640/5;
-        height = 480/5;
+        width = 640/8;
+        height = 480/8;
 
         gTestPixelRed = pixel_Create( 255, 0, 0 );
         gTestPixelGreen = pixel_Create( 0, 255, 0 );
@@ -58,7 +58,7 @@
         bgColor = pixel_Create( 200, 200, 200 );
         gVideobuff = videobuff_Create( width, height, bgColor );
 
-        gCamera = camera_Create( 0, 0, -200, width, height, 10, 1000, 120 );
+        gCamera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
 
         gRlist = renderer_Create( 100 );
 
@@ -91,7 +91,7 @@
 
         gObject.matrix = mat4x3_RotXX( odoboAngle );
         odoboAngle += 0.1;
-        _log( odoboAngle );
+//        _log( odoboAngle );
 
         //if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
 
@@ -105,7 +105,7 @@
                 {
                     odobo2D_Main()
                 }
-                , 1000 );
+                , 500 );
     }
     odobo2D_Main();
 
