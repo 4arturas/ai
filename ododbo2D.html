@@ -28,7 +28,7 @@
     var gViewer;
     var gVideobuff;
     var gCamera;
-    var gRenderer;
+    var gRlist;
     var gObject;
 
     var gTestPixelRed;
@@ -55,9 +55,9 @@
         bgColor = pixel_Create( 200, 200, 200 );
         gVideobuff = videobuff_Create( width, height, bgColor );
 
-        gCamera = camera_Create( 0, 0, 0, width, height, 10, 1000 );
+        gCamera = camera_Create( 0, -120, 0, width, height, 10, 1000 );
 
-        gRenderer = renderer_Create( 100 );
+        gRlist = renderer_Create( 100 );
 
         gObject = object_CreateQuad( 100, 100, 2, 2 );
 
@@ -80,8 +80,12 @@
 
 
     camera_Euler( gCamera );
-    if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
-        renderer_AddObject( gRenderer, gObject, gCamera );
+    renderer_Reset( gRlist );
+    //if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
+
+        renderer_AddObject( gRlist, gObject, gCamera );
+
+    renderer_Render( gRlist, gVideobuff, gCamera );
     viewer_Draw( gViewer, gVideobuff );
 
 
