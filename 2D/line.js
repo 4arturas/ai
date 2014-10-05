@@ -4,6 +4,12 @@ function line_BreshamAssertInts( n )
     _assert( ( reminder == 0 ), 'line_BreshamSimple: only integers allowed reminder = ' + reminder );
 }
 
+function line_Log( x0, y0, x1, y1 )
+{
+    var strFn = 'line_Draw(vb, '+x0+', '+y0+', '+x1+', '+y1+', p);';
+    console.log( strFn );
+}
+
 function line_Bresham( vb, x0, y0, x1, y1, color )
 {
     var dx, dy;
@@ -17,6 +23,8 @@ function line_Bresham( vb, x0, y0, x1, y1, color )
     line_BreshamAssertInts( x1 );
     line_BreshamAssertInts( y0 );
     line_BreshamAssertInts( y1 );
+
+//    line_Log( x0, y0, x1, y1 );
 
     ptr = x0 + y0 * vb.width;
 
@@ -240,7 +248,11 @@ function line_Draw( vb, x0, y0, x1, y1, color/*pixel*/ )
 
     if ( clipCode0 == 0 && clipCode1 == 0 )
     {
-        line_BreshamSimple( vb, x0, y0, x1, y1, color );
+        x0 = Math.floor( x0 );
+        y0 = Math.floor( y0 );
+        x1 = Math.floor( x1 );
+        y1 = Math.floor( y1 );
+        line_Bresham( vb, x0, y0, x1, y1, color );
         return;
     }
 
@@ -265,6 +277,7 @@ function line_Draw( vb, x0, y0, x1, y1, color/*pixel*/ )
     line_Bresham( vb, x0, y0, x1, y1, color );
 }
 
+
 function line_Test( vb )
 {
     var s = 50;
@@ -274,7 +287,6 @@ function line_Test( vb )
     var x1;
     var y1;
     var i;
-    var strFn
 
     for ( i = 0; i < 300; i++ )
     {
@@ -283,8 +295,7 @@ function line_Test( vb )
         y0 = _randomInt(-s, s);
         x1 = _randomInt(-s, s);
         y1 = _randomInt(-s, s);
-        strFn = 'line_Draw(vb, '+x0+', '+y0+', '+x1+', '+y1+', p);';
-        console.log( strFn );
+        line_Log( x0, y0, x1, y1 );
         line_Draw(vb, x0, y0, x1, y1, p);
     } // end for i
 }

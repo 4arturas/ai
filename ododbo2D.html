@@ -34,59 +34,82 @@
     var gTestPixelRed;
     var gTestPixelGreen;
     var gTestPixelBlue;
-    var gPixelSize = 2;
+    var gPixelSize = 1;
     function odobo2D_Init()
     {
         var width, height;
         var bgColor;
-        width = 50;
-        height = 50;
-
-
-        gViewer = viewer_Create( width, height, gPixelSize );
-        gViewer.setAttribute( 'id', 'viewer' );
-        gViewer.cellSpacing = '0';
-        gViewer.cellPadding = '0';
-        gViewer.style.border = '1px solid black';
-        gViewer.style.marginLeft = '400px';
-        gViewer.style.marginTop = '100px';
-        document.body.appendChild( gViewer );
-
-        bgColor = pixel_Create( 200, 200, 200 );
-        gVideobuff = videobuff_Create( width, height, bgColor );
-
-        gCamera = camera_Create( 0, -120, 0, width, height, 10, 1000 );
-
-        gRlist = renderer_Create( 100 );
-
-        gObject = object_CreateQuad( 100, 100, 2, 2 );
+        width = 640/5;
+        height = 480/5;
 
         gTestPixelRed = pixel_Create( 255, 0, 0 );
         gTestPixelGreen = pixel_Create( 0, 255, 0 );
         gTestPixelBlue = pixel_Create( 0, 0, 255 );
 
+        gViewer = viewer_Create( width, height, gPixelSize );
+        gViewer.table.setAttribute( 'id', 'viewer' );
+        gViewer.table.cellSpacing = '0';
+        gViewer.table.cellPadding = '0';
+        gViewer.table.style.border = '1px solid black';
+        gViewer.table.style.marginLeft = '400px';
+        gViewer.table.style.marginTop = '100px';
+        document.body.appendChild( gViewer.table );
+
+        bgColor = pixel_Create( 200, 200, 200 );
+        gVideobuff = videobuff_Create( width, height, bgColor );
+
+        gCamera = camera_Create( 0, 0, -200, width, height, 10, 1000, 120 );
+
+        gRlist = renderer_Create( 100 );
+
+        gObject = object_CreateQuad( 100, 100, 2, 2 );
+        gObject.color = gTestPixelRed;
+
     }
     odobo2D_Init();
-    videobuff_Clear( gVideobuff );
+
+    var ctx = 0;
+    var odoboAngle = 0;
+    function odobo2D_Main()
+    {
+        if ( ctx++ == 100 ) return;
+
+        videobuff_Clear( gVideobuff );
 
 //    line_Draw( gVideobuff, 0, 0, 10, 10, gTestPixelGreen );
 //    videobuff_SetPixel( gVideobuff, 255, gTestPixelGreen );
 
-    // tests
-    {
+        // tests
+        {
 //        vector_Test();
 //        line_Test( gVideobuff );
-    } // end test
+        } // end test
 
 
-    camera_Euler( gCamera );
-    renderer_Reset( gRlist );
-    //if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
+        camera_Euler( gCamera );
+        renderer_Reset( gRlist );
+
+        gObject.matrix = mat4x3_RotXX( odoboAngle );
+        odoboAngle += 0.1;
+        _log( odoboAngle );
+
+        //if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
 
         renderer_AddObject( gRlist, gObject, gCamera );
 
-    renderer_Render( gRlist, gVideobuff, gCamera );
-    viewer_Draw( gViewer, gVideobuff );
+        renderer_Render( gRlist, gVideobuff, gCamera );
+        viewer_Draw( gViewer, gVideobuff );
+
+        setTimeout(
+                function()
+                {
+                    odobo2D_Main()
+                }
+                , 1000 );
+    }
+    odobo2D_Main();
+
+
 
 
 </script>

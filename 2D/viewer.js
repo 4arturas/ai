@@ -6,9 +6,12 @@ function viewer_Create( width, height, pixelSize )
 {
     var y, x;
     var table, tr, td;
+    var tdArr;
     table = document.createElement('table');
+    tdArr = new Array( height );
     for ( y = 0; y < height; y++ )
     {
+        tdArr[y] = new Array( width );
         tr = document.createElement('tr');
         table.appendChild( tr );
         for ( x = 0; x < width; x++ )
@@ -21,9 +24,13 @@ function viewer_Create( width, height, pixelSize )
             td.style.fontSize = '1px';
 //            td.style.backgroundColor = 'green';
 //            td.innerHTML = 'x';
+            tdArr[y][x] = td;
         } // end for x
     } // end for y
-    return table;
+    return {
+        table: table,
+        tdArr: tdArr
+    };
 }
 
 function viewer_Clear( viewer, videobuff )
@@ -52,7 +59,8 @@ function viewer_Draw( viewer, videobuff )
         for ( x = 0; x < videobuff.width; x++ )
         {
             pixel = videobuff.buff[ptr+x];
-            td = document.getElementById(y+'_'+x);
+//            td = document.getElementById(y+'_'+x);
+            td = viewer.tdArr[y][x];
             td.style.backgroundColor = 'rgb('+pixel.r+','+pixel.g+','+pixel.b+')';
         } // end for x
     } // end for y
