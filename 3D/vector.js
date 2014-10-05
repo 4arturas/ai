@@ -52,7 +52,7 @@ function mat4x3_CreateIdentity()
     };
 }
 
-function mat4x3_RotX( c, s )
+function mat4x3_RotX( s, c )
 {
     var m = mat4x3_CreateIdentity();
     m._22 = c;  m._23 = s;
@@ -60,7 +60,7 @@ function mat4x3_RotX( c, s )
     return m;
 }
 
-function mat4x3_RotY( c, s )
+function mat4x3_RotY( s, c )
 {
     var m = mat4x3_CreateIdentity();
     m._11 = c;  m._13 = -s;
@@ -68,32 +68,33 @@ function mat4x3_RotY( c, s )
     return m;
 }
 
-function mat4x3_RotZ( c, s )
+function mat4x3_RotZ( s, c )
 {
     var m = mat4x3_CreateIdentity();
     m._11 = c;  m._12 = s;
     m._21 = -s; m._22 = c;
+    return m;
 }
 
 function mat4x3_RotXX( theta )
 {
-    var c = geom_Cos( theta );
     var s = geom_Sin( theta );
-    return mat4x3_RotX( c, s );
+    var c = geom_Cos( theta );
+    return mat4x3_RotX( s, c );
 }
 
 function mat4x3_RotYY( theta )
 {
-    var c = geom_Cos(theta);
     var s = geom_Sin(theta);
-    return mat4x3_RotY(c, s);
+    var c = geom_Cos(theta);
+    return mat4x3_RotY(s, c);
 }
 
 function mat4x3_RotZZ( theta )
 {
-    var c = geom_Cos( theta );
     var s = geom_Sin( theta );
-    return mat4x3_RotZ( c, s );
+    var c = geom_Cos( theta );
+    return mat4x3_RotZ( s, c );
 }
 
 function mat4x3_Mul( a, b )

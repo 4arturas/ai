@@ -17,6 +17,8 @@
 <script type="text/javascript" src="3D/vector.js"></script>
 <script type="text/javascript" src="3D/poly.js"></script>
 <script type="text/javascript" src="3D/camera.js"></script>
+<script type="text/javascript" src="3D/renderer.js"></script>
+<script type="text/javascript" src="3D/obj.js"></script>
 
 
 
@@ -26,6 +28,8 @@
     var gViewer;
     var gVideobuff;
     var gCamera;
+    var gRenderer;
+    var gObject;
 
     var gTestPixelRed;
     var gTestPixelGreen;
@@ -51,7 +55,11 @@
         bgColor = pixel_Create( 200, 200, 200 );
         gVideobuff = videobuff_Create( width, height, bgColor );
 
-        gCamera = camera_Create( 0, 0, 50, width, height, 10, 1000 );
+        gCamera = camera_Create( 0, 0, 0, width, height, 10, 1000 );
+
+        gRenderer = renderer_Create( 100 );
+
+        gObject = object_CreateQuad( 100, 100, 2, 2 );
 
         gTestPixelRed = pixel_Create( 255, 0, 0 );
         gTestPixelGreen = pixel_Create( 0, 255, 0 );
@@ -60,16 +68,20 @@
     }
     odobo2D_Init();
     videobuff_Clear( gVideobuff );
+
 //    line_Draw( gVideobuff, 0, 0, 10, 10, gTestPixelGreen );
 //    videobuff_SetPixel( gVideobuff, 255, gTestPixelGreen );
 
     // tests
     {
-        vector_Test();
-        line_Test( gVideobuff );
+//        vector_Test();
+//        line_Test( gVideobuff );
     } // end test
 
 
+    camera_Euler( gCamera );
+    if ( renderer_CameraCull( gRenderer, gObject, gCamera ) == 1 )
+        renderer_AddObject( gRenderer, gObject, gCamera );
     viewer_Draw( gViewer, gVideobuff );
 
 

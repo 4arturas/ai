@@ -13,7 +13,7 @@ function camera_Create( posX, posY, posZ, width, height, nearClipZ, farClipZ, fo
     return {
         pos: vec3D_Create( posX, posY, posZ ),
         dir: vec3D_Create( 0, 0, 0 ),
-        mcam: mat4x3_CreateIdentity(),
+        matrix: mat4x3_CreateIdentity(),
         nearClipZ: nearClipZ,
         farClipZ: farClipZ,
         for: fov,
@@ -52,5 +52,5 @@ function camera_Euler( cam )
 
     mtemp = mat4x3_Mul( mx, my );
     mrot = mat4x3_Mul( mtemp, mz );
-    cam.mcam = mrot;
+    cam.matrix = mat4x3_Mul( mt, mrot );
 }

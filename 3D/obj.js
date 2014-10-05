@@ -1,6 +1,16 @@
 
 function object_Create( numVerts, numPolys )
 {
+    var i;
+    var vertexList = new Array( numVerts );
+    var polyList = new Array( numPolys );
+
+    for ( i = 0; i < numVerts; i++ )
+        vertexList[i] = vertex_Create();
+
+    for ( i = 0; i < numPolys; i++ )
+        polyList[i] = poly_Create();
+
     return {
         attr: null,
         state: null,
@@ -9,28 +19,32 @@ function object_Create( numVerts, numPolys )
         maxRadius: null,
         avgRadius: null,
 
+        matrix: null,
+
         numVerts: numVerts,
-        vertexList: new Array( numVerts ),
+        vertexList: vertexList,
 
         numPolys: numPolys,
-        polyList: new Array( numPolys )
+        polyList: polyList
     };
 }
 
 function object_Radius( obj )
 {
     var vert;
-    var maxLength = Number.MIN_VALUE;
     var l;
     obj.avgRadius = 0.0;
+    obj.maxRadius = Number.MIN_VALUE;
     for ( vert = 0; vert < obj.numVerts; vert++ )
     {
         l = vec3D_Length( obj.vertexList[vert].v );
-        if ( l > maxLength )
-            maxLength = l;
+        if ( l > obj.maxRadius )
+            obj.maxRadius = l;
         obj.avgRadius += l;
     } // end for vert
     obj.avgRadius /= obj.numVerts;
+//    _log( 'avgRadius=' + obj.avgRadius );
+//    _log( 'maxRadius=' + obj.maxRadius );
 }
 
 function object_CreateQuad( height, width, rows, cols )
@@ -55,7 +69,7 @@ function object_CreateQuad( height, width, rows, cols )
         {
             i = r * cols + c;
             obj.vertexList[i].v.x = c * vcol - ( width*0.5 );
-            obj.vertexList[i].v.y = r * rcol - ( height*0.5 );
+            obj.vertexList[i].v.y = r * vrow - ( height*0.5 );
             obj.vertexList[i].v.z = 0.0;
         } // end for c
     } // end for r
@@ -86,6 +100,7 @@ function object_CreateQuad( height, width, rows, cols )
     } // end for poly
 
     object_Radius( obj );
+    obj.matrix = mat4x3_CreateIdentity();
 
     return obj;
 }

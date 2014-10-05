@@ -1,10 +1,10 @@
-function poly_Create( attr, state, color, normal )
+function poly_Create()
 {
     return {
-        attr: attr,
-        state: state,
-        color: color,
-        normal: normal,
+        attr: null,
+        state: null,
+        color: null,
+        normal: null,
         vidx: new Array( 3 ),
         tidx: new Array( 3 )
     };
