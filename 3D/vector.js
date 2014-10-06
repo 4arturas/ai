@@ -5,6 +5,11 @@ function vec3D_Create( x, y, z )
     };
 }
 
+function vec3D_Equal( a, b )
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
 function vec3D_Dot( a, b )
 {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
@@ -13,6 +18,12 @@ function vec3D_Dot( a, b )
 function vec3D_Length( v )
 {
     return Math.sqrt( vec3D_Dot( v, v ) );
+}
+
+function vec3D_Dist( a, b )
+{
+    var r = vec3D_Sub( a, b );
+    return vec3D_Length( r );
 }
 
 function vec3D_Normalize( v )
@@ -33,6 +44,28 @@ function vec3D_Sub( a, b )
     return vec3D_Create(
         a.x-b.x, a.y-b.y, a.z-b.z
     );
+}
+
+function vec3D_MulScalar( a, s )
+{
+    return vec3D_Create(
+        a.x*s, a.y*s, a.z*s
+    );
+}
+function vec3D_DivScalar( a, s )
+{
+    return vec3D_Create(
+        a.x/s, a.y/s, a.z/s
+    );
+}
+
+function vec3D_Truncate( a, maxVal )
+{
+    var l = vec3D_Length( a );
+    var i = maxVal / l;
+    if ( i > 1.0 )
+        return vec3D_DivScalar( a, i );
+    return a;
 }
 
 function vec3D_Build( a, b )

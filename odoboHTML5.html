@@ -22,6 +22,8 @@
 <script type="text/javascript" src="3D/obj.js"></script>
 <script type="text/javascript" src="3D/engine.js"></script>
 
+<script type="text/javascript" src="odoboSpinner.js"></script>
+
 <script type="text/javascript">
     
     var gEngine;
@@ -102,89 +104,21 @@
 </script>
 
 <fieldset style="width:150px; font-size: 10px;">
-    <legend>Tests:</legend>
+    <legend>Odobo:</legend>
+
     <script type="text/javascript">
-        var SPINNER_STATE_INIT = 0;
-        var SPINNER_STATE_WORKING = 1;
-        var SPINNER_STATE_STOP = 2;
-        var gOdoboSpinner;
-        function odoboSpinner_Create()
-        {
-            var i;
-            gOdoboSpinner = {
-                state: SPINNER_STATE_INIT,
-                animation: 1,
-                framesCounter: 0,
-                angle: 0.0,
-                spinSpeed: 0,
-                center: null,
-                z: 500
-            };
-
-            odobo_ResetObjects();
-            var h = 0;
-            var rows, cols;
-            i = 0;
-            var color;
-            for ( i = 0; i < gEngine.numObjects; i++ )
-            {
-                gEngine.objectsArr[i].state = STATE_ON;
-                gEngine.objectsArr[i].attr = ATTR_2SIDE | ATTR_WIRED;
-                if ( i >= 0 && 5 > i )
-                    color = gPixelRed;
-                if ( i >= 5 && 10 > i )
-                    color = gPixelGreen;
-                if ( i >= 10 && 15 > i )
-                    color = gPixelBlue;
-
-                gEngine.objectsArr[i].color = color;
-
-
-            } // end for i
-
-
-//            gEngine.objectsArr[i].color = gPixelRed;
-
-        }
-        odoboSpinner_Create();
-        function odobo_Spinner()
-        {
-            if ( gOdoboSpinner.framesCounter++ > 1000 ) return 0;
-
-            var i;
-            var start = -200;
-            var x = start;
-            var y = start;
-            var step = 100;
-            for ( i = 0; i < gEngine.numObjects; i++ )
-            {
-                gEngine.objectsArr[i].matrix = mat4x3_RotXX( gOdoboSpinner.angle );
-                gEngine.objectsArr[i].matrix.tx = x;
-                gEngine.objectsArr[i].matrix.ty = y;
-                x += step;
-                if ( (i+1) % 5 == 0 )
-                {
-                    x = start;
-                    y += step;
-                }
-
-                gEngine.objectsArr[i].matrix.tz = gOdoboSpinner.z;
-            } // end for i
-
-            if ( gOdoboSpinner.framesCounter > 0 )
-                gOdoboSpinner.angle += 0.1;
-            if ( gOdoboSpinner.framesCounter > 100 )
-                gOdoboSpinner.angle += 0.1;
-            if ( gOdoboSpinner.framesCounter > 400 )
-                gOdoboSpinner.angle -= 0.1;
-            if ( gOdoboSpinner.framesCounter > 600 )
-                gOdoboSpinner.angle -= 0.1;
-
-            return 1;
-        }
-
+        var gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr );
     </script>
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); odoboSpinner_Create(); odobo_FnAI = odobo_Spinner;"> Odobo spinner
+    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner;"> spinner
+    <br>
+    <span style="color:red;">
+    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'seek' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek;"> seek
+    </span>
+</fieldset>
+
+
+<fieldset style="width:150px; font-size: 10px;">
+    <legend>Tests:</legend>
 
     <script type="text/javascript">
         var testQuadsCounter = 0;
