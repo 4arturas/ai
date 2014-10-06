@@ -171,14 +171,15 @@
                 gEngine.objectsArr[i].matrix.tz = gOdoboSpinner.z;
             } // end for i
 
-            if ( 100 > gOdoboSpinner.framesCounter )
+            if ( gOdoboSpinner.framesCounter > 0 )
                 gOdoboSpinner.angle += 0.1;
-            if ( 200 > gOdoboSpinner.framesCounter )
+            if ( gOdoboSpinner.framesCounter > 100 )
                 gOdoboSpinner.angle += 0.1;
-            if ( 400 > gOdoboSpinner.framesCounter )
+            if ( gOdoboSpinner.framesCounter > 400 )
                 gOdoboSpinner.angle -= 0.1;
-            if ( 600 > gOdoboSpinner.framesCounter )
+            if ( gOdoboSpinner.framesCounter > 600 )
                 gOdoboSpinner.angle -= 0.1;
+            
             return 1;
         }
 
