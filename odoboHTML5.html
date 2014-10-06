@@ -162,19 +162,24 @@
         {
             if ( gOdoboSpinner.framesCounter++ > 100 ) return 0;
             var i;
-            var x = -200;
-            var y = -200;
-            var step = 50;
+            var start = -200;
+            var x = start;
+            var y = start;
+            var step = 100;
             for ( i = 0; i < gEngine.numObjects; i++ )
             {
                 gEngine.objectsArr[i].matrix.tx = x;
-//                gEngine.objectsArr[i].matrix.ty = y;
+                gEngine.objectsArr[i].matrix.ty = y;
                 x += step;
-//                if ( i % 5 == 0 )
+                if ( (i+1) % 5 == 0 )
+                {
+                    x = start;
                     y += step;
+                }
 
                 gEngine.objectsArr[i].matrix.tz = gOdoboSpinner.z;
             } // end for i
+
             return 1;
         }
 
@@ -254,6 +259,7 @@
 
 <script type="text/javascript">
     odobo_FnAI = odobo_Spinner;
+//    odobo_FnAI = odobo_TestQuadsSolid;
     function odobo_Main()
     {
         if ( odobo_FnAI() == 0 ) return;

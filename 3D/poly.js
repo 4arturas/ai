@@ -24,6 +24,41 @@ function polyr_Create()
     };
 }
 
+function polyr_Draw2( vb, poly, buffStartPtr, ystart, yend, xl, xr, dxdyl, dxdyr )
+{
+    var yi, xi;
+    var xstart, xend;
+    var dx;
+    for ( yi = ystart; yi < yend; yi++ )
+    {
+        xstart = Math.floor(xl);
+        xend = Math.floor(xr);
+
+        if ( xstart != xend )
+        {
+            dx = xend - xstart;
+        }
+
+
+        if ( xend > vb.maxx )
+            xend = vb.maxx;
+
+        if ( vb.minx > xstart )
+        {
+            dx = vb.minx - xstart;
+            xstart = vb.minx;
+        }
+
+        for ( xi = xstart; xi < xend; xi++ )
+        {
+            videobuff_SetPixel( vb, (buffStartPtr+xi), poly.color );
+//            console.log( Math.floor(xi) );
+        } // end for xi
+        xl += dxdyl;
+        xr += dxdyr;
+        buffStartPtr += vb.width;
+    } // end for yi
+}
 function polyr_Draw( vb, poly )
 {
     var vv0, vv1, vv2;
@@ -141,20 +176,39 @@ function polyr_Draw( vb, poly )
     {
         dxdy = dxdyl;
         dzdy = dzdyl;
+        x = xl;
+        z = zl;
     }
 
-    for ( yi = ystart; yi < yend; yi++ )
-    {
-        xstart = Math.floor(xl);
-        xend = Math.floor(xr);
+//    polyr_Draw2( vb, poly, buffStartPtr, ystart, yend, x, xr, dxdy, dxdyr );
 
-        for ( xi = xstart; xi < xend; xi++ )
-        {
-            videobuff_SetPixel( vb, (buffStartPtr+xi), poly.color );
-//            console.log( Math.floor(xi) );
-        } // end for xi
-        xl += dxdyl;
-        xr += dxdyr;
-        buffStartPtr += vb.width;
-    } // end for yi
+    if ( yend == vb.maxy )
+        return;
+
+    dxdy = x1 - x2;
+    if ( y1 != y2 )
+    {
+        dy = y1 - y2;
+        dxdy /= dy;
+    }
+
+    if ( vb.miny > y1 )
+    {
+        dy = vb.miny - y1;
+        x = dxdy * dy + x1;
+        ystart = vb.miny;
+    }
+    else
+    {
+        x = x1;
+        z = z1;
+        ystart = y1;
+    }
+
+    if ( y2 > vb.maxy )
+        yend = vb.maxy;
+    else
+        yend = y2;
+
+    polyr_Draw2( vb, poly, buffStartPtr, ystart, yend, x, xr, dxdy, dxdyr );
 }

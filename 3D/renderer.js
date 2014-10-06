@@ -26,11 +26,11 @@ function renderer_CameraCull( rl, obj, cam )
     if ( cam.nearClipZ > (pos.z+obj.maxRadius) || (pos.z-obj.maxRadius) > cam.farClipZ )
         return 0;
 
-    zTest = pos.x * cam.zFzctorX;
+    zTest = pos.z * cam.zFzctorX;
     if ( -zTest > (pos.x+obj.maxRadius) || (pos.x-obj.maxRadius) > zTest )
         return 0;
 
-    zTest = pos.y * cam.zFactorY;
+    zTest = pos.z * cam.zFactorY;
     if ( -zTest > (pos.y+obj.maxRadius) || (pos.y-obj.maxRadius) > zTest )
         return 0;
 
