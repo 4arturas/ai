@@ -111,8 +111,12 @@
     </script>
     <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner;"> spinner
     <br>
+    <span style="">
+    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Seek' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek;"> Seek
+    </span>
+    <br>
     <span style="color:red;">
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'seek' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek;"> seek
+    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Flee' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee;"> Flee
     </span>
 </fieldset>
 
@@ -197,7 +201,8 @@
 //    odobo_FnAI = odobo_TestQuadsSolid;
     function odobo_Main()
     {
-        if ( odobo_FnAI() == 0 ) return;
+//        if ( odobo_FnAI() == 0 ) return;
+        odobo_FnAI();
         odobo_Run();
         setTimeout( function() { odobo_Main(); }, 20 );
     }

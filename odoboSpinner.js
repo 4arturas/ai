@@ -89,6 +89,7 @@ function odobo_Spinner()
 function odobo_Seek()
 {
 //    http://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
+    if ( gOdoboSpinner.state == SPINNER_STATE_STOP ) return 0;
     var obj;
     odobo_ResetObjects();
     obj = gOdoboSpinner.objectsArr[0];
@@ -130,4 +131,10 @@ function odobo_Seek()
 
 
     return 1;
+}
+
+function odobo_Flee()
+{
+    _log('Not implemented');
+    return 0;
 }
