@@ -21,6 +21,25 @@ function vec3D_Normalize( v )
     return vec3D_Create( (v.x*oneOverLength), (v.y*oneOverLength), (v.z*oneOverLength) );
 }
 
+function vec3D_Add( a, b )
+{
+    return vec3D_Create(
+        a.x+b.x, a.y+b.y, a.z+b.z
+    );
+}
+
+function vec3D_Sub( a, b )
+{
+    return vec3D_Create(
+        a.x-b.x, a.y-b.y, a.z-b.z
+    );
+}
+
+function vec3D_Build( a, b )
+{
+    return vec3D_Sub( b, a );
+}
+
 function vec3D_Cross( a, b )
 {
     return vec3D_Create(

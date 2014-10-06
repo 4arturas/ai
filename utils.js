@@ -34,3 +34,11 @@ function _assert( a, msg )
     }
 }
 
+function _swap( x, y )
+{
+    var tmp = x;
+    x = y;
+    y = tmp;
+    return [ x, y ];
+}
+

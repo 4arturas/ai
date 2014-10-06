@@ -51,12 +51,16 @@ function renderer_AddObject( rl, obj, cam )
     var v0, v1, v2;
     var vert0, vert1, vert2;
 
+    var u, v, n, view;
+    var dotProduct;
+
     _assert( (rl.polygonListSize > rl.numPolys), 'renderer_AddObject: (rl.polygonListSize > rl.numPolys)');
 
     for ( pidx = 0; pidx < obj.numPolys; pidx++ )
     {
         polyr_Ptr = rl.plist[rl.numPolys];
         polyr_Ptr.color = obj.color;
+        polyr_Ptr.attr = obj.attr;
 
         // transform to world
         {
@@ -66,6 +70,18 @@ function renderer_AddObject( rl, obj, cam )
             v2 = mat4x3_MulVec( obj.matrix, obj.vertexList[polyPtr.vidx[2]].v );
 
         } // end transform to world
+
+        // back face culling
+        if ( (obj.attr&ATTR_2SIDE) != ATTR_2SIDE )
+        {
+            u = vec3D_Build( v0, v1 );
+            v = vec3D_Build( v0, v2 );
+            n = vec3D_Cross( u, v );
+            view = vec3D_Build( cam.pos, v0 );
+            dotProduct = vec3D_Dot( n, view );
+            if ( dotProduct > 0 )
+                continue;
+        } // end back face culling
 
         // transform to camera
         {
@@ -104,9 +120,17 @@ function renderer_Render( rl, videobuff, cam )
         v1 = polyrPtr.vertex[1].v;
         v2 = polyrPtr.vertex[2].v;
 
-        line_Draw( videobuff, v0.x, v0.y, v1.x, v1.y, polyrPtr.color );
-        line_Draw( videobuff, v1.x, v1.y, v2.x, v2.y, polyrPtr.color );
-        line_Draw( videobuff, v2.x, v2.y, v0.x, v0.y, polyrPtr.color );
+        if ( (polyrPtr.attr&ATTR_SOLID) == ATTR_SOLID )
+        {
+            polyr_Draw( videobuff, polyrPtr );
+        }
+
+        if ( (polyrPtr.attr&ATTR_WIRED) == ATTR_WIRED )
+        {
+            line_Draw(videobuff, v0.x, v0.y, v1.x, v1.y, polyrPtr.color);
+            line_Draw(videobuff, v1.x, v1.y, v2.x, v2.y, polyrPtr.color);
+            line_Draw(videobuff, v2.x, v2.y, v0.x, v0.y, polyrPtr.color);
+        }
 
     } // end for i
 }
