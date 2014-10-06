@@ -151,7 +151,7 @@ function polyr_Draw( vb, poly )
         for ( xi = xstart; xi < xend; xi++ )
         {
             videobuff_SetPixel( vb, (buffStartPtr+xi), poly.color );
-            console.log( Math.floor(xi) );
+//            console.log( Math.floor(xi) );
         } // end for xi
         xl += dxdyl;
         xr += dxdyr;

@@ -1,8 +1,10 @@
+var VIEWER_TYPE_HTML4 = 0;
+var VIEWER_TYPE_HTML5 = 1;
 function viewer_GetTDID( y, x )
 {
     return y+'_'+x;
 }
-function viewer_Create( width, height, pixelSize )
+function viewerHTML4_Create( viewerType, width, height, pixelSize )
 {
     var y, x;
     var table, tr, td;
@@ -28,12 +30,13 @@ function viewer_Create( width, height, pixelSize )
         } // end for x
     } // end for y
     return {
+        viewerType: viewerType,
         table: table,
         tdArr: tdArr
     };
 }
 
-function viewer_Clear( viewer, videobuff )
+function viewerHTML4_Clear( viewer, videobuff )
 {
     var y, x;
     var td;
@@ -47,7 +50,7 @@ function viewer_Clear( viewer, videobuff )
     } // end for y
 }
 
-function viewer_Draw( viewer, videobuff )
+function viewerHTML4_Draw( viewer, videobuff )
 {
     var y, x;
     var ptr;
@@ -67,7 +70,7 @@ function viewer_Draw( viewer, videobuff )
 }
 
 
-function viewerHTML5_Create( width, height )
+function viewerHTML5_Create( viewerType, width, height )
 {
     var canvas = document.createElement( 'canvas' );
     canvas.setAttribute('width',width);
@@ -75,6 +78,7 @@ function viewerHTML5_Create( width, height )
     canvas.style.width = width+'px';
     canvas.style.height = height+'px';
     return {
+        viewerType: viewerType,
         width: width,
         height: height,
         canvas: canvas

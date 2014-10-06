@@ -33,16 +33,16 @@
         width = 640/2;
         height = 480/2;
 
-        gEngine = engine_Create( width, height );
+        gEngine = engine_Create( VIEWER_TYPE_HTML5, width, height );
 
-        gEngine.viewerHTML5.canvas.style.border = '1px solid black';
-        gEngine.viewerHTML5.canvas.style.position = 'absolute';
-        gEngine.viewerHTML5.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
-        gEngine.viewerHTML5.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
+        gEngine.viewer.canvas.style.border = '1px solid black';
+        gEngine.viewer.canvas.style.position = 'absolute';
+        gEngine.viewer.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
+        gEngine.viewer.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
 
         engine_InitObjects( gEngine );
 
-        document.body.appendChild( gEngine.viewerHTML5.canvas );
+        document.body.appendChild( gEngine.viewer.canvas );
     }
     odobo_Init();
 
@@ -65,7 +65,7 @@
         } // end for i
 
         renderer_Render( gEngine.rlist, gEngine.videobuff, gEngine.camera );
-        viewerHTML5_Draw( gEngine.viewerHTML5, gEngine.videobuff );
+        engine_Draw( gEngine.viewer, gEngine.videobuff );
 
     }
     function odobo_FnAI()

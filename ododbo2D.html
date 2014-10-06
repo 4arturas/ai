@@ -46,7 +46,7 @@
         gTestPixelGreen = pixel_Create( 0, 255, 0 );
         gTestPixelBlue = pixel_Create( 0, 0, 255 );
 
-        gViewer = viewer_Create( width, height, gPixelSize );
+        gViewer = viewerHTML4_Create( width, height, gPixelSize );
         gViewer.table.setAttribute( 'id', 'viewer' );
         gViewer.table.cellSpacing = '0';
         gViewer.table.cellPadding = '0';
@@ -99,7 +99,7 @@
         renderer_AddObject( gRlist, gObject, gCamera );
 
         renderer_Render( gRlist, gVideobuff, gCamera );
-        viewer_Draw( gViewer, gVideobuff );
+        viewerHTML4_Draw( gViewer, gVideobuff );
 
         setTimeout(
                 function()

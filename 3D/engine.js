@@ -1,7 +1,8 @@
-function engine_Create( width, height )
+
+function engine_Create( viewerType, width, height )
 {
     var gEngine = {
-        viewerHTML5: null,
+        viewer: null,
         videobuff: null,
         camera: null,
         rlist: null,
@@ -22,7 +23,12 @@ function engine_Create( width, height )
 
     gEngine.rlist = renderer_Create( 100 );
 
-    gEngine.viewerHTML5 = viewerHTML5_Create( width, height );
+    if ( viewerType == VIEWER_TYPE_HTML5 )
+        gEngine.viewer = viewerHTML5_Create( viewerType, width, height );
+    else if ( viewerType == VIEWER_TYPE_HTML4 )
+        gEngine.viewer = viewerHTML4_Create( viewerType, width, height, 1 );
+    else
+        _assert( false, 'engine_Create: undefined engine type');
 
     return gEngine;
 }
@@ -39,4 +45,19 @@ function engine_InitObjects( engine )
     engine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
     engine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
     engine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
+}
+
+function engine_Draw( viewer, videobuff )
+{
+    if ( viewer.viewerType == VIEWER_TYPE_HTML4 )
+    {
+        viewerHTML4_Draw(viewer, videobuff);
+    }
+    else if ( viewer.viewerType == VIEWER_TYPE_HTML5 )
+    {
+        viewerHTML5_Draw(viewer, videobuff);
+    }
+    else
+        _assert( false, 'viewer_Draw: not known engine type' )
+
 }
