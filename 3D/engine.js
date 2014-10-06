@@ -11,6 +11,7 @@ function engine_Create( viewerType, width, height )
         OBJ_QUAD_0: 0,
         OBJ_QUAD_1: 1,
         OBJ_QUAD_2: 2,
+        OBJ_SLOT_3: 3,
         objectsArr: null
     };
 
@@ -35,16 +36,14 @@ function engine_Create( viewerType, width, height )
 
 function engine_InitObjects( engine )
 {
-    engine.numObjects = 3;
+    var i;
+    engine.numObjects = 3*5;
     engine.objectsArr = new Array( this.numObjects );
 
-    engine.objectsArr[gEngine.OBJ_QUAD_0] = object_CreateQuad( 100, 100, 2, 2 );
-    engine.objectsArr[gEngine.OBJ_QUAD_1] = object_CreateQuad( 100, 100, 2, 2 );
-    engine.objectsArr[gEngine.OBJ_QUAD_2] = object_CreateQuad( 100, 100, 2, 2 );
 
-    engine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
-    engine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
-    engine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
+    for ( i = 0; i < engine.numObjects; i++ )
+        engine.objectsArr[i] = object_CreateQuad( 100, 100, 2, 2 );
+
 }
 
 function engine_Draw( viewer, videobuff )

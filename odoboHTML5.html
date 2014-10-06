@@ -96,13 +96,92 @@
         {
             gEngine.objectsArr[i].state = 0;
             gEngine.objectsArr[i].attr = 0;
+            gEngine.objectsArr[i].matrix = mat4x3_CreateIdentity();
         }
     }
 </script>
 
 <fieldset style="width:150px; font-size: 10px;">
     <legend>Tests:</legend>
-    <script>
+    <script type="text/javascript">
+        var gOdoboSpinner;
+        function odoboSpinner_Create()
+        {
+            var i;
+            gOdoboSpinner = {
+                animation: 1,
+                framesCounter: 0,
+                center: null,
+                z: 500
+            };
+
+            odobo_ResetObjects();
+            var h = 0;
+            var rows, cols;
+            i = 0;
+            var color;
+            for ( i = 0; i < gEngine.numObjects; i++ )
+            {
+                gEngine.objectsArr[i].state = STATE_ON;
+                gEngine.objectsArr[i].attr = ATTR_2SIDE | ATTR_WIRED;
+                if ( i >= 0 && 5 > i )
+                    color = gPixelRed;
+                if ( i >= 5 && 10 > i )
+                    color = gPixelGreen;
+                if ( i >= 10 && 15 > i )
+                    color = gPixelBlue;
+
+                color = gPixelRed;
+                gEngine.objectsArr[0].color = color;
+                gEngine.objectsArr[1].color = color;
+                gEngine.objectsArr[2].color = color;
+                gEngine.objectsArr[3].color = color;
+                gEngine.objectsArr[4].color = color;
+
+                color = gPixelGreen;
+                gEngine.objectsArr[5].color = color;
+                gEngine.objectsArr[6].color = color;
+                gEngine.objectsArr[7].color = color;
+                gEngine.objectsArr[8].color = color;
+                gEngine.objectsArr[9].color = color;
+
+                color = gPixelBlue;
+                gEngine.objectsArr[10].color = color;
+                gEngine.objectsArr[11].color = color;
+                gEngine.objectsArr[12].color = color;
+                gEngine.objectsArr[13].color = color;
+                gEngine.objectsArr[14].color = color;
+            } // end for i
+
+
+//            gEngine.objectsArr[i].color = gPixelRed;
+
+        }
+        odoboSpinner_Create();
+        function odobo_Spinner()
+        {
+            if ( gOdoboSpinner.framesCounter++ > 100 ) return 0;
+            var i;
+            var x = -200;
+            var y = -200;
+            var step = 50;
+            for ( i = 0; i < gEngine.numObjects; i++ )
+            {
+                gEngine.objectsArr[i].matrix.tx = x;
+//                gEngine.objectsArr[i].matrix.ty = y;
+                x += step;
+//                if ( i % 5 == 0 )
+                    y += step;
+
+                gEngine.objectsArr[i].matrix.tz = gOdoboSpinner.z;
+            } // end for i
+            return 1;
+        }
+
+    </script>
+    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); odoboSpinner_Create(); odobo_FnAI = odobo_Spinner;"> Odobo spinner
+
+    <script type="text/javascript">
         var testQuadsCounter = 0;
         var testQuadsAngle0 = 0;
         var testQuadsAngle1 = 0;
@@ -138,6 +217,7 @@
             return 1;
         }
     </script>
+    <br>
     <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Quads' ); odobo_FnAI = odobo_TestQuads1;"> Quads
 
     <script type="text/javascript">
@@ -173,7 +253,7 @@
 </fieldset>
 
 <script type="text/javascript">
-    odobo_FnAI = odobo_TestQuadsSolid;
+    odobo_FnAI = odobo_Spinner;
     function odobo_Main()
     {
         if ( odobo_FnAI() == 0 ) return;
