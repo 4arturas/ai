@@ -55,7 +55,7 @@ function renderer_AddObject( rl, obj, cam )
 
     for ( pidx = 0; pidx < obj.numPolys; pidx++ )
     {
-        polyr_Ptr = rl.plist[pidx];
+        polyr_Ptr = rl.plist[rl.numPolys];
         polyr_Ptr.color = obj.color;
 
         // transform to world
@@ -69,9 +69,9 @@ function renderer_AddObject( rl, obj, cam )
 
         // transform to camera
         {
-            rl.plist[pidx].vertex[0].v  = mat4x3_MulVec( cam.matrix, v0 );
-            rl.plist[pidx].vertex[1].v  = mat4x3_MulVec( cam.matrix, v1 );
-            rl.plist[pidx].vertex[2].v  = mat4x3_MulVec( cam.matrix, v2 );
+            polyr_Ptr.vertex[0].v  = mat4x3_MulVec( cam.matrix, v0 );
+            polyr_Ptr.vertex[1].v  = mat4x3_MulVec( cam.matrix, v1 );
+            polyr_Ptr.vertex[2].v  = mat4x3_MulVec( cam.matrix, v2 );
 
         } // end transform to camera
 

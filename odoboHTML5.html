@@ -21,10 +21,34 @@
 <script type="text/javascript" src="3D/obj.js"></script>
 
 <script type="text/javascript">
-    var gViewerHTML5;
-    var gVideobuff;
-    var gCamera;
-    var gRlist;
+    
+    var gEngine = {
+        viewerHTML5: null,
+        videobuff: null,
+        camera: null,
+        rlist: null,
+
+        numObjects: null,
+        OBJ_QUAD_0: 0,
+        OBJ_QUAD_1: 1,
+        OBJ_QUAD_2: 2,
+        objectsArr: null
+    };
+
+    function engine_InitObjects( engine )
+    {
+        engine.numObjects = 3;
+        engine.objectsArr = new Array( this.numObjects );
+
+        engine.objectsArr[gEngine.OBJ_QUAD_0] = object_CreateQuad( 100, 100, 2, 2 );
+        engine.objectsArr[gEngine.OBJ_QUAD_1] = object_CreateQuad( 100, 100, 2, 2 );
+        engine.objectsArr[gEngine.OBJ_QUAD_2] = object_CreateQuad( 100, 100, 2, 2 );
+
+        engine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
+        engine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
+        engine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
+    }
+
     var gObject;
     function odobo_Init()
     {
@@ -35,58 +59,99 @@
         height = 480/2;
 
         bgColor = pixel_Create( 200, 200, 200 );
-        gVideobuff = videobuff_Create( width, height, bgColor );
+        gEngine.videobuff = videobuff_Create( width, height, bgColor );
 
-        gCamera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
+        gEngine.camera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
 
-        gRlist = renderer_Create( 100 );
+        gEngine.rlist = renderer_Create( 100 );
 
         gObject = object_CreateQuad( 100, 100, 2, 2 );
         gObject.color = gPixelRed;
 
-        gViewerHTML5 = viewerHTML5_Create( width, height );
-        gViewerHTML5.canvas.style.border = '1px solid black';
-        gViewerHTML5.canvas.style.position = 'absolute';
-        gViewerHTML5.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
-        gViewerHTML5.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
+        gEngine.viewerHTML5 = viewerHTML5_Create( width, height );
+        gEngine.viewerHTML5.canvas.style.border = '1px solid black';
+        gEngine.viewerHTML5.canvas.style.position = 'absolute';
+        gEngine.viewerHTML5.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
+        gEngine.viewerHTML5.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
 
-        document.body.appendChild( gViewerHTML5.canvas );
+        engine_InitObjects( gEngine );
+
+        document.body.appendChild( gEngine.viewerHTML5.canvas );
     }
     odobo_Init();
+
 
     var gAngle = 0.0;
     function odobo_Run()
     {
-        videobuff_Clear( gVideobuff );
+        var i;
+        videobuff_Clear( gEngine.videobuff );
 
-        camera_Euler( gCamera );
-        renderer_Reset( gRlist );
+        camera_Euler( gEngine.camera );
+        renderer_Reset( gEngine.rlist );
 
-        gObject.matrix = mat4x3_RotXX( gAngle );
-        gAngle += 0.1;
+//        gObject.matrix = mat4x3_RotXX( gAngle );
+//        gAngle += 0.1;
 
+        for ( i = 0; i < gEngine.objectsArr.length; i++ )
+        {
+            var obj = gEngine.objectsArr[i];
+            if (renderer_CameraCull(gEngine.rlist, obj, gEngine.camera) == 1)
+                renderer_AddObject(gEngine.rlist, obj, gEngine.camera);
+        } // end for i
 
-        if ( renderer_CameraCull( gRlist, gObject, gCamera ) == 1 )
-            renderer_AddObject( gRlist, gObject, gCamera );
-
-        renderer_Render( gRlist, gVideobuff, gCamera );
-        viewerHTML5_Draw( gViewerHTML5, gVideobuff );
+        renderer_Render( gEngine.rlist, gEngine.videobuff, gEngine.camera );
+        viewerHTML5_Draw( gEngine.viewerHTML5, gEngine.videobuff );
 
     }
-    var gCounter = 0;
+    function odobo_FnAI()
+    {
+        alert( 'odobo_FnAI not implemented');
+        return 0;
+    }
+
+</script>
+
+<fieldset style="width:150px; font-size: 10px;">
+    <legend>Tests:</legend>
+    <input type="radio" name="viewerTest" onclick="alert(1);"> Test quads
+    <script>
+        var testQuadsCounter = 0;
+        var testQuadsAngle0 = 0;
+        var testQuadsAngle1 = 0;
+        function odobo_TestQuads1()
+        {
+            var angle = 0.1;
+            if ( testQuadsCounter++ == 1000 ) return 0;
+
+            gEngine.objectsArr[gEngine.OBJ_QUAD_0].matrix = mat4x3_RotXX( testQuadsAngle0 );
+            gEngine.objectsArr[gEngine.OBJ_QUAD_1].matrix = mat4x3_RotYY( testQuadsAngle1 );
+            gEngine.objectsArr[gEngine.OBJ_QUAD_2].matrix = mat4x3_RotZZ( testQuadsAngle1 );
+
+            gEngine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
+            gEngine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
+            gEngine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
+
+            testQuadsAngle0 += angle;
+            testQuadsAngle1 += angle;
+
+            return 1;
+        }
+        odobo_FnAI = odobo_TestQuads1;
+    </script>
+    <br>
+    <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
+</fieldset>
+
+<script type="text/javascript">
     function odobo_Main()
     {
-        if ( (gCounter++) == 500 ) return;
+        if ( odobo_FnAI() == 0 ) return;
         odobo_Run();
         setTimeout( function() { odobo_Main(); }, 20 );
     }
     odobo_Main();
 </script>
-
-<fieldset style="width:150px; font-size: 10px;">
-    <legend>Tests:</legend>
-    <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
-</fieldset>
 
 </body>
 </html>

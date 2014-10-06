@@ -1,7 +1,7 @@
 function line_BreshamAssertInts( n )
 {
     var reminder = n - Math.floor( n );
-    _assert( ( reminder == 0 ), 'line_BreshamSimple: only integers allowed reminder = ' + reminder );
+    _assert( ( reminder == 0 ), 'line_Bresham: only integers allowed reminder = ' + reminder );
 }
 
 function line_Log( x0, y0, x1, y1 )
@@ -19,12 +19,12 @@ function line_Bresham( vb, x0, y0, x1, y1, color )
     var i;
     var ptr;
 
+//    line_Log( x0, y0, x1, y1 );
+
     line_BreshamAssertInts( x0 );
     line_BreshamAssertInts( x1 );
     line_BreshamAssertInts( y0 );
     line_BreshamAssertInts( y1 );
-
-//    line_Log( x0, y0, x1, y1 );
 
     ptr = x0 + y0 * vb.width;
 
@@ -80,57 +80,6 @@ function line_Bresham( vb, x0, y0, x1, y1, color )
             ptr += yinc;
         } // end for i
     }
-}
-
-function line_BreshamSimple( videobuff, x0, y0, x1, y1, color/*pixel*/ )
-{
-    var dx, dy;
-    var dx2, dy2;
-    var err;
-    var xinc, yinc;
-    var ptr;
-    var i;
-
-    line_BreshamAssertInts( x0 );
-    line_BreshamAssertInts( x1 );
-    line_BreshamAssertInts( y0 );
-    line_BreshamAssertInts( y1 );
-
-    if ( x0 > x1 )
-    {
-        x0 ^= x1;
-        x1 ^= x0;
-        x0 ^= x1;
-    }
-    if ( y0 > y1 )
-    {
-        y0 ^= y1;
-        y1 ^= y0;
-        y0 ^= y1;
-    }
-
-    ptr = x0 + y0 * videobuff.width;
-
-    xinc = 1;
-    yinc = videobuff.width;
-
-    dx = x1 - x0;
-    dy = y1 - y0;
-    dx2 = dx << 1;
-    dy2 = dy << 1;
-
-    err = dy2 - dx;
-    for ( i = 0; i < dx; i++ )
-    {
-        videobuff_SetPixel( videobuff, ptr, color );
-        if ( err > 0 )
-        {
-            err -= dx2;
-            ptr += yinc;
-        }
-        err += dy2;
-        ptr += xinc;
-    } // end for i
 }
 
 var CC_NORTH = 0x08;
