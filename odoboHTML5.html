@@ -104,13 +104,19 @@
 <fieldset style="width:150px; font-size: 10px;">
     <legend>Tests:</legend>
     <script type="text/javascript">
+        var SPINNER_STATE_INIT = 0;
+        var SPINNER_STATE_WORKING = 1;
+        var SPINNER_STATE_STOP = 2;
         var gOdoboSpinner;
         function odoboSpinner_Create()
         {
             var i;
             gOdoboSpinner = {
+                state: SPINNER_STATE_INIT,
                 animation: 1,
                 framesCounter: 0,
+                angle: 0.0,
+                spinSpeed: 0,
                 center: null,
                 z: 500
             };
@@ -131,26 +137,9 @@
                 if ( i >= 10 && 15 > i )
                     color = gPixelBlue;
 
-                color = gPixelRed;
-                gEngine.objectsArr[0].color = color;
-                gEngine.objectsArr[1].color = color;
-                gEngine.objectsArr[2].color = color;
-                gEngine.objectsArr[3].color = color;
-                gEngine.objectsArr[4].color = color;
+                gEngine.objectsArr[i].color = color;
 
-                color = gPixelGreen;
-                gEngine.objectsArr[5].color = color;
-                gEngine.objectsArr[6].color = color;
-                gEngine.objectsArr[7].color = color;
-                gEngine.objectsArr[8].color = color;
-                gEngine.objectsArr[9].color = color;
 
-                color = gPixelBlue;
-                gEngine.objectsArr[10].color = color;
-                gEngine.objectsArr[11].color = color;
-                gEngine.objectsArr[12].color = color;
-                gEngine.objectsArr[13].color = color;
-                gEngine.objectsArr[14].color = color;
             } // end for i
 
 
@@ -160,7 +149,8 @@
         odoboSpinner_Create();
         function odobo_Spinner()
         {
-            if ( gOdoboSpinner.framesCounter++ > 100 ) return 0;
+            if ( gOdoboSpinner.framesCounter++ > 1000 ) return 0;
+
             var i;
             var start = -200;
             var x = start;
@@ -168,6 +158,7 @@
             var step = 100;
             for ( i = 0; i < gEngine.numObjects; i++ )
             {
+                gEngine.objectsArr[i].matrix = mat4x3_RotXX( gOdoboSpinner.angle );
                 gEngine.objectsArr[i].matrix.tx = x;
                 gEngine.objectsArr[i].matrix.ty = y;
                 x += step;
@@ -180,6 +171,14 @@
                 gEngine.objectsArr[i].matrix.tz = gOdoboSpinner.z;
             } // end for i
 
+            if ( 100 > gOdoboSpinner.framesCounter )
+                gOdoboSpinner.angle += 0.1;
+            if ( 200 > gOdoboSpinner.framesCounter )
+                gOdoboSpinner.angle += 0.1;
+            if ( 400 > gOdoboSpinner.framesCounter )
+                gOdoboSpinner.angle -= 0.1;
+            if ( 600 > gOdoboSpinner.framesCounter )
+                gOdoboSpinner.angle -= 0.1;
             return 1;
         }
 
@@ -258,6 +257,7 @@
 </fieldset>
 
 <script type="text/javascript">
+    odobo_FnAI = odobo_TestQuads1;
     odobo_FnAI = odobo_Spinner;
 //    odobo_FnAI = odobo_TestQuadsSolid;
     function odobo_Main()
