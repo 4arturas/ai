@@ -1,8 +1,8 @@
 function poly_Create()
 {
     return {
-        attr: null,
-        state: null,
+        attr: 0,
+        state: 0,
         color: null,
         normal: null,
         vidx: [null,null,null],
@@ -17,8 +17,8 @@ function polyr_Create()
     for ( i = 0; i < 3; i++ )
         vertxList[i] = vertex_Create();
     return {
-        attr: null,
-        state: null,
+        attr: 0,
+        state: 0,
         color: null,
         vertex: vertxList
     };

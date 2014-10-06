@@ -12,8 +12,8 @@ function object_Create( numVerts, numPolys )
         polyList[i] = poly_Create();
 
     return {
-        attr: null,
-        state: null,
+        attr: 0,
+        state: 0,
         color: null,
 
         maxRadius: null,

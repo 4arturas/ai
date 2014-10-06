@@ -14,42 +14,17 @@
 <script type="text/javascript" src="2D/line.js"></script>
 <script type="text/javascript" src="2D/viewer.js"></script>
 
+<script type="text/javascript" src="3D/global.js"></script>
 <script type="text/javascript" src="3D/vector.js"></script>
 <script type="text/javascript" src="3D/poly.js"></script>
 <script type="text/javascript" src="3D/camera.js"></script>
 <script type="text/javascript" src="3D/renderer.js"></script>
 <script type="text/javascript" src="3D/obj.js"></script>
+<script type="text/javascript" src="3D/engine.js"></script>
 
 <script type="text/javascript">
     
-    var gEngine = {
-        viewerHTML5: null,
-        videobuff: null,
-        camera: null,
-        rlist: null,
-
-        numObjects: null,
-        OBJ_QUAD_0: 0,
-        OBJ_QUAD_1: 1,
-        OBJ_QUAD_2: 2,
-        objectsArr: null
-    };
-
-    function engine_InitObjects( engine )
-    {
-        engine.numObjects = 3;
-        engine.objectsArr = new Array( this.numObjects );
-
-        engine.objectsArr[gEngine.OBJ_QUAD_0] = object_CreateQuad( 100, 100, 2, 2 );
-        engine.objectsArr[gEngine.OBJ_QUAD_1] = object_CreateQuad( 100, 100, 2, 2 );
-        engine.objectsArr[gEngine.OBJ_QUAD_2] = object_CreateQuad( 100, 100, 2, 2 );
-
-        engine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
-        engine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
-        engine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
-    }
-
-    var gObject;
+    var gEngine;
     function odobo_Init()
     {
         var width, height;
@@ -58,17 +33,8 @@
         width = 640/2;
         height = 480/2;
 
-        bgColor = pixel_Create( 200, 200, 200 );
-        gEngine.videobuff = videobuff_Create( width, height, bgColor );
+        gEngine = engine_Create( width, height );
 
-        gEngine.camera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
-
-        gEngine.rlist = renderer_Create( 100 );
-
-        gObject = object_CreateQuad( 100, 100, 2, 2 );
-        gObject.color = gPixelRed;
-
-        gEngine.viewerHTML5 = viewerHTML5_Create( width, height );
         gEngine.viewerHTML5.canvas.style.border = '1px solid black';
         gEngine.viewerHTML5.canvas.style.position = 'absolute';
         gEngine.viewerHTML5.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
@@ -90,12 +56,10 @@
         camera_Euler( gEngine.camera );
         renderer_Reset( gEngine.rlist );
 
-//        gObject.matrix = mat4x3_RotXX( gAngle );
-//        gAngle += 0.1;
-
         for ( i = 0; i < gEngine.objectsArr.length; i++ )
         {
             var obj = gEngine.objectsArr[i];
+            if ( (obj.state&STATE_ON) != STATE_ON ) continue;
             if (renderer_CameraCull(gEngine.rlist, obj, gEngine.camera) == 1)
                 renderer_AddObject(gEngine.rlist, obj, gEngine.camera);
         } // end for i
@@ -110,6 +74,21 @@
         return 0;
     }
 
+</script>
+
+<div id="msgPanel" style="overflow-y: scroll; float: right; width: 250px; height: 80px; border: 1px solid black; padding: 2px;"></div>
+<script type="text/javascript">
+    function odobo_AddMsgToPanel( msg )
+    {
+        var div = document.createElement('div');
+        div.style.color = 'green';
+        div.appendChild( document.createTextNode( msg ) );
+        document.getElementById('msgPanel').appendChild(div);
+        setTimeout( function()
+        {
+            document.getElementById('msgPanel').removeChild( div );
+        }, 3000 );
+    }
 </script>
 
 <fieldset style="width:150px; font-size: 10px;">
@@ -132,12 +111,17 @@
             gEngine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
             gEngine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
 
+            gEngine.objectsArr[gEngine.OBJ_QUAD_0].state |= STATE_ON;
+            gEngine.objectsArr[gEngine.OBJ_QUAD_1].state |= STATE_ON;
+            gEngine.objectsArr[gEngine.OBJ_QUAD_2].state |= STATE_ON;
+
             testQuadsAngle0 += angle;
             testQuadsAngle1 += angle;
 
             return 1;
         }
         odobo_FnAI = odobo_TestQuads1;
+        odobo_AddMsgToPanel( 'first msg' );
     </script>
     <br>
     <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
