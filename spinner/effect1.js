@@ -30,6 +30,6 @@ function spinner_Effect_1()
         }
     } // end for i
 
-    odobo_SpinnerSetXYZ();
+    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
     return 1;
 }

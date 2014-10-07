@@ -39,6 +39,6 @@ function spinner_Effect_2()
             break;
     } // end switch
 
-    odobo_SpinnerSetXYZ();
+    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
     return 1;
 }

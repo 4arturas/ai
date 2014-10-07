@@ -49,32 +49,45 @@ function spinner_Create( objectsArr )
     return spinner;
 }
 
-function odobo_SpinnerSetXYZ()
+function odobo_SpinnerCreateHome( arrLength, z )
 {
     var i;
     var start = -200;
     var x = start;
     var y = start+100;
     var step = 100;
-    var obj;
-    for ( i = 0; i < gEngine.numObjects; i++ )
+    var homeArr = new Array( arrLength );
+    for ( i = 0; i < arrLength; i++ )
     {
-        obj = gOdoboSpinner.objectsArr[i];
-        obj.matrix.tx = x;
-        obj.matrix.ty = y;
+        homeArr[i] = vec3D_Create( x, y, z );
         x += step;
         if ( (i+1) % 5 == 0 )
         {
             x = start;
             y += step;
         }
+    } // end for i
+    return homeArr;
+}
 
-        obj.matrix.tz = gOdoboSpinner.z;
+function odobo_SpinnerSetXYZ( objectsArr )
+{
+    var i;
+    var home;
+    var obj;
+    var homeArr = odobo_SpinnerCreateHome( objectsArr.length, gOdoboSpinner.z );
+    for ( i = 0; i < objectsArr.length; i++ )
+    {
+        home = homeArr[i];
+        obj = objectsArr[i];
+        obj.matrix.tx = home.x;
+        obj.matrix.ty = home.y;
+        obj.matrix.tz = home.z;
     } // end for i
 }
 
 function odobo_Spinner()
 {
-    odobo_SpinnerSetXYZ();
+    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
     return 1;
 }
