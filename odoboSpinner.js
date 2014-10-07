@@ -113,6 +113,7 @@ function odobo_SpinnerEffect1()
     return 1;
 }
 var spinnerEffectType2;
+var spinnerEffectAngleStep2 = 0.1;
 function odobo_SpinnerEffect2()
 {
     var i;
@@ -144,7 +145,10 @@ function odobo_SpinnerEffect2()
                 else if ( spinnerEffectType2[i] == SPINNER_EFFECT_3 )
                     obj.matrix = mat4x3_RotZZ(gOdoboSpinner.angle);
             } // end for i
-            gOdoboSpinner.angle += 0.1;
+            gOdoboSpinner.angle += spinnerEffectAngleStep2;
+
+            if ( _abs( gOdoboSpinner.angle )  > geomPI2 )
+                spinnerEffectAngleStep2 -= (spinnerEffectAngleStep2*2.0);
             break;
     } // end switch
 

@@ -9,24 +9,30 @@ function timer_Create( fps )
         timeScale: null
     };
 
-    var counterFreq = 1.0;
+
+/*
+    var counterFreq = 200.0;
     timer.timeScale = 1.0 / counterFreq;
     timer.frameTime = counterFreq / fps;
 
     timer.timeElapsed = 0.0;
+*/
+
     timer.lastTime = new Date().getTime();
+    timer.frameTime = fps;
     timer.nextTime = timer.lastTime + timer.frameTime;
-    _log ( timer.frameTime );
+    return timer;
 }
 
-function timer_ReadyForNextFrame( tm )
+function timer_NextFrame( timer )
 {
-    tm.currentTime = new Date().getTime();
-    if ( tm.currentTime > tm.nextTime )
+    _log( 1 );
+    timer.currentTime = new Date().getTime();
+    if ( timer.currentTime > timer.nextTime )
     {
-        tm.timeElapsed = ( tm.currentTime - tm.lastTime ) * tm.timeScale;
-        tm.lastTime = tm.currentTime;
-        tm.nextTime = tm.currentTime + tm.frameTime;
+//        timer.timeElapsed = ( timer.currentTime - timer.lastTime ) * timer.timeScale;
+        timer.lastTime = timer.currentTime;
+        timer.nextTime = timer.currentTime + timer.frameTime;
         return 1;
     }
     return 0;
@@ -37,4 +43,4 @@ function timer_Test()
     var t = timer_Create( 45.0 );
     timer_ReadyForNextFrame( t );
 }
-timer_Test();
+//timer_Test();

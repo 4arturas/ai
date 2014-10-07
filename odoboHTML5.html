@@ -236,13 +236,17 @@
 </fieldset>
 
 <script type="text/javascript">
+    var gTimer = timer_Create( 25 );
     odobo_FnAI = odobo_TestQuads1;
     odobo_FnAI = odobo_Spinner;
 //    odobo_FnAI = odobo_TestQuadsSolid;
     function odobo_Main()
     {
-        if ( odobo_FnAI() == 0 ) return;
-        odobo_Run();
+        if ( timer_NextFrame( gTimer ) == 1 )
+        {
+            if (odobo_FnAI() == 0) return;
+            odobo_Run();
+        }
         setTimeout( function() { odobo_Main(); }, 20 );
     }
     odobo_Main();
