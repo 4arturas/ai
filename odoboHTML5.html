@@ -23,12 +23,52 @@
 <script type="text/javascript" src="3D/renderer.js"></script>
 <script type="text/javascript" src="3D/obj.js"></script>
 <script type="text/javascript" src="3D/engine.js"></script>
+<script type="text/javascript" src="3D/engineTests.js"></script>
 
 <script type="text/javascript" src="steeringBehaviors.js"></script>
 
 
 <script type="text/javascript">
-    
+    function getWidth()
+    {
+        var x = 0;
+        if (self.innerHeight)
+        {
+            x = self.innerWidth;
+        }
+        else if (document.documentElement && document.documentElement.clientHeight)
+        {
+            x = document.documentElement.clientWidth;
+        }
+        else if (document.body)
+        {
+            x = document.body.clientWidth;
+        }
+        return x;
+    }
+
+    function getHeight()
+    {
+        var y = 0;
+        if (self.innerHeight)
+        {
+            y = self.innerHeight;
+        }
+        else if (document.documentElement && document.documentElement.clientHeight)
+        {
+            y = document.documentElement.clientHeight;
+        }
+        else if (document.body)
+        {
+            y = document.body.clientHeight;
+        }
+
+        return y;
+    }
+</script>
+
+<script type="text/javascript">
+
     var gEngine;
     function odobo_Init()
     {
@@ -42,9 +82,9 @@
 
         gEngine.viewer.canvas.style.border = '1px solid black';
         gEngine.viewer.canvas.style.position = 'absolute';
-        gEngine.viewer.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
+        gEngine.viewer.canvas.style.top = (getHeight()/2-height/2) + 'px';
         gEngine.viewer.canvas.style.top = '120px';
-        gEngine.viewer.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
+        gEngine.viewer.canvas.style.left = (getWidth()/2-width/2) + 'px';
 
         engine_InitObjects( gEngine );
 
@@ -178,76 +218,18 @@
     <legend>Engine tests:</legend>
 
     <script type="text/javascript">
-        var testQuadsCounter = 0;
-        var testQuadsAngle0 = 0;
-        var testQuadsAngle1 = 0;
-        function odobo_TestQuads1()
-        {
-            var angle = 0.1;
-            if ( testQuadsCounter++ == 10000 ) return 0;
 
-            odobo_ResetObjects();
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].matrix = mat4x3_RotXX( testQuadsAngle0 );
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].matrix = mat4x3_RotYY( testQuadsAngle0 );
-            gEngine.objectsArr[gEngine.OBJ_QUAD_2].matrix = mat4x3_RotZZ( testQuadsAngle0 );
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].color = gPixelRed;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].color = gPixelGreen;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_2].color = gPixelBlue;
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].state |= STATE_ON;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].state |= STATE_ON;
-//            gEngine.objectsArr[gEngine.OBJ_QUAD_2].state |= STATE_ON;
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr |= ATTR_2SIDE;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].attr |= ATTR_2SIDE;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_2].attr |= ATTR_2SIDE;
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr |= ATTR_WIRED;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].attr |= ATTR_WIRED;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_2].attr |= ATTR_WIRED;
-
-            testQuadsAngle0 += angle;
-
-            return 1;
-        }
     </script>
     <br>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Quads' ); odobo_FnAI = odobo_TestQuads1; odobo_Main();"> Quads
-
-    <script type="text/javascript">
-        function odobo_TestQuadsBackFaceCulling()
-        {
-            var res = odobo_TestQuads1();
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr &= ~ATTR_2SIDE;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_1].attr &= ~ATTR_2SIDE;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_2].attr &= ~ATTR_2SIDE;
-            return res;
-        }
-    </script>
+           onclick="odobo_AddMsgToPanel( 'Quads' ); odobo_FnAI = engineTest_Quads1; odobo_Main();"> Quads
     <br>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Quads back face culling' ); odobo_FnAI = odobo_TestQuadsBackFaceCulling; odobo_Main();"> Quads back face culling
-    <script type="text/javascript">
-        function odobo_TestQuadsSolid()
-        {
-            odobo_ResetObjects();
-
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].matrix = mat4x3_RotXX( 0 );
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].state |= STATE_ON;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr |= ATTR_2SIDE;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr |= ATTR_WIRED;
-            gEngine.objectsArr[gEngine.OBJ_QUAD_0].attr |= ATTR_SOLID;
-
-            return 1;
-        }
-    </script>
+           onclick="odobo_AddMsgToPanel( 'Quads back face culling' ); odobo_FnAI = engineTest_QuadsBackFaceCulling; odobo_Main();"> Quads back face culling
     <br>
     <div style="color:red;">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Quads solid' ); odobo_FnAI = odobo_TestQuadsSolid; odobo_Main();"> Quads solid
+           onclick="odobo_AddMsgToPanel( 'Quads solid' ); odobo_FnAI = engineTest_QuadsSolid; odobo_Main();"> Quads solid
     </div>
     <div style="color:red;">
     <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
@@ -260,9 +242,9 @@
 
 <script type="text/javascript">
     var gTimer = timer_Create( 25 );
-    odobo_FnAI = odobo_TestQuads1;
+    odobo_FnAI = engineTest_Quads1;
     odobo_FnAI = odobo_Spinner;
-//    odobo_FnAI = odobo_TestQuadsSolid;
+//    odobo_FnAI = engineTest_QuadsSolid;
     function odobo_Main()
     {
         if ( timer_NextFrame( gTimer ) == 1 )

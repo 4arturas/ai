@@ -17,7 +17,7 @@ function engine_Create( viewerType, width, height )
 
     var bgColor;
 
-    bgColor = pixel_Create( 200, 200, 200 );
+    bgColor = pixel_Create( 240, 240, 240 );
     gEngine.videobuff = videobuff_Create( width, height, bgColor );
 
     gEngine.camera = camera_Create( 0, 0, -300, width, height, 10, 1000, 120 );
