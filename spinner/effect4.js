@@ -51,7 +51,7 @@ function spinner_Effect_4()
                 {
                     vehicle = vehicle_Create();
                     vehicle.position = spinnerEffect4_Home[i];
-                    vehicle.velocity = vec3D_Create( 10.0, 10.0, 10.0 );
+                    vehicle.velocity = vec3D_Create( 1.0, 1.0, 1.0 );
                     vehicle.maxSpeed = 100.0;
                     vehicle.mass = 1.0;
 
@@ -63,6 +63,7 @@ function spinner_Effect_4()
                 spinnerEffect4_Vehicle[i] = vehicle;
 
                 obj = gOdoboSpinner.objectsArr[i];
+                obj.matrix = mat4x3_CreateIdentity();
                 obj.matrix.tx = vehicle.position.x;
                 obj.matrix.ty = vehicle.position.y;
                 obj.matrix.tz = vehicle.position.z;
@@ -74,7 +75,8 @@ function spinner_Effect_4()
             for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
             {
                 vehicle = spinnerEffect4_Vehicle[i];
-                steering_Update( vehicle );
+                if ( !vec3D_Equal( vehicle.position, vehicle.target ))
+                    steering_Update( vehicle );
 
                 obj = gOdoboSpinner.objectsArr[i];
                 obj.matrix = mat4x3_CreateIdentity();

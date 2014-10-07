@@ -206,6 +206,11 @@ function vec3D_Log( v )
     console.log( v.x + ' ' + v.y + ' ' + v.z );
 }
 
+function vec3D_IsNaN( v )
+{
+    return ( isNaN(v.x) || isNaN(v.y) || isNaN(v.z) );
+}
+
 function vector_Test()
 {
     // vector length test
