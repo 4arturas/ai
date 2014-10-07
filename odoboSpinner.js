@@ -6,14 +6,14 @@ function odobo_Seek()
 //    http://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
     var obj;
     odobo_ResetObjects();
-    obj = gOdoboSpinner.objectsArr[0];
+    obj = gSpinner.objectsArr[0];
     obj.state = STATE_ON;
     obj.attr = ATTR_2SIDE | ATTR_WIRED;
-    switch ( gOdoboSpinner.state )
+    switch ( gSpinner.state )
     {
 
         case SPINNER_STATE_INIT:
-            gOdoboSpinner.state = SPINNER_STATE_WORKING;
+            gSpinner.state = SPINNER_STATE_WORKING;
 
             seekVehicle = vehicle_Create();
             seekVehicle.position = vec3D_Create( 0, 0, 0 );
@@ -35,7 +35,7 @@ function odobo_Seek()
 
             var length = vec3D_Dist( seekVehicle.position, seekVehicle.target );
             if ( 12 > length )
-                gOdoboSpinner.state = SPINNER_STATE_STOPPED;
+                gSpinner.state = SPINNER_STATE_STOPPED;
             return 1;
 
         case SPINNER_STATE_STOPPED:

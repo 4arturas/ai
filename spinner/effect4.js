@@ -34,11 +34,11 @@ function spinner_Effect_4()
     var i, j, k, r;
     var obj;
     var vehicle;
-    switch ( gOdoboSpinner.state )
+    switch ( gSpinner.state )
     {
         case SPINNER_STATE_INIT:
-            gOdoboSpinner.state = SPINNER_STATE_WORKING;
-            spinnerEffect4_Home = odobo_SpinnerCreateHome( gOdoboSpinner.objectsArr.length, gOdoboSpinner.z );
+            gSpinner.state = SPINNER_STATE_WORKING;
+            spinnerEffect4_Home = odobo_SpinnerCreateHome( gSpinner.objectsArr.length, gSpinner.z );
 
             spinnerEffect4_Vehicle = new Array( spinnerEffect4_Home.length );
 
@@ -46,7 +46,7 @@ function spinner_Effect_4()
             spinnerEffect4_Target = new Array( spinnerEffect4_Home.length );
             spinner_Effect_4_CreateTargets();
 
-            for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+            for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
                 {
                     vehicle = vehicle_Create();
@@ -62,7 +62,7 @@ function spinner_Effect_4()
 
                 spinnerEffect4_Vehicle[i] = vehicle;
 
-                obj = gOdoboSpinner.objectsArr[i];
+                obj = gSpinner.objectsArr[i];
                 obj.matrix = mat4x3_CreateIdentity();
                 obj.matrix.tx = vehicle.position.x;
                 obj.matrix.ty = vehicle.position.y;
@@ -72,13 +72,13 @@ function spinner_Effect_4()
 
         case SPINNER_STATE_WORKING:
 
-            for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+            for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
                 vehicle = spinnerEffect4_Vehicle[i];
                 if ( !vec3D_Equal( vehicle.position, vehicle.target ))
                     steering_Update( vehicle );
 
-                obj = gOdoboSpinner.objectsArr[i];
+                obj = gSpinner.objectsArr[i];
                 obj.matrix = mat4x3_CreateIdentity();
                 obj.matrix.tx = vehicle.position.x;
                 obj.matrix.ty = vehicle.position.y;
@@ -88,6 +88,6 @@ function spinner_Effect_4()
             break;
     } // end switch
 
-//    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
+//    odobo_SpinnerSetXYZ( gSpinner.objectsArr );
     return 1;
 }

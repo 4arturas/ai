@@ -170,33 +170,41 @@
 <script type="text/javascript" src="spinner/effect2.js"></script>
 <script type="text/javascript" src="spinner/effect3.js"></script>
 <script type="text/javascript" src="spinner/effect4.js"></script>
+<script type="text/javascript" src="spinner/effect5.js"></script>
 <script type="text/javascript" src="odoboSpinner.js"></script>
 
 <fieldset class="fieldsetCls">
     <legend>Odobo:</legend>
 
     <script type="text/javascript">
-        var gOdoboSpinner = spinner_Create( gEngine.objectsArr );
+        var gSpinner = spinner_Create( gEngine.objectsArr );
     </script>
     <div>
     <input type="radio" name="viewerTest" checked
-           onclick="odobo_AddMsgToPanel( 'effect 0' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner; odobo_Main();"> effect 0
+           onclick="odobo_AddMsgToPanel( 'effect 0' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner; odobo_Main();"> effect 0
     </div>
     <div>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'effect1' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_1; odobo_Main();"> effect 1
+           onclick="odobo_AddMsgToPanel( 'effect1' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_1; odobo_Main();"> effect 1
     </div>
     <div>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'effect2' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_2; odobo_Main();"> effect 2
+           onclick="odobo_AddMsgToPanel( 'effect2' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_2; odobo_Main();"> effect 2
     </div>
     <div>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'effect3' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_3; odobo_Main();"> effect 3
+           onclick="odobo_AddMsgToPanel( 'effect3' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_3; odobo_Main();"> effect 3
     </div>
     <div>
         <input type="radio" name="viewerTest"
-               onclick="odobo_AddMsgToPanel( 'effect4' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_4; odobo_Main();"> effect 4
+               onclick="odobo_AddMsgToPanel( 'effect4' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_4; odobo_Main();"> effect 4
+    </div>
+    <div>
+        <input type="radio" name="viewerTest"
+               onclick="odobo_AddMsgToPanel( 'effect5' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_5; odobo_Main();"> effect 5
+    </div>
+    <div style="color:red;">
+        effect n
     </div>
 </fieldset>
 
@@ -204,12 +212,12 @@
     <legend>Steering:</legend>
     <span style="">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Seek' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
+           onclick="odobo_AddMsgToPanel( 'Seek' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
     </span>
     <br>
     <span style="color:red;">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Flee' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
+           onclick="odobo_AddMsgToPanel( 'Flee' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
     </span>
 </fieldset>
 
@@ -234,10 +242,22 @@
     <div style="color:red;">
     <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
     </div>
+
+    <div style="color:red;">
+        TODO:<br>
+        clip on y axis<br>
+        clip on x axis<br>
+        near plane z clip<br>
+        skins<br>
+        boxes<br>
+    </div>
 </fieldset>
 
 <fieldset class="fieldsetCls">
     <legend>Physics:</legend>
+    <div style="color:red;">
+        TODO:<br>
+    </div>
 </fieldset>
 
 <script type="text/javascript">

@@ -6,11 +6,11 @@ function spinner_Effect_2()
     var i;
     var obj;
 
-    switch ( gOdoboSpinner.state )
+    switch ( gSpinner.state )
     {
         case SPINNER_STATE_INIT:
-            gOdoboSpinner.state = SPINNER_STATE_WORKING;
-            spinnerEffectType2 = new Array( gOdoboSpinner.objectsArr.length );
+            gSpinner.state = SPINNER_STATE_WORKING;
+            spinnerEffectType2 = new Array( gSpinner.objectsArr.length );
             for ( i = 0; i < spinnerEffectType2.length; i++ )
             {
                 spinnerEffectType2[i] = i % 2;
@@ -22,23 +22,23 @@ function spinner_Effect_2()
             break;
 
         case SPINNER_STATE_WORKING:
-            for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+            for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
-                obj = gOdoboSpinner.objectsArr[i];
+                obj = gSpinner.objectsArr[i];
                 if ( spinnerEffectType2[i] == SPINNER_EFFECT_1 )
-                    obj.matrix = mat4x3_RotXX(gOdoboSpinner.angle);
+                    obj.matrix = mat4x3_RotXX(gSpinner.angle);
                 else if ( spinnerEffectType2[i] == SPINNER_EFFECT_2 )
-                    obj.matrix = mat4x3_RotYY(gOdoboSpinner.angle);
+                    obj.matrix = mat4x3_RotYY(gSpinner.angle);
                 else if ( spinnerEffectType2[i] == SPINNER_EFFECT_3 )
-                    obj.matrix = mat4x3_RotZZ(gOdoboSpinner.angle);
+                    obj.matrix = mat4x3_RotZZ(gSpinner.angle);
             } // end for i
-            gOdoboSpinner.angle += spinnerEffectAngleStep2;
+            gSpinner.angle += spinnerEffectAngleStep2;
 
-            if ( _abs( gOdoboSpinner.angle )  > geomPI2 )
+            if ( _abs( gSpinner.angle )  > geomPI2 )
                 spinnerEffectAngleStep2 -= (spinnerEffectAngleStep2*2.0);
             break;
     } // end switch
 
-    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
+    odobo_SpinnerSetXYZ( gSpinner.objectsArr );
     return 1;
 }

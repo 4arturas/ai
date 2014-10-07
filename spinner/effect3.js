@@ -1,76 +1,76 @@
-var spinnerEffect3_Type;
-var spinnerEffect3_Angle;
-var spinnerEffect3_AngleStep = 0.2;
-var spinnerEffect3_AngleStepArr;
+
+
 function spinner_Effect_3_SetStep()
 {
     var r = _randomInt( 0, 1 );
     if ( r == 0 )
-        return spinnerEffect3_AngleStep;
-    return -spinnerEffect3_AngleStep;
+        return gSpinner.angleStep;
+    return -gSpinner.angleStep;
 }
 function spinner_Effect_3()
 {
     var i;
     var obj;
 
-    switch ( gOdoboSpinner.state )
+    switch ( gSpinner.state )
     {
         case SPINNER_STATE_INIT:
-            gOdoboSpinner.state = SPINNER_STATE_WORKING;
-            spinnerEffect3_Type = new Array( gOdoboSpinner.objectsArr.length );
-            spinnerEffect3_Angle = new Array( gOdoboSpinner.objectsArr.length );
-            spinnerEffect3_AngleStepArr = new Array( gOdoboSpinner.objectsArr.length );
-            for ( i = 0; i < spinnerEffect3_Type.length; i++ )
+
+            gSpinner.state = SPINNER_STATE_WORKING;
+            gSpinner.angleStep = 0.2;
+            gSpinner.effectTypeArr = new Array( gSpinner.objectsArr.length );
+            gSpinner.angle = new Array( gSpinner.objectsArr.length );
+            gSpinner.angleStepArr = new Array( gSpinner.objectsArr.length );
+            for ( i = 0; i < gSpinner.effectTypeArr.length; i++ )
             {
-                spinnerEffect3_Type[i] = -1;
-                spinnerEffect3_Angle[i] = 0.0;
-                spinnerEffect3_AngleStepArr[i] = spinnerEffect3_AngleStep;
-//                spinnerEffect3_Type[i] = _randomInt(0, 2);
+                gSpinner.effectTypeArr[i] = -1;
+                gSpinner.angle[i] = 0.0;
+                gSpinner.angleStepArr[i] = gSpinner.angleStep;
+//                gSpinner.effectTypeArr[i] = _randomInt(0, 2);
             }
             break;
 
         case SPINNER_STATE_WORKING:
-            for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+            for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
-                obj = gOdoboSpinner.objectsArr[i];
+                obj = gSpinner.objectsArr[i];
 
-                if ( spinnerEffect3_Type[i] == -1 ) // 1. if effect is not set
+                if ( gSpinner.effectTypeArr[i] == -1 ) // 1. if effect is not set
                 {
                     var r = _randomInt( 0, 50 );
                     if ( r == 1 )
                     {
-                        spinnerEffect3_Type[i] = SPINNER_EFFECT_1;
-                        spinnerEffect3_AngleStepArr[i] = spinner_Effect_3_SetStep();
+                        gSpinner.effectTypeArr[i] = SPINNER_EFFECT_1;
+                        gSpinner.angleStepArr[i] = spinner_Effect_3_SetStep();
                     }
                     else if ( r == 2 )
                     {
-                        spinnerEffect3_Type[i] = SPINNER_EFFECT_2;
-                        spinnerEffect3_AngleStepArr[i] = spinner_Effect_3_SetStep();
+                        gSpinner.effectTypeArr[i] = SPINNER_EFFECT_2;
+                        gSpinner.angleStepArr[i] = spinner_Effect_3_SetStep();
                     }
                     else if ( r == 3 )
                     {
-                        spinnerEffect3_Type[i] = SPINNER_EFFECT_3;
-                        spinnerEffect3_AngleStepArr[i] = spinner_Effect_3_SetStep();
+                        gSpinner.effectTypeArr[i] = SPINNER_EFFECT_3;
+                        gSpinner.angleStepArr[i] = spinner_Effect_3_SetStep();
                     }
                 } // end if 1.
 
                 else // if effect is set
                 {
-                    var angle = spinnerEffect3_Angle[i];
-                    if (spinnerEffect3_Type[i] == SPINNER_EFFECT_1)
+                    var angle = gSpinner.angle[i];
+                    if (gSpinner.effectTypeArr[i] == SPINNER_EFFECT_1)
                         obj.matrix = mat4x3_RotXX( angle );
-                    else if (spinnerEffect3_Type[i] == SPINNER_EFFECT_2)
+                    else if (gSpinner.effectTypeArr[i] == SPINNER_EFFECT_2)
                         obj.matrix = mat4x3_RotYY( angle );
-                    else if (spinnerEffect3_Type[i] == SPINNER_EFFECT_3)
+                    else if (gSpinner.effectTypeArr[i] == SPINNER_EFFECT_3)
                         obj.matrix = mat4x3_RotZZ( angle );
                 } /// end else
 
-                spinnerEffect3_Angle[i] += spinnerEffect3_AngleStepArr[i];
-                if ( _abs( spinnerEffect3_Angle[i] )  > geomPI )
+                gSpinner.angle[i] += gSpinner.angleStepArr[i];
+                if ( _abs( gSpinner.angle[i] )  > geomPI )
                 {
-                    spinnerEffect3_Angle[i] = 0;
-                    spinnerEffect3_Type[i] = -1;
+                    gSpinner.angle[i] = 0;
+                    gSpinner.effectTypeArr[i] = -1;
                     obj.matrix = mat4x3_CreateIdentity();
                 }
 
@@ -79,6 +79,6 @@ function spinner_Effect_3()
             break;
     } // end switch
 
-    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
+    odobo_SpinnerSetXYZ( gSpinner.objectsArr );
     return 1;
 }

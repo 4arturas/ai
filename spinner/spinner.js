@@ -13,14 +13,17 @@ function spinner_Create( objectsArr )
     var i;
     var spinner = {
         state: SPINNER_STATE_INIT,
-        animation: 1,
         framesCounter: 0,
-        angle: 0.0,
-        spinSpeed: 0,
         center: null,
         z: 500,
 
-        objectsArr: objectsArr
+        objectsArr: objectsArr,
+
+        effectTypeArr: null,
+        angle: null,
+        angleStep: null,
+        angleStepArr: null,
+        sequanceArr: null
     };
 
     odobo_ResetObjects();
@@ -75,7 +78,7 @@ function odobo_SpinnerSetXYZ( objectsArr )
     var i;
     var home;
     var obj;
-    var homeArr = odobo_SpinnerCreateHome( objectsArr.length, gOdoboSpinner.z );
+    var homeArr = odobo_SpinnerCreateHome( objectsArr.length, gSpinner.z );
     for ( i = 0; i < objectsArr.length; i++ )
     {
         home = homeArr[i];
@@ -88,6 +91,6 @@ function odobo_SpinnerSetXYZ( objectsArr )
 
 function odobo_Spinner()
 {
-    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
+    odobo_SpinnerSetXYZ( gSpinner.objectsArr );
     return 1;
 }

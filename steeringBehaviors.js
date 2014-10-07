@@ -1,5 +1,7 @@
-var STEERING_SEEK = 0x01;
-
+var STEERING_SEEK = 1;
+var STEERING_FLEE = 2;
+var STEERING_ARRIVAL = 3;
+//http://www.red3d.com/cwr/steer/gdc99/
 function vehicle_Create()
 {
     return {

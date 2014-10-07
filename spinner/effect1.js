@@ -4,21 +4,21 @@ function spinner_Effect_1()
 {
     var i;
     var obj;
-    for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+    for ( i = 0; i < gSpinner.objectsArr.length; i++ )
     {
-        obj = gOdoboSpinner.objectsArr[i];
+        obj = gSpinner.objectsArr[i];
         if ( spinnerEffectType1 == SPINNER_EFFECT_1 )
-            obj.matrix = mat4x3_RotXX(gOdoboSpinner.angle);
+            obj.matrix = mat4x3_RotXX(gSpinner.angle);
         else if ( spinnerEffectType1 == SPINNER_EFFECT_2 )
-            obj.matrix = mat4x3_RotYY(gOdoboSpinner.angle);
+            obj.matrix = mat4x3_RotYY(gSpinner.angle);
         else if ( spinnerEffectType1 == SPINNER_EFFECT_3 )
-            obj.matrix = mat4x3_RotZZ(gOdoboSpinner.angle);
+            obj.matrix = mat4x3_RotZZ(gSpinner.angle);
 
     } // end for i
-    gOdoboSpinner.angle += spinnerEffectAngleStep1;
-    if ( _abs( gOdoboSpinner.angle) > geomPI )
+    gSpinner.angle += spinnerEffectAngleStep1;
+    if ( _abs( gSpinner.angle) > geomPI )
     {
-        gOdoboSpinner.angle = 0.0;
+        gSpinner.angle = 0.0;
         if ( spinnerEffectType1 == SPINNER_EFFECT_1 )
             spinnerEffectType1 = SPINNER_EFFECT_2;
         else if ( spinnerEffectType1 == SPINNER_EFFECT_2 )
@@ -30,6 +30,6 @@ function spinner_Effect_1()
         }
     } // end for i
 
-    odobo_SpinnerSetXYZ( gOdoboSpinner.objectsArr );
+    odobo_SpinnerSetXYZ( gSpinner.objectsArr );
     return 1;
 }
