@@ -8,6 +8,8 @@
 
 <script type="text/javascript" src="utils.js"></script>
 
+<script type="text/javascript" src="timer.js"></script>
+
 <script type="text/javascript" src="2D/geom.js"></script>
 <script type="text/javascript" src="2D/pixel.js"></script>
 <script type="text/javascript" src="2D/videobuff.js"></script>
@@ -22,6 +24,7 @@
 <script type="text/javascript" src="3D/obj.js"></script>
 <script type="text/javascript" src="3D/engine.js"></script>
 
+<script type="text/javascript" src="steeringBehaviors.js"></script>
 <script type="text/javascript" src="odoboSpinner.js"></script>
 
 <script type="text/javascript">
@@ -40,6 +43,7 @@
         gEngine.viewer.canvas.style.border = '1px solid black';
         gEngine.viewer.canvas.style.position = 'absolute';
         gEngine.viewer.canvas.style.top = (window.innerHeight/2-height/2) + 'px';
+        gEngine.viewer.canvas.style.top = '120px';
         gEngine.viewer.canvas.style.left = (window.innerWidth/2-width/2) + 'px';
 
         engine_InitObjects( gEngine );
@@ -80,12 +84,26 @@
 
 <div id="msgPanel" style="overflow-y: scroll; float: right; width: 250px; height: 80px; border: 1px solid black; padding: 2px;"></div>
 <script type="text/javascript">
+    var msgPanelLastElement = null;
     function odobo_AddMsgToPanel( msg )
     {
         var div = document.createElement('div');
         div.style.color = 'green';
         div.appendChild( document.createTextNode( msg ) );
-        document.getElementById('msgPanel').appendChild(div);
+
+        // this is not very nice at all todo
+        try
+        {
+            document.getElementById('msgPanel').insertBefore(div, msgPanelLastElement);
+        }
+
+        catch (e)
+        {
+            document.getElementById('msgPanel').appendChild(div);
+        }
+
+        msgPanelLastElement = div;
+
         setTimeout( function()
         {
             document.getElementById('msgPanel').removeChild( div );
@@ -109,14 +127,30 @@
     <script type="text/javascript">
         var gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr );
     </script>
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner;"> spinner
-    <br>
+    <div>
+    <input type="radio" name="viewerTest" checked
+           onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner; odobo_Main();"> spinner
+    </div>
+    <div>
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'effect1' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_SpinnerEffect1; odobo_Main();"> effect1
+    </div>
+    <div>
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'effect2' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_SpinnerEffect2; odobo_Main();"> effect2
+    </div>
+</fieldset>
+
+<fieldset style="width:150px; font-size: 10px;">
+    <legend>Steering:</legend>
     <span style="">
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Seek' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek;"> Seek
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'Seek' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
     </span>
     <br>
     <span style="color:red;">
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Flee' ); odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee;"> Flee
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'Flee' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
     </span>
 </fieldset>
 
@@ -161,7 +195,8 @@
         }
     </script>
     <br>
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Quads' ); odobo_FnAI = odobo_TestQuads1;"> Quads
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'Quads' ); odobo_FnAI = odobo_TestQuads1; odobo_Main();"> Quads
 
     <script type="text/javascript">
         function odobo_TestQuadsBackFaceCulling()
@@ -174,7 +209,8 @@
         }
     </script>
     <br>
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Quads back face culling' ); odobo_FnAI = odobo_TestQuadsBackFaceCulling;"> Quads back face culling
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'Quads back face culling' ); odobo_FnAI = odobo_TestQuadsBackFaceCulling; odobo_Main();"> Quads back face culling
     <script type="text/javascript">
         function odobo_TestQuadsSolid()
         {
@@ -190,9 +226,13 @@
         }
     </script>
     <br>
-    <input type="radio" name="viewerTest" onclick="odobo_AddMsgToPanel( 'Quads solid' ); odobo_FnAI = odobo_TestQuadsSolid;"> Quads solid
-    <br>
+    <div style="color:red;">
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'Quads solid' ); odobo_FnAI = odobo_TestQuadsSolid; odobo_Main();"> Quads solid
+    </div>
+    <div style="color:red;">
     <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
+    </div>
 </fieldset>
 
 <script type="text/javascript">
@@ -201,8 +241,7 @@
 //    odobo_FnAI = odobo_TestQuadsSolid;
     function odobo_Main()
     {
-//        if ( odobo_FnAI() == 0 ) return;
-        odobo_FnAI();
+        if ( odobo_FnAI() == 0 ) return;
         odobo_Run();
         setTimeout( function() { odobo_Main(); }, 20 );
     }

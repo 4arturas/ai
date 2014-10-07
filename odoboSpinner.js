@@ -1,6 +1,6 @@
 var SPINNER_STATE_INIT = 0;
 var SPINNER_STATE_WORKING = 1;
-var SPINNER_STATE_STOP = 2;
+var SPINNER_STATE_STOPPED = 2;
 
 function odoboSpinner_Create( objectsArr )
 {
@@ -14,14 +14,7 @@ function odoboSpinner_Create( objectsArr )
         center: null,
         z: 500,
 
-        objectsArr: objectsArr,
-
-
-        // seek
-        seekPos: null,
-        seekVelocity: null,
-        seekMaxVelocity: 0,
-        seekTarget: null
+        objectsArr: objectsArr
     };
 
     odobo_ResetObjects();
@@ -50,20 +43,19 @@ function odoboSpinner_Create( objectsArr )
     return spinner;
 }
 
-function odobo_Spinner()
+function odobo_SpinnerSetXYZ()
 {
-    if ( gOdoboSpinner.framesCounter++ > 1000 ) return 0;
-
     var i;
     var start = -200;
     var x = start;
-    var y = start;
+    var y = start+100;
     var step = 100;
+    var obj;
     for ( i = 0; i < gEngine.numObjects; i++ )
     {
-        gOdoboSpinner.objectsArr[i].matrix = mat4x3_RotXX( gOdoboSpinner.angle );
-        gOdoboSpinner.objectsArr[i].matrix.tx = x;
-        gOdoboSpinner.objectsArr[i].matrix.ty = y;
+        obj = gOdoboSpinner.objectsArr[i];
+        obj.matrix.tx = x;
+        obj.matrix.ty = y;
         x += step;
         if ( (i+1) % 5 == 0 )
         {
@@ -71,25 +63,99 @@ function odobo_Spinner()
             y += step;
         }
 
-        gOdoboSpinner.objectsArr[i].matrix.tz = gOdoboSpinner.z;
+        obj.matrix.tz = gOdoboSpinner.z;
     } // end for i
+}
 
-    if ( gOdoboSpinner.framesCounter > 0 )
-        gOdoboSpinner.angle += 0.1;
-    if ( gOdoboSpinner.framesCounter > 100 )
-        gOdoboSpinner.angle += 0.1;
-    if ( gOdoboSpinner.framesCounter > 400 )
-        gOdoboSpinner.angle -= 0.1;
-    if ( gOdoboSpinner.framesCounter > 600 )
-        gOdoboSpinner.angle -= 0.1;
-
+function odobo_Spinner()
+{
+    odobo_SpinnerSetXYZ();
     return 1;
 }
 
+var SPINNER_EFFECT_1 = 0;
+var SPINNER_EFFECT_2 = 1;
+var SPINNER_EFFECT_3 = 2;
+
+var spinnerEffectType1 = SPINNER_EFFECT_1;
+var spinnerEffectAngleStep1 = 0.1;
+function odobo_SpinnerEffect1()
+{
+    var i;
+    var obj;
+    for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+    {
+        obj = gOdoboSpinner.objectsArr[i];
+        if ( spinnerEffectType1 == SPINNER_EFFECT_1 )
+            obj.matrix = mat4x3_RotXX(gOdoboSpinner.angle);
+        else if ( spinnerEffectType1 == SPINNER_EFFECT_2 )
+            obj.matrix = mat4x3_RotYY(gOdoboSpinner.angle);
+        else if ( spinnerEffectType1 == SPINNER_EFFECT_3 )
+            obj.matrix = mat4x3_RotZZ(gOdoboSpinner.angle);
+
+    } // end for i
+    gOdoboSpinner.angle += spinnerEffectAngleStep1;
+    if ( _abs( gOdoboSpinner.angle) > geomPI )
+    {
+        gOdoboSpinner.angle = 0.0;
+        if ( spinnerEffectType1 == SPINNER_EFFECT_1 )
+            spinnerEffectType1 = SPINNER_EFFECT_2;
+        else if ( spinnerEffectType1 == SPINNER_EFFECT_2 )
+            spinnerEffectType1 = SPINNER_EFFECT_3;
+        else if ( spinnerEffectType1 == SPINNER_EFFECT_3 )
+        {
+            spinnerEffectType1 = SPINNER_EFFECT_1;
+            spinnerEffectAngleStep1 -= (spinnerEffectAngleStep1*2.0);
+        }
+    } // end for i
+
+    odobo_SpinnerSetXYZ();
+    return 1;
+}
+var spinnerEffectType2;
+function odobo_SpinnerEffect2()
+{
+    var i;
+    var obj;
+
+    switch ( gOdoboSpinner.state )
+    {
+        case SPINNER_STATE_INIT:
+            gOdoboSpinner.state = SPINNER_STATE_WORKING;
+            spinnerEffectType2 = new Array( gOdoboSpinner.objectsArr.length );
+            for ( i = 0; i < spinnerEffectType2.length; i++ )
+            {
+                spinnerEffectType2[i] = i % 2;
+//                spinnerEffectType2[i] = _randomInt(0, 2);
+            }
+
+
+
+            break;
+
+        case SPINNER_STATE_WORKING:
+            for ( i = 0; i < gOdoboSpinner.objectsArr.length; i++ )
+            {
+                obj = gOdoboSpinner.objectsArr[i];
+                if ( spinnerEffectType2[i] == SPINNER_EFFECT_1 )
+                    obj.matrix = mat4x3_RotXX(gOdoboSpinner.angle);
+                else if ( spinnerEffectType2[i] == SPINNER_EFFECT_2 )
+                    obj.matrix = mat4x3_RotYY(gOdoboSpinner.angle);
+                else if ( spinnerEffectType2[i] == SPINNER_EFFECT_3 )
+                    obj.matrix = mat4x3_RotZZ(gOdoboSpinner.angle);
+            } // end for i
+            gOdoboSpinner.angle += 0.1;
+            break;
+    } // end switch
+
+    odobo_SpinnerSetXYZ();
+    return 1;
+}
+
+var seekVehicle;
 function odobo_Seek()
 {
 //    http://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
-    if ( gOdoboSpinner.state == SPINNER_STATE_STOP ) return 0;
     var obj;
     odobo_ResetObjects();
     obj = gOdoboSpinner.objectsArr[0];
@@ -99,42 +165,40 @@ function odobo_Seek()
     {
 
         case SPINNER_STATE_INIT:
-            gOdoboSpinner.seekPos = vec3D_Create( 0, 0, 0 );
-            gOdoboSpinner.seekMaxVelocity = 0.01;
-            gOdoboSpinner.seekTarget = vec3D_Create( 30, 0, 0 );
-            gOdoboSpinner.seekVelocity = vec3D_Create( 0.9, 0.9, 0 );
             gOdoboSpinner.state = SPINNER_STATE_WORKING;
+
+            seekVehicle = vehicle_Create();
+            seekVehicle.position = vec3D_Create( 0, 0, 0 );
+            seekVehicle.velocity = vec3D_Create( 10.0, 10.0, 10.0 );
+            seekVehicle.maxSpeed = 100.0;
+            seekVehicle.mass = 1.0;
+            seekVehicle.target = vec3D_Create( 300, 200, 500 );
+
             break;
 
         case SPINNER_STATE_WORKING:
 
-            obj.matrix.tx = gOdoboSpinner.seekPos.x;
-            obj.matrix.ty = gOdoboSpinner.seekPos.y;
-            obj.matrix.tz = gOdoboSpinner.seekPos.z;
+            steering_Update( seekVehicle );
+            obj.matrix = mat4x3_CreateIdentity();
+            obj.matrix.tx = seekVehicle.position.x;
+            obj.matrix.ty = seekVehicle.position.y;
+            obj.matrix.tz = seekVehicle.position.z;
 
-            gOdoboSpinner.seekVelocity = vec3D_Sub( gOdoboSpinner.seekTarget, gOdoboSpinner.seekPos );
-            gOdoboSpinner.seekVelocity = vec3D_MulScalar( gOdoboSpinner.seekVelocity, 0.05 );
-            gOdoboSpinner.seekPos = vec3D_Add( gOdoboSpinner.seekPos, gOdoboSpinner.seekVelocity );
-            var length = vec3D_Dist( gOdoboSpinner.seekPos, gOdoboSpinner.seekTarget );
-            if ( 1 > length )
-                gOdoboSpinner.state = SPINNER_STATE_STOP;
-            break;
 
-        case SPINNER_STATE_STOP:
-            obj = gOdoboSpinner.objectsArr[0];
-            obj.matrix.tx = gOdoboSpinner.seekPos.x;
-            obj.matrix.ty = gOdoboSpinner.seekPos.y;
-            obj.matrix.tz = gOdoboSpinner.seekPos.z;
+            var length = vec3D_Dist( seekVehicle.position, seekVehicle.target );
+            if ( 12 > length )
+                gOdoboSpinner.state = SPINNER_STATE_STOPPED;
+            return 1;
+
+        case SPINNER_STATE_STOPPED:
             _log( 'Arrived' );
             return 0;
     }
-
-
     return 1;
 }
 
+
 function odobo_Flee()
 {
-    _log('Not implemented');
     return 0;
 }

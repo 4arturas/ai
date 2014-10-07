@@ -59,6 +59,15 @@ function vec3D_DivScalar( a, s )
     );
 }
 
+function vec3D_Truncate( v, maxVal )
+{
+    var l = vec3D_Length( v );
+    if ( l > maxVal )
+        return vec3D_Normalize( v );
+    return v;
+}
+/*
+
 function vec3D_Truncate( a, maxVal )
 {
     var l = vec3D_Length( a );
@@ -67,6 +76,7 @@ function vec3D_Truncate( a, maxVal )
         return vec3D_DivScalar( a, i );
     return a;
 }
+*/
 
 function vec3D_Build( a, b )
 {

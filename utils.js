@@ -42,3 +42,8 @@ function _swap( x, y )
     return [ x, y ];
 }
 
+function _abs( v )
+{
+    return Math.abs( v );
+}
+
