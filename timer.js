@@ -26,7 +26,6 @@ function timer_Create( fps )
 
 function timer_NextFrame( timer )
 {
-    _log( 1 );
     timer.currentTime = new Date().getTime();
     if ( timer.currentTime > timer.nextTime )
     {

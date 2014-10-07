@@ -25,7 +25,7 @@
 <script type="text/javascript" src="3D/engine.js"></script>
 
 <script type="text/javascript" src="steeringBehaviors.js"></script>
-<script type="text/javascript" src="odoboSpinner.js"></script>
+
 
 <script type="text/javascript">
     
@@ -121,42 +121,56 @@
     }
 </script>
 
-<fieldset style="width:150px; font-size: 10px;">
+<style type="text/css">
+    .fieldsetCls { width:150px; font-size: 10px; }
+</style>
+
+<script type="text/javascript" src="spinner/spinner.js"></script>
+<script type="text/javascript" src="spinner/effect1.js"></script>
+<script type="text/javascript" src="spinner/effect2.js"></script>
+<script type="text/javascript" src="spinner/effect3.js"></script>
+<script type="text/javascript" src="odoboSpinner.js"></script>
+
+<fieldset class="fieldsetCls">
     <legend>Odobo:</legend>
 
     <script type="text/javascript">
-        var gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr );
+        var gOdoboSpinner = spinner_Create( gEngine.objectsArr );
     </script>
     <div>
     <input type="radio" name="viewerTest" checked
-           onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner; odobo_Main();"> spinner
+           onclick="odobo_AddMsgToPanel( 'Odobo spinner' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Spinner; odobo_Main();"> spinner
     </div>
     <div>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'effect1' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_SpinnerEffect1; odobo_Main();"> effect1
+           onclick="odobo_AddMsgToPanel( 'effect1' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_1; odobo_Main();"> effect1
     </div>
     <div>
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'effect2' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_SpinnerEffect2; odobo_Main();"> effect2
+           onclick="odobo_AddMsgToPanel( 'effect2' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_2; odobo_Main();"> effect2
+    </div>
+    <div>
+    <input type="radio" name="viewerTest"
+           onclick="odobo_AddMsgToPanel( 'effect3' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = spinner_Effect_3; odobo_Main();"> effect3
     </div>
 </fieldset>
 
-<fieldset style="width:150px; font-size: 10px;">
+<fieldset class="fieldsetCls">
     <legend>Steering:</legend>
     <span style="">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Seek' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
+           onclick="odobo_AddMsgToPanel( 'Seek' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
     </span>
     <br>
     <span style="color:red;">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Flee' ); gOdoboSpinner = odoboSpinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
+           onclick="odobo_AddMsgToPanel( 'Flee' ); gOdoboSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
     </span>
 </fieldset>
 
 
-<fieldset style="width:150px; font-size: 10px;">
-    <legend>Tests:</legend>
+<fieldset class="fieldsetCls">
+    <legend>Engine tests:</legend>
 
     <script type="text/javascript">
         var testQuadsCounter = 0;
@@ -233,6 +247,10 @@
     <div style="color:red;">
     <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
     </div>
+</fieldset>
+
+<fieldset class="fieldsetCls">
+    <legend>Physics:</legend>
 </fieldset>
 
 <script type="text/javascript">
