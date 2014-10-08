@@ -23,6 +23,16 @@ function vehicle_Create()
 
 function steering_Seek( vehicle )
 {
+
+}
+
+function steering_Update( vehicle )
+{
+
+}
+
+function steering_Seek_( vehicle )
+{
     var t = 0;
     var direction = vec3D_Sub( vehicle.target, vehicle.position );
     if ( vec3D_IsNaN( direction ) )
@@ -52,7 +62,7 @@ function steering_Calculate( vehicle )
     return steering_Seek( vehicle );
 }
 
-function steering_Update( vehicle )
+function steering_Update_( vehicle )
 {
     _assert( vec3D_Equal( vehicle.position, vehicle.target), 'steering_Update position == target' );
     //update the time elapsed
