@@ -19,12 +19,12 @@ function steeringTest_Seek()
             gTestVehicle.position = vec3D_Create( 0, 0, 0 );
             gTestVehicle.velocity = vec3D_Create( 10.0, 10.0, 10.0 );
 
-            gTestVehicle.max_force = 100;
-            gTestVehicle.mass = 6;
-            gTestVehicle.max_speed = 10;
+            gTestVehicle.max_force = 1;
+            gTestVehicle.mass = 1;
+            gTestVehicle.max_speed = 1;
 
-            gTestVehicle.target = vec3D_Create( 300, 200, 500 );
-//            gTestVehicle.target = vec3D_Create( 50, 0, 0 );
+//            gTestVehicle.target = vec3D_Create( 300, 200, 500 );
+            gTestVehicle.target = vec3D_Create( 50, 0, 0 );
 
             break;
 

@@ -23,6 +23,18 @@ function vec2D_Normalize( v )
     var oneOverLength = 1.0 / vec2D_Length( v );
     return vec2D_Create( (v.x*oneOverLength), (v.y*oneOverLength) );
 }
+function vec2D_Add( a, b )
+{
+    return vec3D_Create(
+            a.x+b.x, a.y+b.y
+    );
+}
+function vec2D_DivScalar( a, s )
+{
+    return vec2D_Create(
+            a.x/s, a.y/s
+    );
+}
 
 function vec2D_Truncate( v, maxVal )
 {

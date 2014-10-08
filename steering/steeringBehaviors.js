@@ -26,7 +26,7 @@ function vehicle_Create()
     };
 }
 
-function steering_Seek( vehicle )
+function steering_Seek__( vehicle )
 {
 //    steering_force = truncate (steering_direction, max_force)
     var steering_force = vec3D_Truncate( vehicle.target, vehicle.max_force );
@@ -37,6 +37,26 @@ function steering_Seek( vehicle )
     vehicle.velocity = vec3D_Truncate( velocity, vehicle.max_speed );
 //    position = position + velocity
     vehicle.position = vec3D_Add( vehicle.position, vehicle.velocity );
+}
+
+function steering_Seek( vehicle )
+{
+//    steering_force = truncate (steering_direction, max_force)
+    var target = vec2D_Create( vehicle.target.x, vehicle.target.y );
+    var steering_force = vec2D_Truncate( target, vehicle.max_force );
+//    acceleration = steering_force / mass
+    var acceleration = vec2D_DivScalar( steering_force, vehicle.mass );
+//    velocity = truncate (velocity + acceleration, max_speed)
+    var velocity = vec2D_Create( vehicle.velocity.x, vehicle.velocity.y );
+    velocity = vec2D_Add(velocity, acceleration);
+    velocity = vec2D_Truncate( velocity, vehicle.max_speed );
+//    position = position + velocity
+    var position = vec2D_Create( vehicle.position.x, vehicle.position.y );
+    position = vec2D_Add( position, velocity );
+    vehicle.position.x = position.x;
+    vehicle.position.y = position.y;
+    vehicle.velocity.x = velocity.x;
+    vehicle.velocity.y = velocity.y;
 }
 
 function steering_Update( vehicle )
