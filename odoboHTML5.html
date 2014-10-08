@@ -25,7 +25,8 @@
 <script type="text/javascript" src="3D/engine.js"></script>
 <script type="text/javascript" src="3D/engineTests.js"></script>
 
-<script type="text/javascript" src="steeringBehaviors.js"></script>
+<script type="text/javascript" src="steering/steeringBehaviors.js"></script>
+<script type="text/javascript" src="steering/steeringTests.js"></script>
 
 
 <script type="text/javascript">
@@ -149,7 +150,7 @@
             document.getElementById('msgPanel').removeChild( div );
         }, 3000 );
     }
-    function odobo_ResetObjects()
+    function odobo_ResetObjects() // not good only for test todo: rethink
     {
         var i;
         for ( i = 0; i < gEngine.numObjects; i++ )
@@ -212,12 +213,12 @@
     <legend>Steering:</legend>
     <span style="">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Seek' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Seek; odobo_Main();"> Seek
+           onclick="odobo_AddMsgToPanel( 'Seek' ); gSpinner = spinner_Create( gEngine.objectsArr ); steeringTestType = 0; odobo_FnAI = steeringTest_Seek; odobo_Main();"> Seek
     </span>
     <br>
     <span style="color:red;">
     <input type="radio" name="viewerTest"
-           onclick="odobo_AddMsgToPanel( 'Flee' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = odobo_Flee; odobo_Main();"> Flee
+           onclick="odobo_AddMsgToPanel( 'Flee' ); gSpinner = spinner_Create( gEngine.objectsArr ); odobo_FnAI = steeringTest_Flee; odobo_Main();"> Flee
     </span>
 </fieldset>
 

@@ -2,6 +2,15 @@ var STEERING_SEEK = 1;
 var STEERING_FLEE = 2;
 var STEERING_ARRIVAL = 3;
 //http://www.red3d.com/cwr/steer/gdc99/
+/*
+Simple Vehicle Model:
+    mass          scalar
+position      vector
+velocity      vector
+max_force     scalar
+max_speed     scalar
+orientation   N basis vectors
+*/
 function vehicle_Create()
 {
     return {
@@ -10,25 +19,29 @@ function vehicle_Create()
         rotation: 0.0,
         velocity: vec3D_Create(0,0,0),
         mass: 0.0,
-        maxForce: 0.0,
-        maxSpeed: 0.0,
-        maxTurnRate: 0.0,
-        scale: 0.0,
+        max_force: 0.0,
+        max_speed: 0.0,
 
-        heading: vec3D_Create(0,0,0),
-        side: vec3D_Create(0,0,0),
         target: vec3D_Create(0,0,0)
     };
 }
 
 function steering_Seek( vehicle )
 {
-
+//    steering_force = truncate (steering_direction, max_force)
+    var steering_force = vec3D_Truncate( vehicle.target, vehicle.max_force );
+//    acceleration = steering_force / mass
+    var acceleration = vec3D_DivScalar( steering_force, vehicle.mass );
+//    velocity = truncate (velocity + acceleration, max_speed)
+    var velocity = vec3D_Add( vehicle.velocity, acceleration );
+    vehicle.velocity = vec3D_Truncate( velocity, vehicle.max_speed );
+//    position = position + velocity
+    vehicle.position = vec3D_Add( vehicle.position, vehicle.velocity );
 }
 
 function steering_Update( vehicle )
 {
-
+    steering_Seek( vehicle );
 }
 
 function steering_Seek_( vehicle )
@@ -44,7 +57,7 @@ function steering_Seek_( vehicle )
     {
         t = t;
     }
-    var velocity = vec3D_MulScalar( normalizecDirection, vehicle.maxSpeed );
+    var velocity = vec3D_MulScalar( normalizecDirection, vehicle.max_speed );
     if ( vec3D_IsNaN( velocity ) )
     {
         t = t;
@@ -103,7 +116,7 @@ function steering_Update_( vehicle )
 
     //make sure vehicle does not exceed maximum velocity
 //    m_vVelocity.Truncate(m_dMaxSpeed);
-    vehicle.velocity = vec3D_Truncate( vehicle.velocity, vehicle.maxSpeed );
+    vehicle.velocity = vec3D_Truncate( vehicle.velocity, vehicle.max_speed );
     if ( vec3D_IsNaN( vehicle.velocity ) )
     {
         oldPos = oldPos;
@@ -122,33 +135,7 @@ function steering_Update_( vehicle )
         oldPos = oldPos;
     }
 
-    //update the heading if the vehicle has a non zero velocity
-//    if (m_vVelocity.LengthSq() > 0.00000001)
-    if ( vec3D_Length( vehicle.velocity ) > 0.00000001 )
-    {
-//        m_vHeading = Vec2DNormalize(m_vVelocity);
-        vehicle.heading = vec3D_Normalize( vehicle.velocity );
-//        m_vSide = m_vHeading.Perp();
-        vehicle.side = vec3D_Cross( vehicle.heading, vehicle.velocity );
-    }
 
-    /*
-    //EnforceNonPenetrationConstraint(this, World()->Agents());
-
-    //treat the screen as a toroid
-    WrapAround(m_vPos, m_pWorld->cxClient(), m_pWorld->cyClient());
-
-    //update the vehicle's current cell if space partitioning is turned on
-    if (Steering()->isSpacePartitioningOn())
-    {
-        World()->CellSpace()->UpdateEntity(this, OldPos);
-    }
-
-    if (isSmoothingOn())
-    {
-        m_vSmoothedHeading = m_pHeadingSmoother->Update(Heading());
-    }
-    */
 
 }
 

@@ -51,9 +51,11 @@ function spinner_Effect_4()
                 {
                     vehicle = vehicle_Create();
                     vehicle.position = spinnerEffect4_Home[i];
-                    vehicle.velocity = vec3D_Create( 1.0, 1.0, 1.0 );
-                    vehicle.maxSpeed = 100.0;
-                    vehicle.mass = 1.0;
+                    vehicle.velocity = vec3D_Create( 0.0, 0.0, 0.0 );
+
+                    vehicle.max_force = 1;
+                    vehicle.mass = 1;
+                    vehicle.max_speed = 5;
 
                     k = spinnerEffect4_Target[i];
                     vehicle.target = spinnerEffect4_Home[k];
@@ -66,7 +68,7 @@ function spinner_Effect_4()
                 obj.matrix = mat4x3_CreateIdentity();
                 obj.matrix.tx = vehicle.position.x;
                 obj.matrix.ty = vehicle.position.y;
-                obj.matrix.tz = vehicle.position.z;
+                obj.matrix.tz = gSpinner.z;
             } // end for i
             break;
 
@@ -82,7 +84,7 @@ function spinner_Effect_4()
                 obj.matrix = mat4x3_CreateIdentity();
                 obj.matrix.tx = vehicle.position.x;
                 obj.matrix.ty = vehicle.position.y;
-                obj.matrix.tz = vehicle.position.z;
+                obj.matrix.tz = gSpinner.z;
             } // end for i
 
             break;
