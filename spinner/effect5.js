@@ -48,6 +48,8 @@ function spinner_Effect_5()
             {
                 {
                     vehicle = vehicle_Create();
+                    vehicle.steeringType = STEERING_SEEK;
+                    vehicle.steeringType = STEERING_ARRIVAL;
                     pos = gSpinner.homeArr[i];
                     vehicle.position = vec3D_Create( pos.x, pos.y, pos.z );
                     vehicle.velocity = vec3D_Create( 0.0, 0.0, 0.0 );
@@ -78,7 +80,7 @@ function spinner_Effect_5()
             {
                 vehicle = gSpinner.vehicleArr[i];
                 var dist = vec3D_Dist( vehicle.position, vehicle.target );
-                _log( dist );
+//                _log( dist );
                 if ( dist > 200 )
                 {
 //                    gSpinner.state = SPINNER_STATE_INIT;

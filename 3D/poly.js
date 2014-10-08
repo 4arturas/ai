@@ -52,7 +52,6 @@ function polyr_Draw2( vb, poly, buffStartPtr, ystart, yend, xl, xr, dxdyl, dxdyr
         for ( xi = xstart; xi < xend; xi++ )
         {
             videobuff_SetPixel( vb, (buffStartPtr+xi), poly.color );
-//            console.log( Math.floor(xi) );
         } // end for xi
         xl += dxdyl;
         xr += dxdyr;

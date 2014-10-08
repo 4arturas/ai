@@ -26,10 +26,54 @@ function vehicle_Create()
     };
 }
 
-function steering_Seek__( vehicle )
+function steering_Seek( vehicle )
 {
+//    desired_velocity = normalize (position - target) * max_speed
+    var desired_velocity = vec3D_Sub( vehicle.position, vehicle.target );
+    desired_velocity = vec3D_MulScalar( desired_velocity, vehicle.max_speed );
+//    steering = desired_velocity - velocity
+    var steering = vec3D_Sub( desired_velocity, vehicle.velocity );
+    return steering;
+}
+
+function steering_Arrival( vehicle )
+{
+//    target_offset = target - position
+    var target_offset = vec3D_Sub( vehicle.target, vehicle.position );
+//    distance = length (target_offset)
+    var distance = vec3D_Length( target_offset );
+//    ramped_speed = max_speed * (distance / slowing_distance)
+    var slowing_distance = 5.0;
+    var ramped_speed = vehicle.max_speed * ( distance / slowing_distance );
+//    clipped_speed = minimum (ramped_speed, max_speed)
+    var clipped_speed = _min( ramped_speed, vehicle.max_speed );
+//    desired_velocity = (clipped_speed / distance) * target_offset
+    var desired_velocity = vec3D_MulScalar( target_offset, clipped_speed/distance );
+//    steering = desired_velocity - velocity
+    var steering = vec3D_Sub( desired_velocity, vehicle.velocity );
+    return steering;
+
+}
+
+function steering_Calculate( vehicle )
+{
+    switch ( vehicle.steeringType )
+    {
+        case STEERING_SEEK:
+            return steering_Seek( vehicle );
+        case STEERING_ARRIVAL:
+            return steering_Arrival( vehicle );
+        default:
+            _assert( false, 'steering_Calculate: not known vehicle.steeringType' );
+    } // end switch
+}
+
+function steering_Update( vehicle )
+{
+    var steering_direction = steering_Calculate( vehicle );
+
 //    steering_force = truncate (steering_direction, max_force)
-    var steering_force = vec3D_Truncate( vehicle.target, vehicle.max_force );
+    var steering_force = vec3D_Truncate( steering_direction, vehicle.max_force );
 //    acceleration = steering_force / mass
     var acceleration = vec3D_DivScalar( steering_force, vehicle.mass );
 //    velocity = truncate (velocity + acceleration, max_speed)
@@ -38,124 +82,36 @@ function steering_Seek__( vehicle )
 //    position = position + velocity
     vehicle.position = vec3D_Add( vehicle.position, vehicle.velocity );
 }
-
-function steering_Seek( vehicle )
-{
-//    steering_force = truncate (steering_direction, max_force)
-    var target = vec2D_Create( vehicle.target.x, vehicle.target.y );
-    var steering_force = vec2D_Truncate( target, vehicle.max_force );
-//    acceleration = steering_force / mass
-    var acceleration = vec2D_DivScalar( steering_force, vehicle.mass );
-//    velocity = truncate (velocity + acceleration, max_speed)
-    var velocity = vec2D_Create( vehicle.velocity.x, vehicle.velocity.y );
-    velocity = vec2D_Add(velocity, acceleration);
-    velocity = vec2D_Truncate( velocity, vehicle.max_speed );
-//    position = position + velocity
-    var position = vec2D_Create( vehicle.position.x, vehicle.position.y );
-    position = vec2D_Add( position, velocity );
-    vehicle.position.x = position.x;
-    vehicle.position.y = position.y;
-    vehicle.velocity.x = velocity.x;
-    vehicle.velocity.y = velocity.y;
-}
-
-function steering_Update( vehicle )
-{
-    steering_Seek( vehicle );
-}
-
-function steering_Seek_( vehicle )
-{
-    var t = 0;
-    var direction = vec3D_Sub( vehicle.target, vehicle.position );
-    if ( vec3D_IsNaN( direction ) )
-    {
-        t = t;
-    }
-    var normalizecDirection = vec3D_Normalize( direction );
-    if ( vec3D_IsNaN( normalizecDirection ) )
-    {
-        t = t;
-    }
-    var velocity = vec3D_MulScalar( normalizecDirection, vehicle.max_speed );
-    if ( vec3D_IsNaN( velocity ) )
-    {
-        t = t;
-    }
-    var desiredVelocity = vec3D_Sub( velocity, vehicle.velocity );
-    if ( vec3D_IsNaN( desiredVelocity ) )
-    {
-        t = t;
-    }
-    return desiredVelocity;
-}
-
-function steering_Calculate( vehicle )
-{
-    return steering_Seek( vehicle );
-}
-
 function steering_Update_( vehicle )
 {
-    _assert( vec3D_Equal( vehicle.position, vehicle.target), 'steering_Update position == target' );
+//    _assert( vec3D_Equal( vehicle.position, vehicle.target), 'steering_Update position == target' );
     //update the time elapsed
     var timeElapsed = 0.5;
 
     //keep a record of its old position so we can update its cell later
     //in this method
     var oldPos = vehicle.position;
-    if ( vec3D_IsNaN( oldPos ) )
-    {
-        oldPos = oldPos;
-    }
-
 
     var steeringForce;
 
     //calculate the combined force from each steering behavior in the
     //vehicle's list
     steeringForce = steering_Calculate( vehicle );
-    if ( vec3D_IsNaN( steeringForce ) )
-    {
-        oldPos = oldPos;
-    }
 
     //Acceleration = Force/Mass
     var acceleration = vec3D_DivScalar( steeringForce, vehicle.mass );
-    if ( vec3D_IsNaN( acceleration ) )
-    {
-        oldPos = oldPos;
-    }
 
     //update velocity
     vehicle.velocity = vec3D_MulScalar( acceleration, timeElapsed );
-    if ( vec3D_IsNaN( vehicle.velocity ) )
-    {
-        oldPos = oldPos;
-    }
 
     //make sure vehicle does not exceed maximum velocity
 //    m_vVelocity.Truncate(m_dMaxSpeed);
-    vehicle.velocity = vec3D_Truncate( vehicle.velocity, vehicle.max_speed );
-    if ( vec3D_IsNaN( vehicle.velocity ) )
-    {
-        oldPos = oldPos;
-    }
 
     //update the position
 //    m_vPos += m_vVelocity * time_elapsed;
     var tmp = vec3D_MulScalar( vehicle.velocity, timeElapsed );
-    if ( vec3D_IsNaN( tmp ) )
-    {
-        oldPos = oldPos;
-    }
+
     vehicle.position = vec3D_Add( vehicle.position, tmp );
-    if ( vec3D_IsNaN( vehicle.position ) )
-    {
-        oldPos = oldPos;
-    }
-
-
 
 }
 

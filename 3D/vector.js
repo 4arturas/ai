@@ -198,12 +198,12 @@ function mat4x3_Log( m )
     s += m._21 + ' ' + m._22 + ' ' + m._23 + '\n';
     s += m._31 + ' ' + m._32 + ' ' + m._33 + '\n';
     s += m.tx + ' ' + m.ty + ' ' + m.tz;
-    console.log( s );
+    _log( s );
 }
 
 function vec3D_Log( v )
 {
-    console.log( v.x + ' ' + v.y + ' ' + v.z );
+    _log( v.x + ' ' + v.y + ' ' + v.z );
 }
 
 function vec3D_IsNaN( v )

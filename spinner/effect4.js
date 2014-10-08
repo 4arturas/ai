@@ -37,7 +37,6 @@ function spinner_Effect_4()
                         var nextIdx = i+1;
                         if ( nextIdx == gSpinner.objectsArr.length )
                             nextIdx = 0;
-                        _log( nextIdx );
                         gSpinner.effectTypeArr[nextIdx] = SPINNER_EFFECT_1;
                     } // end if
                 } // end if

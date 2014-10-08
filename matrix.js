@@ -68,7 +68,7 @@ function matrix_Print( m )
             s += m[y][x] + ' ';
         s += ']\n';
     } // end for y
-    console.log( s );
+    _log( s );
 }
 
 function matrix_Identitiy( size )

@@ -29,6 +29,18 @@ function vec2D_Add( a, b )
             a.x+b.x, a.y+b.y
     );
 }
+function vec2D_Sub( a, b )
+{
+    return vec3D_Create(
+            a.x-b.x, a.y-b.y
+    );
+}
+function vec2D_MulScalar( a, s )
+{
+    return vec2D_Create(
+            a.x*s, a.y*s
+    );
+}
 function vec2D_DivScalar( a, s )
 {
     return vec2D_Create(
