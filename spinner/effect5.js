@@ -26,6 +26,7 @@ function spinner_Effect_5_CreateTargets()
         } // end while
     } // end for i
 }
+
 function spinner_Effect_5()
 {
     var i, j, k, r;
@@ -36,16 +37,19 @@ function spinner_Effect_5()
     {
         case SPINNER_STATE_INIT:
             gSpinner.state = SPINNER_STATE_WORKING;
+            gSpinner.modValue = 0;
             gSpinner.homeArr = odobo_SpinnerCreateHome( gSpinner.objectsArr.length, gSpinner.z );
 
             gSpinner.vehicleArr = new Array( gSpinner.homeArr.length );
 
             // create teargets
             gSpinner.targetArr = new Array( gSpinner.homeArr.length );
+            gSpinner.vehicleArrivedArr = new Array( gSpinner.homeArr.length );
             spinner_Effect_5_CreateTargets();
 
             for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
+                gSpinner.vehicleArrivedArr[i] = 0;
                 {
                     vehicle = vehicle_Create();
                     vehicle.steeringType = STEERING_SEEK;
@@ -56,7 +60,7 @@ function spinner_Effect_5()
 
                     vehicle.max_force = 1;
                     vehicle.mass = 1;
-                    vehicle.max_speed = 10;
+                    vehicle.max_speed = 5;
 
                     k = gSpinner.targetArr[i];
                     pos = gSpinner.homeArr[k];
@@ -76,15 +80,18 @@ function spinner_Effect_5()
 
         case SPINNER_STATE_WORKING:
 
+            k = 0;
             for ( i = 0; i < gSpinner.objectsArr.length; i++ )
             {
+                if ( gSpinner.vehicleArrivedArr[i] == 1 )
+                    continue;
+                k++;
                 vehicle = gSpinner.vehicleArr[i];
                 var dist = vec3D_Dist( vehicle.position, vehicle.target );
-//                _log( dist );
-                if ( dist > 200 )
+                if ( 0.1 > dist )
                 {
-//                    gSpinner.state = SPINNER_STATE_INIT;
-//                    break;
+                    gSpinner.vehicleArrivedArr[i] = 1;
+                    continue;
                 }
                 steering_Update( vehicle );
 
@@ -95,6 +102,23 @@ function spinner_Effect_5()
                 obj.matrix.tz = gSpinner.z;
             } // end for i
 
+            if ( k == 0 )
+            {
+                if ( gSpinner.modValue == 1 )
+                {
+                    gSpinner.state = SPINNER_STATE_INIT;
+                    break;
+                }
+                gSpinner.modValue = 1;
+
+                for ( i = 0; i < gSpinner.objectsArr.length; i++ )
+                {
+                    gSpinner.vehicleArrivedArr[i] = 0;
+                    vehicle = gSpinner.vehicleArr[i];
+                    pos = gSpinner.homeArr[i];
+                    vehicle.target = vec3D_Create( pos.x, pos.y, pos.z );
+                } // end for i
+            }
             break;
     } // end switch
 

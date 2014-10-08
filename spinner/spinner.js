@@ -25,9 +25,11 @@ function spinner_Create( objectsArr )
         angleStepArr: null,
         sequanceArr: null,
 
+        modValue: null,
         vehicleArr: null,
         homeArr: null,
-        targetArr: null
+        targetArr: null,
+        vehicleArrivedArr: null
     };
 
     odobo_ResetObjects();

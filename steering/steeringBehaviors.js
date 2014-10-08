@@ -42,6 +42,10 @@ function steering_Arrival( vehicle )
     var target_offset = vec3D_Sub( vehicle.target, vehicle.position );
 //    distance = length (target_offset)
     var distance = vec3D_Length( target_offset );
+    if ( distance == 0 )
+    {
+        distance = distance;
+    }
 //    ramped_speed = max_speed * (distance / slowing_distance)
     var slowing_distance = 5.0;
     var ramped_speed = vehicle.max_speed * ( distance / slowing_distance );
