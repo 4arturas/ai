@@ -30,7 +30,7 @@ var gSpinner = {
     boxDOMArr: null,
     _iframe: null,
 
-    create_Box: function( top, left, width, height, txt, color )
+    create_Box: function( top, left, width, height, txt, color, IamInRowNr )
     {
         var box = {
             top: top,
@@ -38,7 +38,8 @@ var gSpinner = {
             width: width,
             height: height,
             txt: txt,
-            color: color
+            color: color,
+            IamInRowNr: IamInRowNr
         };
         return box;
     },
@@ -93,7 +94,7 @@ var gSpinner = {
             left = this.left;
             for ( c = 0; c < this.cols; c++ )
             {
-                box = this.create_Box( top, left, width, height, i, 'lightblue' );
+                box = this.create_Box( top, left, width, height, i, 'lightblue', r );
                 this.boxArr[i] = box;
                 this.set_BoxDOM( i, box );
                 left += this.tcol;
@@ -108,7 +109,7 @@ var gSpinner = {
             left = this.left;
             for ( c = 0; c < this.cols; c++ )
             {
-                boxInvisible = this.create_Box( top, left, width, height, 'invisible '+c, 'whitesmoke' );
+                boxInvisible = this.create_Box( top, left, width, height, 'invisible '+c, 'whitesmoke', r );
                 this.set_BoxDOM( i, boxInvisible );
                 left += this.tcol;
                 i++;
@@ -158,7 +159,6 @@ var gSpinner = {
     {
         var i, boxDomIdx;
         var r, c;
-        var invisibleIdx;
         var box;
         var boxTmp;
         step = -1;
@@ -166,31 +166,31 @@ var gSpinner = {
         boxDomIdx = 0;
         var idx = 0;
         r = 0;
-        for (i = 0; i < this.size; i++)
+
+        i = 0;
+        var IamInRowNr = -1;
+        for ( r = 0; r < this.rows; r++ )
+        for ( c = 0; c < this.cols; c++ )
         {
+            i = r * this.cols + c;
             box = this.boxArr[i];
             box.top += step;
             // UP
             if ( this.top > box.top+box.height )
             {
-                box.top =_floor( box.height * (this.rows) );
+                IamInRowNr = box.IamInRowNr;
+                box.top =_floor( box.height * (this.rows-1) );
+
             } // end if
 
-
-//            boxDomIdx++;
-//            boxDomIdx %= this.boxDOMArr.length;
+            this.set_BoxDOM(boxDomIdx++, box );
         } // end for i
-        for ( c = 0; c < this.cols; c++ )
+
+        for ( c = IamInRowNr*this.cols; c < IamInRowNr*this.cols+this.cols; c++ )
         {
-            box = this.boxArr[c];
-            boxTmp = _clone( box );
-            boxTmp.color = 'green';
-            boxTmp.top = box.top + _floor(this.rows*box.height);
-            this.set_BoxDOM(boxDomIdx++, boxTmp );
-        } // end for i
-
-
-
+            boxTmp = this.create_Box(this.height + box.top, box.left, box.width, box.height, box.txt, 'green', box.IamInRowNr);
+            this.set_BoxDOM(boxDomIdx++, box );
+        } // end for c
 //        for ( ;boxDomIdx < this.boxDOMArr.length; boxDomIdx++ )
 //            this.boxDOMArr[boxDomIdx].visibility = 'hidden';
     }
