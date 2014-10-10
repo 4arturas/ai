@@ -9,7 +9,7 @@
 <!--<div style="position: absolute; top: 100px; left: 100px; border: 1px solid green;">ba</div>-->
 <br>
 <br>
-<iframe id="ifr" style="border: 1px solid black; width:420px; height: 200px; overflow-x: hidden;"></iframe>
+<iframe id="ifr" scrolling="no" style="border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>
 <script>
     var ifr = document.getElementById('ifr');
 </script>
@@ -25,14 +25,41 @@
     gSpinner.create( ifr, 250, 150, 400, 200, 6, 6 );
     gSpinner.reset();
 
+    var _stop = 1;
+    var _stepSize = 4;
+    var _step = _stepSize;
+    var _timeout = 100;
+    function _run()
+    {
+        if ( _stop == 1 )
+            return;
+        gSpinner.spin( _step );
+        setTimeout( function() { _run(); }, _timeout );
+    }
+
+    function _spin()
+    {
+        _stop = 1;
+        setTimeout( function()
+        {
+            _stop = 0;
+            _run(), (1000) }
+        );
+
+
+    }
 
 </script>
 
 <fieldset style="width: 100px;">
     <legend>2D spinner</legend>
-    <input type="radio" value="radioSpinner" onclick="gSpinner.reset(); setInterval( function() { gSpinner.up( -2 ); }, 50 );"> Up
-    <!--<br>-->
-    <!--<input type="radio" value="radioSpinner" onclick="gSpinner.reset();"> Down-->
+    <input type="radio" name="radioSpinner" onclick="if ( _stop == 0 ) return; _stop = 0; _spin();"> Spin
+    <br>
+    <input type="radio" name="radioSpinner" onclick="_step = -_stepSize;"> Up
+    <br>
+    <input type="radio" name="radioSpinner" onclick="_step = _stepSize;"> Down
+    <br>
+    <input type="radio" name="radioSpinner" onclick="_stop = 1;"> Stop
 </fieldset>
 
 
