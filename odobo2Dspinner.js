@@ -29,6 +29,7 @@ var gSpinner = {
     boxArr: null,
     boxDOMArr: null,
     _iframe: null,
+    leftPadding: 3,
 
 
     create_BoxDOM: function( top, left, width, height, txt, color )
@@ -36,7 +37,7 @@ var gSpinner = {
         var domE;
         domE = document.createElement('div');
         domE.style.position = 'absolute';
-        domE.style.border = '1px solid black';
+//        domE.style.border = '1px solid black';
         domE.style.textAlign = 'center';
         domE.style.verticalAlign = 'middle';
         domE.style.visibility = '';
@@ -49,10 +50,10 @@ var gSpinner = {
         return domE;
     },
 
-    create_Box: function( top, left, width, height, txt, color, IamInRowNr )
+    create_Box: function( top, left, width, height, txt, color )
     {
         var dom0 = this.create_BoxDOM( top, left, width, height, txt, color );
-        var dom1 = this.create_BoxDOM( top*this.rows*height, left, width, height, txt, 'green' );
+        var dom1 = this.create_BoxDOM( top, left, width, height, txt, color );
         var box = {
             top: top,
             left: left,
@@ -60,7 +61,6 @@ var gSpinner = {
             height: height,
             txt: txt,
             color: color,
-            IamInRowNr: IamInRowNr,
             dom0: dom0,
             dom1: dom1
         };
@@ -76,19 +76,21 @@ var gSpinner = {
         while ( el.firstChild )
             el.removeChild( el.firstChild );
     },
-    set_BoxDOM: function( domE, top, left, width, height, color, txt )
+
+    set_BoxDOM: function( domE, box )
     {
 //            this.remove_Children( domE );
         // todo
 
 //        domE.style.visibility = '';
         domE.style.position = 'absolute';
-        domE.style.top = top+'px';
-        domE.style.left = left+'px';
-        domE.style.width = width+'px';
-        domE.style.height = height+'px';
-        domE.style.backgroundColor = color;
-        domE.innerHTML = txt;
+        domE.style.top = box.top+'px';
+        domE.style.left = box.left+'px';
+        domE.style.width = box.width+'px';
+        domE.style.height = box.height+'px';
+        domE.style.border = '1px solid black';
+//        domE.style.backgroundColor = box.color;
+        domE.innerHTML = box.txt;
     },
 
     reset: function()
@@ -100,8 +102,12 @@ var gSpinner = {
         var height = _floor(this.height/this.rows);
         var top = this.top;
         var left;
+        var lastBoxLeft = 0;
+        var colors = [ 'paleturquoise', 'papayawhip', 'palegreen', 'palegoldenrod', 'palevioletred', 'bisque' ];
+        var color;
         for ( r = 0; r < this.rows; r++ )
         {
+            color = colors[r];
             left = this.left;
             for ( c = 0; c < this.cols; c++ )
             {
@@ -111,11 +117,16 @@ var gSpinner = {
                 box.width = width;
                 box.height = height;
                 box.txt = i+'';
+                box.color = color;
+                this.set_BoxDOM( box.dom0, box );
+                this.set_BoxDOM( box.dom1, box );
+                box.dom0.style.zIndex = '2';
+                box.dom1.style.zIndex = '1';
 
-                this.set_BoxDOM( box.dom0, top, left, width, height, box.color, box.txt );
-                this.set_BoxDOM( box.dom1, (top+(this.rows*height)), left, width, height, box.color, box.txt );
+                box.dom0.style.backgroundColor = color;
+                box.dom1.style.backgroundColor = color;
 
-                left += this.tcol;
+                left += this.tcol+this.leftPadding;
                 i++;
             } // end for c
             top += height;
@@ -141,25 +152,22 @@ var gSpinner = {
         this.boxArr = new Array( this.size );
         this._iframe = document.createElement('iframe');
         this._iframe.style.border = '1px solid black';
-//        this._iframe.style.width = this.width + 'px';
-//        this._iframe.style.height = this.height + 'px';
-//        document.body.appendChild( this._iframe );
+
         var doc = _ifr.contentDocument || _ifr._iframe.contentWindow.document;
-//        doc.style.overflowX = 'hidden';
-//        doc.style.overflowY = 'hidden';
+
         var div = document.createElement('div');
-//        div.appendChild( document.createTextNode('text') );
         div.style.position = 'absolute';
         div.style.top = '0px';
         div.style.left = '0px';
-        div.style.width = (this.width-4)+'px';
+        div.style.width = (this.width+this.cols*this.leftPadding-7)+'px';
         div.style.height = (this.height-2)+'px';
 //        div.style.backgroundColor = 'red';
         div.style.border = '1px solid black';
+        div.style.zIndex = '3';
 
         for ( i = 0; i < this.size; i++ )
         {
-            var box = this.create_Box( 0, 0, 0, 0, ''+i, '#E5FDFF', 0 );
+            var box = this.create_Box( 0, 0, 0, 0, ''+i, '' );
             this.boxArr[i] = box;
             doc.body.appendChild( box.dom0 );
             doc.body.appendChild( box.dom1 );
@@ -168,7 +176,7 @@ var gSpinner = {
         doc.body.appendChild( div );
     },
 
-    spin_Column: function( c, step )
+    spin_Column_: function( c, step )
     {
         var i;
         var r;
@@ -184,7 +192,9 @@ var gSpinner = {
             {
                 if ( this.top > (box.top+box.height) )
                 {
-                    box.top =_floor( box.height * (this.rows-1) );
+                    ///////////////
+                    box.top =/*_floor*/( box.height * (this.rows-1) );
+                    ///////////////
                     box.dom1.style.visibility = 'hidden';
                 } // end if
                 else
@@ -196,7 +206,8 @@ var gSpinner = {
             // DOWN
             else if ( box.top > (this.height-box.height) )
             {
-                box.dom1.style.top = _floor(this.top-(this.height-box.top)) + 'px';
+                //box.dom1.style.top = _floor(this.top-(this.height-box.top)) + 'px';
+                box.dom1.style.top = _floor(box.top-this.height) + 'px';
                 box.dom1.style.visibility = '';
                 if   ( box.top > this.height )
                     box.top = this.top;
@@ -210,6 +221,38 @@ var gSpinner = {
         } // end for i
     },
 
+    spin_Column: function( c, step )
+    {
+        var i;
+        var r;
+        var box;
+        i = 0;
+        for ( r = 0; r < this.rows; r++ )
+        {
+            i = r * this.cols + c;
+            box = this.boxArr[i];
+            box.top += step;
+            var boxHelper = box.top;
+            if ( step > 0 ) // DOWN
+            {
+                box.dom1.style.top = /*_floor*/(box.top - this.height) + 'px';
+                if ( box.top > this.height )
+                {
+                    box.top = box.dom1.style.top.replace('px','')*1+1;
+                }
+            }
+            else  // UP
+            {
+                box.dom1.style.top = /*_floor*/(this.height + box.top) + 'px';
+                if ( this.top > box.top+box.height )
+                {
+                    box.top = box.dom1.style.top.replace('px','')*1-1;
+                }
+            }
+            box.dom0.style.top = /*_floor*/(box.top) + 'px';
+        } // end for r
+    },
+
     spin: function( step )
     {
         var c;
@@ -218,7 +261,8 @@ var gSpinner = {
         {
 
             steps[c] = ( c % 2 ) == 0 ? step : -step;
-//            steps[c] = step;
+            //steps[c] = step;
+            //steps[c] = -3;
         }
 
         for ( c = 0; c < this.cols; c++ )
