@@ -9,7 +9,8 @@
 <!--<div style="position: absolute; top: 100px; left: 100px; border: 1px solid green;">ba</div>-->
 <br>
 <br>
-<iframe id="ifr" scrolling="no" style="border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>
+<iframe id="ifr" scrolling="no" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>
+<!--<div id="ifr" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 800px; overflow: hidden;"></div>-->
 <script>
     var ifr = document.getElementById('ifr');
 </script>
@@ -20,10 +21,14 @@
 <script>
 
 
-//    ifr.contentDocument.document.appendChild( document.createTextNode('text') );
 
-    gSpinner.create( ifr, 400, 200, 3, 1 );
-    gSpinner.reset( gSpinner.TRACK_TYPE_SPIN_UP );
+    var doc = ifr.contentDocument || ifr.contentWindow.document;
+    var _body = doc.body;
+
+//    var _body = ifr;
+
+    gSpinner.create( _body, 400, 200, 6, 6 );
+    gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP );
 
     var _stop = 1;
     var _stepSize = 4;
@@ -53,18 +58,6 @@
     _spin();
 
 </script>
-
-<fieldset style="width: 100px;">
-    <legend>2D spinner</legend>
-    <input type="radio" name="radioSpinner" onclick="if ( _stop == 0 ) return; _stop = 0; _spin();"> Spin
-    <br>
-    <input type="radio" name="radioSpinner" onclick="_step = -_stepSize;"> Up
-    <br>
-    <input type="radio" name="radioSpinner" onclick="_step = _stepSize;"> Down
-    <br>
-    <input type="radio" name="radioSpinner" onclick="_stop = 1;"> Stop
-</fieldset>
-
 
 
 

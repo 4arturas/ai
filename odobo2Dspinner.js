@@ -42,8 +42,37 @@ var gSpinner = {
     cols: null,
     trow: null,
     tcol: null,
-    parentContainer: null,
+    parentBody: null,
     leftPadding: 3,
+
+    create: function( parentBody, width, height, rows, cols )
+    {
+        var i;
+        var boxDOM;
+        this.size = rows*cols;
+        this.top = 0;
+        this.left = 0;
+        this.width = width;
+        this.height = height;
+        this.rows = rows;
+        this.cols = cols;
+
+        this.trow = _floor( this.height/this.rows );
+        this.tcol = _floor( this.width/this.cols );
+
+        var div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.top = this.top+'px';
+        div.style.left = '0px';
+        div.style.width = (this.width+this.cols*this.leftPadding-7)+'px';
+        div.style.height = (this.height-2)+'px';
+        div.style.border = '1px solid black';
+        div.style.zIndex = '3';
+
+        this.parentBody = parentBody;
+
+        this.parentBody.appendChild( div );
+    },
 
 
     create_BoxDOM: function( top, left, width, height, txt, color )
@@ -51,7 +80,6 @@ var gSpinner = {
         var domE;
         domE = document.createElement('div');
         domE.style.position = 'absolute';
-//        domE.style.border = '1px solid black';
         domE.style.textAlign = 'center';
         domE.style.verticalAlign = 'middle';
         domE.style.visibility = '';
@@ -83,32 +111,18 @@ var gSpinner = {
     },
 
 
-
-
-
-    remove_Children: function( el )
-    {
-        while ( el.firstChild )
-            el.removeChild( el.firstChild );
-    },
-
     set_BoxDOM: function( domE, box )
     {
-//            this.remove_Children( domE );
-        // todo
-
-//        domE.style.visibility = '';
         domE.style.position = 'absolute';
         domE.style.top = box.top+'px';
         domE.style.left = box.left+'px';
         domE.style.width = box.width+'px';
         domE.style.height = box.height+'px';
         domE.style.border = '1px solid black';
-//        domE.style.backgroundColor = box.color;
         domE.innerHTML = box.txt;
     },
 
-    reset: function( trackType )
+    reset_Tracks: function( trackType )
     {
         var c;
         var width = _floor(this.width/this.cols);
@@ -120,7 +134,7 @@ var gSpinner = {
         var sign;
         for ( c = 0; c < this.cols; c++ )
         {
-            track = this.track_Create( trackType, this.top, left, width, height, this.rows, c, colors );
+            track = this.create_Track( trackType, this.top, left, width, height, this.rows, c, colors );
             this.trackArr[c] = track;
             left += this.tcol+this.leftPadding;
 
@@ -138,11 +152,10 @@ var gSpinner = {
         } // end for c
     },
 
-    boxArr: null,
     TRACK_TYPE_SPIN_UP: 0,
     TRACK_TYPE_SPIN_DOWN: 1,
     TRACK_TYPE_SPIN_BOTH_DIRECTIONS: 2,
-    track_Create: function( trackType, top, left, width, height, rows, column, colors ) {
+    create_Track: function( trackType, top, left, width, height, rows, column, colors ) {
         var r;
         var color;
         var box;
@@ -172,8 +185,8 @@ var gSpinner = {
             box.dom1.style.backgroundColor = color;
             box.dom1.innerHTML = 'helper';
 
-            this.parentContainer.appendChild( box.dom0 );
-            this.parentContainer.appendChild( box.dom1 );
+            this.parentBody.appendChild( box.dom0 );
+            this.parentBody.appendChild( box.dom1 );
 
             top += height;
         } // end for r
@@ -200,7 +213,7 @@ var gSpinner = {
                 this.sign = sign;
                 this.force = 1*this.sign;
                 this.maxForce = 1*this.sign;
-                var maxSpeed = 2;
+                var maxSpeed = 10;
                 this.maxSpeed = maxSpeed*this.sign;
                 this.mass = 1*this.sign;
                 this.velocity = 0.001*this.sign;
@@ -236,37 +249,7 @@ var gSpinner = {
         return track;
     },
 
-    create: function( parent, width, height, rows, cols )
-    {
-        var i;
-        var boxDOM;
-        this.size = rows*cols;
-        this.top = 0;
-        this.left = 0;
-        this.width = width;
-        this.height = height;
-        this.rows = rows;
-        this.cols = cols;
 
-        this.trow = _floor( this.height/this.rows );
-        this.tcol = _floor( this.width/this.cols );
-
-        var doc = parent.contentDocument || parent.contentWindow.document;
-
-        var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.top = '0px';
-        div.style.left = '0px';
-        div.style.width = (this.width+this.cols*this.leftPadding-7)+'px';
-        div.style.height = (this.height-2)+'px';
-//        div.style.backgroundColor = 'red';
-        div.style.border = '1px solid black';
-        div.style.zIndex = '3';
-
-        this.parentContainer = doc.body;
-
-        doc.body.appendChild( div );
-    },
 
     track_Spin: function( track ) {
         var r;
@@ -298,21 +281,27 @@ var gSpinner = {
         }
         else  // UP
         {
-            box = track.boxArr[this.rows-1];
+            box = track.boxArr[0];
+//            box = track.boxArr[this.rows-1];
             _top = box.top + track.velocity;
-            for ( r = this.rows-1; r >= 0; r-- )
+//            for ( r = this.rows-1; r >= 0; r-- )
+            for ( r = 0; r < this.rows; r++ )
             {
                 box = track.boxArr[r];
                 box.top = _top;
-                _top += box.height;
+                _top -= box.height;
 
-                box.topTail = this.height + box.top;
-                if ( this.top > box.top + box.height )
+
+                box.topTail = box.top + this.height;
+                if ( this.top > box.top+box.height )
                 {
                     box.top = box.topTail;
                 }
+
+
                 box.dom0.style.top = _floor(box.top) + 'px';
                 box.dom1.style.top = _floor(box.topTail) + 'px';
+
             }// end for r
 
 
@@ -363,7 +352,6 @@ var gSpinner = {
         return 1;
     },
 
-
     spin: function( step )
     {
         var c;
@@ -374,7 +362,8 @@ var gSpinner = {
         for ( c = 0; c < this.cols; c++ )
         {
             track = this.trackArr[c];
-            if ( track.stopped == 1 ) continue;
+            if ( track.stopped == 1 )
+                continue;
             active += this.track_Spin( track );
 
         } // end for c
