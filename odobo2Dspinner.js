@@ -27,6 +27,10 @@ function _abs( v )
 {
     return Math.abs( v );
 }
+function fnChangeSign( v )
+{
+    return ( v + ( 2 * (-1*v) ) );
+}
 
 var gSpinner = {
     top: null,
@@ -178,16 +182,43 @@ var gSpinner = {
             velocity: null,
             iteration: null,
             slowDownBias: null,
+            vibratoId: null,
+            vibrato: null,
             velocity_CreateStruct: function( sign )
             {
                 this.sign = sign;
                 this.force = 1*this.sign;
-                this.maxForce = 10*this.sign;
-                this.maxSpeed = 5*this.sign;
+                this.maxForce = 1*this.sign;
+                this.maxSpeed = 20*this.sign;
                 this.mass = 1*this.sign;
                 this.velocity = 0.001*this.sign;
                 this.iteration = 0;
-                this.slowDownBias = 10;
+                this.slowDownBias = 20;
+                var i;
+
+                var _v0 = 3;
+                var _v1 = 6;
+                this.vibratoId = 0;
+                this.vibrato = new Array( _v0*_v1 );
+                var step = 0.2;
+                var decrease = 0.5;
+                var val = 0;
+                for ( i = 0; i < _v1; i++ )
+                {
+                    this.vibrato[i] = Math.cos( val );
+                    val += step;
+                }
+                var next = i+_v1;
+                for ( ; i < next; i++ )
+                {
+                    this.vibrato[i] = this.vibrato[i - _v1]*decrease;
+                }
+                next = i+_v1;
+                for ( ; i < next; i++ )
+                {
+                    this.vibrato[i] = this.vibrato[i - _v1]*decrease;
+                }
+                this.vibrato = this.vibrato;
             },
 
             velocity_Calculate: function()
@@ -199,6 +230,55 @@ var gSpinner = {
                     this.velocity = _max( this.maxSpeed, this.velocity );
                 else // DOWN
                     this.velocity = _min( this.maxSpeed, this.velocity );
+            },
+
+            velocity_SlowDownCalculate: function( target, position )
+            {
+                var maxSpeed = ( this.maxSpeed );
+                var target_offset = target - position;
+                var distance = _abs( target_offset );
+                var slowing_distance = 3;
+                var ramped_speed = maxSpeed * ( distance / slowing_distance );
+                var clipped_speed = _min( ramped_speed, maxSpeed );
+                var desired_velocity = target_offset * (clipped_speed/distance);
+                var velocity = ( this.velocity );
+                velocity = desired_velocity - velocity;
+
+                this.velocity = velocity;
+
+                if (this.sign == -1 ) // UP
+                    this.velocity = _max( this.maxSpeed, this.velocity );
+                else // DOWN
+                    this.velocity = _min( this.maxSpeed, this.velocity );
+
+                /*
+                this.sign = fnChangeSign( this.sign );
+                this.force = fnChangeSign( this.force );
+                this.maxForce = fnChangeSign( this.maxForce );
+                this.maxSpeed = fnChangeSign( this.maxSpeed );
+                this.mass = fnChangeSign( this.mass );
+                this.velocity = fnChangeSign( this.velocity );
+                this.iteration = 0;
+                this.slowDownBias /= 10;
+                */
+            },
+
+            velocity_Vibrato: function( target, position )
+            {
+                this.vibrato =
+                    [1.0, 0.8, 0.5, 0.3, 0.1,
+                                              -0.1, -0.3, -0.5, -0.8, -0.5, 0.0 ];
+                if ( this.vibratoId >= this.vibrato.length )
+                    return 0;
+                var accleration = this.vibrato[this.vibratoId++];
+                if ( this.trackColumnID == 0 )
+                {
+                    var i = 0;
+                    i = 0;
+                }
+                this.velocity = this.velocity - position * accleration;
+                this.velocity = this.velocity;
+                return 1;
             }
         };
         return track;
@@ -257,8 +337,7 @@ var gSpinner = {
             if ( track.velocity > 0 ) // DOWN
             {
                 box.topTail = box.top - this.height;
-                box.dom1.style.top = _floor(box.topTail) + 'px';
-                if ( box.top > this.height )
+                if ( box.top+5 > this.height )
                 {
                     box.top = box.topTail+1;
                 }
@@ -266,38 +345,50 @@ var gSpinner = {
             else  // UP
             {
                 box.topTail = this.height + box.top;
-                box.dom1.style.top = _floor(box.topTail) + 'px';
-                if ( this.top > box.top+box.height )
+                if ( this.top > box.top+box.height+5 )
                 {
                     box.top = box.topTail-1;
                 }
             }
             box.dom0.style.top = _floor(box.top) + 'px';
+            box.dom1.style.top = _floor(box.topTail) + 'px';
+
+            if ( 2 > track.slowDownBias && ( box.top == this.top || box.topTail == this.height ) )
+            {
+                track.stopped = 1;
+                return 0;
+            }
 
             // To stop the spinner we have to find the box which is closest to the top
             {
                 smallestDistToTheTop = _min( smallestDistToTheTop, _abs(this.top-box.top) );
             }
         } // end for r
-
-        if ( 0 > track.slowDownBias && 2 > smallestDistToTheTop )
+//_log( smallestDistToTheTop );
+        if ( 2 > track.slowDownBias && 2 > smallestDistToTheTop )
         {
             track.stopped = 1;
             return 0;
         }
         else if ( track.iteration > track.slowDownBias )
         {
-            track.sign *= -1;
-            track.force *= track.force;
-            track.maxForce *= track.sign;
-            track.maxSpeed *= track.sign;
-            track.mass = (track.mass+smallestDistToTheTop)*track.sign;
-            track.velocity = smallestDistToTheTop*track.sign;
-//            track.iteration = 0;
-            track.slowDownBias /= 2;
+
+            //track.velocity_SlowDownCalculate( this.top, smallestDistToTheTop );
+            track.velocity_Vibrato( this.top, smallestDistToTheTop );
+            //track.slowDownBias *= 0.3;
+            //track.iteration = 0;
+        }
+        else
+        {
+            track.velocity_Calculate();
         }
 
         track.iteration++;
+
+
+        var i = -1;
+        i *= 0.3;
+        i *= 0.3;
 
         return 1;
     },
@@ -314,7 +405,6 @@ var gSpinner = {
         {
             track = this.trackArr[c];
             if ( track.stopped == 1 ) continue;
-            track.velocity_Calculate();
             active += this.track_Spin( track );
 
         } // end for c
