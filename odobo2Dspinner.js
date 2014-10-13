@@ -27,9 +27,15 @@ function _abs( v )
 {
     return Math.abs( v );
 }
-function fnChangeSign( v )
+function _change_Sign( v )
 {
     return ( v + ( 2 * (-1*v) ) );
+}
+function _rand_Int( x, y )
+{
+    return Math.floor(
+        Math.random() * ( y - x + 1 ) + x
+    );
 }
 
 var gSpinner = {
@@ -199,52 +205,34 @@ var gSpinner = {
             force: null,
             maxForce: null,
             maxSpeed: null,
-            maxSpeedVibrato: null,
-            maxSpeedNegative: null,
             mass: null,
             velocity: null,
             iteration: null,
             slowDownBias: null,
             directionWasChanged: null,
-            vibratoCtx: null,
-            vibratoScale: null,
             velocity_CreateStruct: function( sign )
             {
                 this.sign = sign;
-                this.force = 1*this.sign;
-                this.maxForce = 1*this.sign;
-                var maxSpeed = 10*1.0;
-                this.maxSpeed = maxSpeed*this.sign;
-                this.mass = 1*this.sign;
-                this.velocity = 0.001*this.sign;
+                this.force = 1;
+                this.maxForce = 1;
+                var maxSpeed;
+                maxSpeed = _rand_Int(10, 30) * 1.0;
+                maxSpeed = 30;
+                this.maxSpeed = maxSpeed;
+                this.mass = 1;
+                this.velocity = 0.001;
                 this.iteration = 0;
-                this.slowDownBias = maxSpeed;
+                this.slowDownBias = _rand_Int( 30, 50 );
+                this.slowDownBias = 10;
                 this.directionWasChanged = 0;
-
-                this.vibratoCtx = 0;
-                this.maxSpeedVibrato = this.maxSpeed;
-                this.vibratoScale = (maxSpeed)/100;
             },
 
             velocity_Calculate: function()
             {
-                var acceleration = (this.force / this.mass) * this.sign;
+                var acceleration = (this.force / this.mass);
                 this.velocity = this.velocity + (acceleration);
 
-                if (this.sign == -1 ) // UP
-                    this.velocity = _max( this.maxSpeed, this.velocity );
-                else // DOWN
-                    this.velocity = _min( this.maxSpeed, this.velocity );
-            },
-
-            velocity_ChangeDirection: function()
-            {
-                this.sign = fnChangeSign( this.sign );
-                this.force = fnChangeSign( this.force );
-                this.maxForce = fnChangeSign( this.maxForce );
-                this.maxSpeed = fnChangeSign( this.maxSpeed );
-                this.mass = fnChangeSign( this.mass );
-                this.velocity = fnChangeSign( this.velocity );
+                this.velocity = _min( this.maxSpeed, this.velocity );
             }
         };
         return track;
@@ -256,62 +244,58 @@ var gSpinner = {
         var r;
         var box;
         var smallestDistToTheTop = this.height + this.height;
-        var i = track.trackColumnID * this.cols;
-
-
         var _top;
-        if (track.velocity > 0)  // DOWN
-        {
+
             box = track.boxArr[0];
             _top = box.top + track.velocity;
             for ( r = 0; r < this.rows; r++ )
             {
                 box = track.boxArr[r];
-                box.top = _top;
-                _top += box.height;
+//                box.top = _top;
 
-                box.topTail = box.top - this.height;
-                if (box.top > this.height)
+                if ( track.sign > 0 )
                 {
-                    box.top = box.topTail;
-                }
+                    box.top += track.velocity;
+//                    _top += box.height;
+                    box.topTail = box.top - this.height;
+                    if (box.top > this.height)
+                    {
+                        box.top = box.topTail;
+                    }
+                    if ( this.top > box.top )
+                    {
+                        box.topTail = box.top + this.height;
+//                        box.topTail = this.height - box.top + box.height;
+                    }
+                } // DOWN
+                else
+                {
+//                    _top -= box.height;
+                    box.top -= track.velocity;
+                    box.topTail = box.top + this.height;
 
-                box.dom0.style.top = _floor(box.top) + 'px';
+
+                    if ( this.top > box.top+box.height )
+                    {
+                        box.top = box.topTail;
+                    }
+                    if ( box.top+box.height > this.height )
+                    {
+                        box.topTail = this.height - box.top - box.height;
+                        box.topTail = box.topTail;
+                    }
+
+                } // UP
+
+
                 box.dom1.style.top = _floor(box.topTail) + 'px';
+                box.dom0.style.top = _floor(box.top) + 'px';
 
-                smallestDistToTheTop = _min( smallestDistToTheTop, (box.top));
-                smallestDistToTheTop = _min( smallestDistToTheTop, (box.topTail));
+
+                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top-this.top));
+                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
             } // end for i
-        }
-        else  // UP
-        {
-            box = track.boxArr[0];
-//            box = track.boxArr[this.rows-1];
-            _top = box.top + track.velocity;
-//            for ( r = this.rows-1; r >= 0; r-- )
-            for ( r = 0; r < this.rows; r++ )
-            {
-                box = track.boxArr[r];
-                box.top = _top;
-                _top -= box.height;
 
-
-                box.topTail = box.top + this.height;
-                if ( this.top > box.top+box.height )
-                {
-                    box.top = box.topTail;
-                }
-
-
-                box.dom0.style.top = _floor(box.top) + 'px';
-                box.dom1.style.top = _floor(box.topTail) + 'px';
-
-                smallestDistToTheTop = _min( smallestDistToTheTop, (box.top));
-                smallestDistToTheTop = _min( smallestDistToTheTop, (box.topTail));
-            }// end for r
-
-
-        } // end else UP
 
 
 //        track.velocity_Calculate();
@@ -321,22 +305,26 @@ var gSpinner = {
         {
 
             var stopVal = 4.0;
-            if ( stopVal > _abs(track.maxSpeed) )
+            if ( stopVal > track.maxSpeed )
             {
-                if ( track.directionWasChanged == 0 && 6 > smallestDistToTheTop && smallestDistToTheTop > 4 )
+                if ( track.directionWasChanged == 0 && box.height*0.7 > smallestDistToTheTop)
                 {
                     track.directionWasChanged++;
-                    track.velocity_ChangeDirection();
-                    this.fnSlowDown(track, 1);
+                    track.sign = _change_Sign( track.sign ); // cnhange direction
+                    track.maxSpeed--;
                 }
-                else if ( track.directionWasChanged == 1 && 0 == smallestDistToTheTop )
+                else if ( track.directionWasChanged == 1 )
                 {
-                    track.stopped = 1;
-                    return 0;
-                }
+                    track.maxSpeed *= 0.99;
+                    if ( 0 == _floor(smallestDistToTheTop) )
+                    {
+                        track.stopped = 1;
+                        return 0;
+                    }
+                } // end else if
             }
             else
-                this.fnSlowDown(track, 1);
+                track.maxSpeed--;
         }
         else
             track.iteration++;
