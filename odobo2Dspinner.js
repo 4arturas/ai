@@ -49,7 +49,7 @@ var gSpinner = {
     trow: null,
     tcol: null,
     parentBody: null,
-    leftPadding: 3,
+    leftPadding: 4,
 
     create: function( parentBody, width, height, rows, cols )
     {
@@ -66,18 +66,7 @@ var gSpinner = {
         this.trow = _floor( this.height/this.rows );
         this.tcol = _floor( this.width/this.cols );
 
-        var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.top = this.top+'px';
-        div.style.left = '0px';
-        div.style.width = (this.width+this.cols*this.leftPadding-7)+'px';
-        div.style.height = (this.height-2)+'px';
-        div.style.border = '1px solid black';
-        div.style.zIndex = '3';
-
         this.parentBody = parentBody;
-
-        this.parentBody.appendChild( div );
     },
 
 
@@ -94,6 +83,7 @@ var gSpinner = {
         domE.style.width = width+'px';
         domE.style.height = height+'px';
         domE.style.backgroundColor = color;
+        domE.style.fontSize = '10px';
         domE.innerHTML = txt;
         return domE;
     },
@@ -102,9 +92,11 @@ var gSpinner = {
     {
         var dom0 = this.create_BoxDOM( top, left, width, height, txt, color );
         var dom1 = this.create_BoxDOM( top, left, width, height, txt, color );
+        dom0.style.zIndex = '2';
+        dom1.style.zIndex = '1';
         var box = {
             top: top,
-            topTail: top,
+            topTail: top+this.height,
             left: left,
             width: width,
             height: height,
@@ -113,19 +105,9 @@ var gSpinner = {
             dom0: dom0,
             dom1: dom1
         };
+        this.parentBody.appendChild( dom0 );
+        this.parentBody.appendChild( dom1 );
         return box;
-    },
-
-
-    set_BoxDOM: function( domE, box )
-    {
-        domE.style.position = 'absolute';
-        domE.style.top = box.top+'px';
-        domE.style.left = box.left+'px';
-        domE.style.width = box.width+'px';
-        domE.style.height = box.height+'px';
-        domE.style.border = '1px solid black';
-        domE.innerHTML = box.txt;
     },
 
     reset_Tracks: function( trackType )
@@ -174,37 +156,17 @@ var gSpinner = {
         var r;
         var color;
         var box;
-        var i = column*this.cols;
         var trackArr = new Array( rows );
         for ( r = 0; r < this.rows; r++ )
         {
             color = colors[r];
-            box = this.create_Box( 0, 0, 0, 0, '', '' );
+            box = this.create_Box( top, left, width, height, ('trackID:' + column + '<br>row:' + r), color );
             trackArr[r] = box;
-            box.top = top;
-            box.topTail = top+this.height;
-            box.left = left;
-            box.width = width;
-            box.height = height;
-
-            box.txt = 'trackID:' + column + '<br>row:' + r+'';
-            box.color = color;
-            this.set_BoxDOM( box.dom0, box );
-            this.set_BoxDOM( box.dom1, box );
-            box.dom0.style.zIndex = '2';
-            box.dom1.style.zIndex = '1';
-            box.dom0.style.fontSize = '10px';
-            box.dom1.style.fontSize = box.dom0.style.fontSize;
-
-            box.dom0.style.backgroundColor = color;
-            box.dom1.style.backgroundColor = color;
-//            box.dom1.innerHTML = 'helper';
-
-            this.parentBody.appendChild( box.dom0 );
-            this.parentBody.appendChild( box.dom1 );
 
             top += height;
         } // end for r
+
+
         var track = {
             type: trackType,
             trackColumnID: column,
