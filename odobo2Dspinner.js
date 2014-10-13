@@ -34,7 +34,7 @@ function _change_Sign( v )
 function _rand_Int( x, y )
 {
     return Math.floor(
-        Math.random() * ( y - x + 1 ) + x
+            Math.random() * ( y - x + 1 ) + x
     );
 }
 
@@ -130,10 +130,30 @@ var gSpinner = {
 
     reset_Tracks: function( trackType )
     {
+        var sign;
+        var c, r;
+        var track;
+        for ( c = 0; c < this.cols; c++ )
+        {
+            track = this.trackArr[c];
+            track.type = trackType;
+            track.stopped = 0;
+            if ( track.type == this.TRACK_TYPE_SPIN_BOTH_DIRECTIONS )
+                sign = (c % 2) ? -1 : +1;
+            else if ( track.type == this.TRACK_TYPE_SPIN_DOWN )
+                sign = +1;
+            else if ( track.type == this.TRACK_TYPE_SPIN_UP )
+                sign = -1;
+            track.velocity_Create( sign );
+        } // end for c
+    },
+
+    create_Tracks: function( trackType )
+    {
         var c;
         var width = _floor(this.width/this.cols);
         var height = _floor(this.height/this.rows);
-        var colors = [ 'paleturquoise', 'papayawhip', 'palegreen', 'palegoldenrod', 'palevioletred', 'bisque' ];
+        var colors = [ 'paleturquoise', 'papayawhip', 'palegreen', 'palegoldenrod', 'palevioletred', 'bisque', 'red', 'blue', 'green' ];
         var track;
         this.trackArr = new Array( this.cols );
         var left = this.left;
@@ -143,19 +163,8 @@ var gSpinner = {
             track = this.create_Track( trackType, this.top, left, width, height, this.rows, c, colors );
             this.trackArr[c] = track;
             left += this.tcol+this.leftPadding;
-
-            // velocity set
-            {
-                track.type = trackType;
-                if ( track.type == this.TRACK_TYPE_SPIN_BOTH_DIRECTIONS )
-                    sign = (c % 2) ? -1 : +1;
-                else if ( track.type == this.TRACK_TYPE_SPIN_DOWN )
-                    sign = +1;
-                else if ( track.type == this.TRACK_TYPE_SPIN_UP )
-                    sign = -1;
-                track.velocity_CreateStruct( sign );
-            } // end velicity set
         } // end for c
+        this.reset_Tracks( trackType );
     },
 
     TRACK_TYPE_SPIN_UP: 0,
@@ -189,7 +198,7 @@ var gSpinner = {
 
             box.dom0.style.backgroundColor = color;
             box.dom1.style.backgroundColor = color;
-            box.dom1.innerHTML = 'helper';
+//            box.dom1.innerHTML = 'helper';
 
             this.parentBody.appendChild( box.dom0 );
             this.parentBody.appendChild( box.dom1 );
@@ -210,20 +219,16 @@ var gSpinner = {
             iteration: null,
             slowDownBias: null,
             directionWasChanged: null,
-            velocity_CreateStruct: function( sign )
+            velocity_Create: function( sign )
             {
                 this.sign = sign;
                 this.force = 1;
                 this.maxForce = 1;
-                var maxSpeed;
-                maxSpeed = _rand_Int(10, 30) * 1.0;
-                maxSpeed = 30;
-                this.maxSpeed = maxSpeed;
+                this.maxSpeed = _rand_Int(10, 30);
                 this.mass = 1;
                 this.velocity = 0.001;
                 this.iteration = 0;
                 this.slowDownBias = _rand_Int( 30, 50 );
-                this.slowDownBias = 10;
                 this.directionWasChanged = 0;
             },
 
@@ -244,63 +249,52 @@ var gSpinner = {
         var r;
         var box;
         var smallestDistToTheTop = this.height + this.height;
-        var _top;
 
-            box = track.boxArr[0];
-            _top = box.top + track.velocity;
-            for ( r = 0; r < this.rows; r++ )
+        box = track.boxArr[0];
+        for ( r = 0; r < this.rows; r++ )
+        {
+            box = track.boxArr[r];
+
+            if ( track.sign > 0 )
             {
-                box = track.boxArr[r];
-//                box.top = _top;
-
-                if ( track.sign > 0 )
+                box.top += track.velocity;
+                box.topTail = box.top - this.height;
+                if (box.top > this.height)
                 {
-                    box.top += track.velocity;
-//                    _top += box.height;
-                    box.topTail = box.top - this.height;
-                    if (box.top > this.height)
-                    {
-                        box.top = box.topTail;
-                    }
-                    if ( this.top > box.top )
-                    {
-                        box.topTail = box.top + this.height;
-//                        box.topTail = this.height - box.top + box.height;
-                    }
-                } // DOWN
-                else
+                    box.top = box.topTail;
+                }
+                if ( this.top > box.top )
                 {
-//                    _top -= box.height;
-                    box.top -= track.velocity;
                     box.topTail = box.top + this.height;
+//                        box.topTail = this.height - box.top + box.height;
+                }
+            } // DOWN
+            else
+            {
+                box.top -= track.velocity;
+                box.topTail = box.top + this.height;
+                if ( this.top > box.top+box.height )
+                {
+                    box.top = box.topTail;
+                }
+                if ( box.top+box.height > this.height )
+                {
+                    box.topTail = this.top - (this.height - box.top);
+                    box.topTail = box.topTail;
+                }
+
+            } // UP
 
 
-                    if ( this.top > box.top+box.height )
-                    {
-                        box.top = box.topTail;
-                    }
-                    if ( box.top+box.height > this.height )
-                    {
-                        box.topTail = this.height - box.top - box.height;
-                        box.topTail = box.topTail;
-                    }
-
-                } // UP
+            box.dom1.style.top = _floor(box.topTail) + 'px';
+            box.dom0.style.top = _floor(box.top) + 'px';
 
 
-                box.dom1.style.top = _floor(box.topTail) + 'px';
-                box.dom0.style.top = _floor(box.top) + 'px';
+            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top-this.top));
+            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
+        } // end for r
 
-
-                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top-this.top));
-                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
-            } // end for i
-
-
-
-//        track.velocity_Calculate();
-//        return 1;
-
+        // Simple slow down
         if ( track.iteration > track.slowDownBias )
         {
 
@@ -335,19 +329,9 @@ var gSpinner = {
         return 1;
     },
 
-    fnSlowDown: function( track, slowDwonVal )
-    {
-        if ( track.sign > 0 )
-            track.maxSpeed -= slowDwonVal;
-        else
-            track.maxSpeed += slowDwonVal;
-    },
-
-    spin: function( step )
+    spin: function()
     {
         var c;
-        var steps = new Array( this.cols );
-        var position;
         var active = 0;
         var track;
         for ( c = 0; c < this.cols; c++ )
