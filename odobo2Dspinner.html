@@ -9,8 +9,8 @@
 <!--<div style="position: absolute; top: 100px; left: 100px; border: 1px solid green;">ba</div>-->
 <br>
 <br>
-<iframe id="ifr" scrolling="no" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>
-<!--<div id="ifr" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 800px; overflow: hidden;"></div>-->
+<!--<iframe id="ifr" scrolling="no" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>-->
+<div id="ifr" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></div>
 <script>
     var ifr = document.getElementById('ifr');
 </script>
@@ -22,12 +22,12 @@
 
 
 
-    var doc = ifr.contentDocument || ifr.contentWindow.document;
-    var _body = doc.body;
+//    var doc = ifr.contentDocument || ifr.contentWindow.document;
+//    var _body = doc.body;
 
-//    var _body = ifr;
+    var _body = ifr;
 
-    gSpinner.create( _body, 400, 200, 6, 6 );
+    gSpinner.create( _body, 400, 200, 6, 1 );
     gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP );
 
     var _stop = 1;
