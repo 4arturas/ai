@@ -6,10 +6,6 @@
 </head>
 <body>
 
-
-<br>
-<br>
-<!--<iframe id="ifr" scrolling="no" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></iframe>-->
 <div id="ifr" style="position: absolute; top: 100px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></div>
 
 <script type="text/javascript" src="odobo2Dspinner.js"></script>
@@ -17,34 +13,27 @@
 <script type="text/javascript">
 
 
-
-    var ifr = document.getElementById('ifr');
-//    var doc = ifr.contentDocument || ifr.contentWindow.document;
-//    var _body = doc.body;
-
-    var _body = ifr;
-
-    gSpinner.create( _body, 400, 200, 6, 6 );
+    gSpinner.create( document.getElementById('ifr'), 400, 200, 6, 6 );
     gSpinner.create_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS );
 
-    var _stop = 1;
-    var _timeout = 100;
-    function _run()
+    var gStop = 1;
+    var gTimeout = 100;
+    function main_Loop()
     {
         if ( gSpinner.spin() == 0 )
         {
             document.getElementById('btnPannel').style.display = '';
             return;
         }
-        setTimeout( function() { _run(); }, _timeout );
+        setTimeout( function() { main_Loop(); }, gTimeout );
     }
 
 </script>
 
 <div id="btnPannel" style="position: absolute; top: 320px; left: 100px;">
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  _stop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS); _run();">Up and Down</button>
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  _stop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP); _run();">Up</button>
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  _stop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_DOWN); _run();">Down</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS); main_Loop();">Up and Down</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP); main_Loop();">Up</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_DOWN); main_Loop();">Down</button>
 </div>
 
 
