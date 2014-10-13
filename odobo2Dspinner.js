@@ -266,7 +266,6 @@ var gSpinner = {
                 if ( this.top > box.top )
                 {
                     box.topTail = box.top + this.height;
-//                        box.topTail = this.height - box.top + box.height;
                 }
             } // DOWN
             else
@@ -280,7 +279,6 @@ var gSpinner = {
                 if ( box.top+box.height > this.height )
                 {
                     box.topTail = this.top - (this.height - box.top);
-                    box.topTail = box.topTail;
                 }
 
             } // UP
