@@ -254,7 +254,7 @@ var gSpinner = {
             smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
         } // end for r
 
-        // Simple slow down
+        // Primitive slow down
         if ( track.iteration > track.slowDownBias )
         {
 
@@ -264,7 +264,7 @@ var gSpinner = {
                 if ( track.directionWasChanged == 0 && box.height*0.7 > smallestDistToTheTop)
                 {
                     track.directionWasChanged++;
-                    track.sign = _change_Sign( track.sign ); // cnhange direction
+                    track.sign = _change_Sign( track.sign ); // change direction
                     track.maxSpeed--;
                 }
                 else if ( track.directionWasChanged == 1 )
