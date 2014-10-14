@@ -49,7 +49,7 @@ var gSpinner = {
     trow: null,
     tcol: null,
     parentBody: null,
-    leftPadding: 4,
+    leftPadding: 1,
 
     create: function( parentBody, width, height, rows, cols )
     {
@@ -63,8 +63,8 @@ var gSpinner = {
         this.rows = rows;
         this.cols = cols;
 
-        this.trow = _floor( this.height/this.rows );
-        this.tcol = _floor( this.width/this.cols );
+        this.trow = /*_floor*/( this.height/this.rows );
+        this.tcol = /*_floor*/( this.width/this.cols );
 
         this.parentBody = parentBody;
     },
@@ -133,9 +133,9 @@ var gSpinner = {
     create_Tracks: function( trackType )
     {
         var c;
-        var width = _floor(this.width/this.cols);
-        var height = _floor(this.height/this.rows);
-        var colors = [ 'paleturquoise', 'papayawhip', 'palegreen', 'palegoldenrod', 'palevioletred', 'bisque', 'red', 'blue', 'green' ];
+        var width = /*_floor*/(this.width/this.cols);
+        var height = /*_floor*/(this.height/this.rows);
+        var colors = [ 'palevioletred', 'palegreen', 'paleturquoise', 'papayawhip', 'palegoldenrod', 'bisque', 'red', 'blue', 'green' ];
         var track;
         this.trackArr = new Array( this.cols );
         var left = this.left;
@@ -160,7 +160,9 @@ var gSpinner = {
         for ( r = 0; r < this.rows; r++ )
         {
             color = colors[r];
-            box = this.create_Box( top, left, width, height, ('trackID:' + column + '<br>row:' + r), color );
+            var _top = top;
+//            if ( r == 0) _top = _top -2;
+            box = this.create_Box( _top, left, width, height, ('trackID:' + column + '<br>row:' + r), color );
             trackArr[r] = box;
 
             top += height;
@@ -184,9 +186,9 @@ var gSpinner = {
             velocity_Create: function( sign )
             {
                 this.sign = sign;
-                this.force = 1;
-                this.maxForce = 1;
-                this.maxSpeed = _rand_Int(10, 30);
+                this.force = 5;
+                this.maxSpeed = _rand_Int(10, 90);
+                this.maxForce = 100/this.maxSpeed;
                 this.mass = 1;
                 this.velocity = 0.001;
                 this.iteration = 0;
@@ -251,7 +253,7 @@ var gSpinner = {
 
 
             smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top-this.top));
-            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
+//            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
         } // end for r
 
         // Primitive slow down

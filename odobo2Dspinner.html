@@ -2,11 +2,11 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>Odobo</title>
 </head>
 <body>
 
-<div id="viewer" style="position: absolute; top: 220px; left: 100px; border: 0; width:420px; height: 200px; overflow: hidden;"></div>
+<div id="viewer" style="position: absolute; top: 220px; left: 100px; width:404px; height: 199px; overflow: hidden; border:1px solid black;"></div>
 
 <script type="text/javascript" src="odobo2Dspinner.js"></script>
 
@@ -14,7 +14,7 @@
 
 
     var viewer = document.getElementById('viewer');
-    gSpinner.create( viewer, 400, 200, 6, 6 );
+    gSpinner.create( viewer, 400, 200, 3, 5 );
     gSpinner.create_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS );
 
     var gStop = 1;
@@ -47,7 +47,7 @@
 </div>
 
 <div style="position: absolute; top: 320px; left: 550px;">
-    <input type="checkbox" onclick="show_HowItWorks(this);"> Show how it works<br>(it putting boxes top or<br>bottom depending on moving direction)
+    <input type="checkbox" onclick="show_HowItWorks(this);"> Show how it works
 </div>
 
 </body>
