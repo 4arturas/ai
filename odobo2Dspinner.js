@@ -183,6 +183,7 @@ var gSpinner = {
             iteration: null,
             slowDownBias: null,
             directionWasChanged: null,
+            ext1: null,
             velocity_Create: function( sign )
             {
                 this.sign = sign;
@@ -212,6 +213,7 @@ var gSpinner = {
     track_Spin: function( track ) {
         var r;
         var box;
+        var smallestDistToTheTopId = -1;
         var smallestDistToTheTop = this.height + this.height;
 
         box = track.boxArr[0];
@@ -251,18 +253,23 @@ var gSpinner = {
             box.dom1.style.top = _floor(box.topTail) + 'px';
             box.dom0.style.top = _floor(box.top) + 'px';
 
-
-            if ( track.iteration > track.slowDownBias )
+            if ( smallestDistToTheTop > _abs(box.top) ) // todo: not good for production
             {
-                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top));
+                smallestDistToTheTopId = r;
+                smallestDistToTheTop = _abs(box.top);
             } // end if
+//            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top));
 
         } // end for r
 
-        // Slow down
+        track.velocity_Calculate();
+        return this.track_SlowDownStrategy1( track, smallestDistToTheTop, track.boxArr[smallestDistToTheTopId] );
+    },
+
+    track_SlowDownStrategy1: function (track, smallestDistToTheTop, box)
+    {
         if ( track.iteration > track.slowDownBias )
         {
-
             var stopVal = 4.0;
             if ( stopVal > track.maxSpeed )
             {
@@ -287,10 +294,6 @@ var gSpinner = {
         }
         else
             track.iteration++;
-
-        track.velocity_Calculate();
-
-
         return 1;
     },
 
