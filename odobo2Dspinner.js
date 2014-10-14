@@ -63,8 +63,8 @@ var gSpinner = {
         this.rows = rows;
         this.cols = cols;
 
-        this.trow = /*_floor*/( this.height/this.rows );
-        this.tcol = /*_floor*/( this.width/this.cols );
+        this.trow = ( this.height/this.rows );
+        this.tcol = ( this.width/this.cols );
 
         this.parentBody = parentBody;
     },
@@ -78,10 +78,10 @@ var gSpinner = {
         domE.style.textAlign = 'center';
         domE.style.verticalAlign = 'middle';
         domE.style.visibility = '';
-        domE.style.top = top+'px';
-        domE.style.left = left+'px';
-        domE.style.width = width+'px';
-        domE.style.height = height+'px';
+        domE.style.top = (top)+'px';
+        domE.style.left = (left)+'px';
+        domE.style.width = (width)+'px';
+        domE.style.height = (height)+'px';
         domE.style.backgroundColor = color;
         domE.style.fontSize = '10px';
         domE.innerHTML = txt;
@@ -133,8 +133,8 @@ var gSpinner = {
     create_Tracks: function( trackType )
     {
         var c;
-        var width = /*_floor*/(this.width/this.cols);
-        var height = /*_floor*/(this.height/this.rows);
+        var width = (this.width/this.cols);
+        var height = (this.height/this.rows);
         var colors = [ 'palevioletred', 'palegreen', 'paleturquoise', 'papayawhip', 'palegoldenrod', 'bisque', 'red', 'blue', 'green' ];
         var track;
         this.trackArr = new Array( this.cols );
@@ -252,11 +252,14 @@ var gSpinner = {
             box.dom0.style.top = _floor(box.top) + 'px';
 
 
-            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top-this.top));
-//            smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.topTail-this.top));
+            if ( track.iteration > track.slowDownBias )
+            {
+                smallestDistToTheTop = _min( smallestDistToTheTop, _abs(box.top));
+            } // end if
+
         } // end for r
 
-        // Primitive slow down
+        // Slow down
         if ( track.iteration > track.slowDownBias )
         {
 
@@ -265,7 +268,7 @@ var gSpinner = {
             {
                 if ( track.directionWasChanged == 0 && box.height*0.7 > smallestDistToTheTop)
                 {
-                    track.directionWasChanged++;
+                    track.directionWasChanged = 1;
                     track.sign = _change_Sign( track.sign ); // change direction
                     track.maxSpeed--;
                 }

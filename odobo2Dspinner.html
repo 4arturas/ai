@@ -17,7 +17,6 @@
     gSpinner.create( viewer, 400, 200, 3, 5 );
     gSpinner.create_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS );
 
-    var gStop = 1;
     var gTimeout = 100;
     function main_Loop()
     {
@@ -39,11 +38,11 @@
 </script>
 
 <div id="btnPannel" style="position: absolute; top: 220px; left: 550px;">
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS); main_Loop();">Up and Down</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none'; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_BOTH_DIRECTIONS); main_Loop();">Up and Down</button>
     <br>
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP); main_Loop();">Up</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none'; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_UP); main_Loop();">Up</button>
     <br>
-    <button onclick="document.getElementById('btnPannel').style.display = 'none';  gStop = 0; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_DOWN); main_Loop();">Down</button>
+    <button onclick="document.getElementById('btnPannel').style.display = 'none'; gSpinner.reset_Tracks( gSpinner.TRACK_TYPE_SPIN_DOWN); main_Loop();">Down</button>
 </div>
 
 <div style="position: absolute; top: 320px; left: 550px;">
