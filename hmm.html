@@ -14,6 +14,9 @@
     }
 </script>
 <script type="text/javascript">
+    var hmmText = 'However, because of the way conditional variables are implemented, what will actually happen is that they each will wake up one at a time, acquiring the mutex lock, then releasing it. However, while they are being released, they compete with one another, and they also compete with the next write. We profiled this approach, and the result was that we could see how we were spending pretty much all of our time in just synchronizing threads. Instead, we moved to a different approach, in which the first write will actually start off a new thread, dedicated to writing batches. The way it works, when a thread want to write a batch, it will add that to a queue and wake up the background writer thread, then wait on an event. The background writer will read all the current batches and merge them into a single write transaction.';
+</script>
+<script type="text/javascript">
 
     var HMM_WORDS = 300;
     var hmmWords;
