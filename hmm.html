@@ -6,5 +6,93 @@
 </head>
 <body>
 
+<script type="text/javascript">
+    function _assert( a, msg )
+    {
+        if ( !a )
+            alert( '!!!Assert Failed!!! - ' + msg );
+    }
+</script>
+<script type="text/javascript">
+
+    var HMM_WORDS = 300;
+    var hmmWords;
+    var hmmEnds;
+    var hmmBigram;
+
+    var HMM_START_SYMBOL = 0;
+    var HMM_END_SYMBOL = 1;
+    function hmm_Init()
+    {
+        var y, x;
+        hmmWords = new Array( HMM_WORDS );
+        hmmEnds = new Array( HMM_WORDS );
+        hmmBigram = new Array( HMM_WORDS );
+        for ( y = 0; y < HMM_WORDS; y++ )
+        {
+            hmmBigram[y] = new Array( HMM_WORDS );
+            hmmEnds[y] = 0;
+            for ( x = 0; x < HMM_WORDS; x++ )
+            {
+                hmmBigram[y][x] = 0;
+            } // end for x
+        } // end for y
+
+        hmmWords[HMM_START_SYMBOL] = '<start>';
+        hmmWords[HMM_END_SYMBOL] = '<end>';
+    }
+
+
+    var HMM_FIRST_WORD = 0;
+    var HMM_MIDDLE_WORD = 1;
+    var HMM_LAST_WORD = 2;
+    var hmmCurrWord = 2;
+    var hmmLastWord;
+
+    function hmm_GetWordIdx( word )
+    {
+        var wordIdx;
+        for ( wordIdx = 2; wordIdx < hmmCurrWord; wordIdx++ )
+        {
+            if ( hmmWords[wordIdx] == word )
+                break;
+        }
+
+        _assert( HMM_WORDS > hmmCurrWord, 'Virsytas masyvo dydis' );
+
+        if ( wordIdx == hmmCurrWord )
+        {
+            hmmWords[hmmCurrWord] = word;
+            hmmCurrWord++;
+        }
+        return wordIdx;
+    }
+    function hmm_AddWord( state, word )
+    {
+        var wordIdx = hmm_GetWordIdx( word );
+
+        switch( state )
+        {
+            case HMM_FIRST_WORD:
+                hmmBigram[HMM_START_SYMBOL][wordIdx]++;
+                hmmEnds[HMM_START_SYMBOL]++;
+                break;
+            case HMM_MIDDLE_WORD:
+                hmmBigram[hmmLastWord][wordIdx]++;
+                hmmEnds[hmmLastWord]++;
+                break;
+            case HMM_END_SYMBOL:
+                hmmBigram[HMM_END_SYMBOL][wordIdx]++;
+                hmmBigram[wordIdx][HMM_END_SYMBOL]++;
+                hmmEnds[HMM_END_SYMBOL]++;
+                break;
+            default:
+                _assert( false, 'Nežinoma būsena' );
+        } // end switch
+
+        hmmLastWord = wordIdx;
+    }
+</script>
+
 </body>
 </html>
