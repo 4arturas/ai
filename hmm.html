@@ -6,6 +6,8 @@
 </head>
 <body>
 
+<table id="hmmTable" border="1" cellpadding="0" cellspacing="0"></table>
+
 <script type="text/javascript">
     function _assert( a, msg )
     {
@@ -41,8 +43,8 @@
             } // end for x
         } // end for y
 
-        hmmWords[HMM_START_SYMBOL] = '<start>';
-        hmmWords[HMM_END_SYMBOL] = '<end>';
+        hmmWords[HMM_START_SYMBOL] = '!!!start!!!';
+        hmmWords[HMM_END_SYMBOL] = '!!!end!!!';
     }
 
 
@@ -133,13 +135,88 @@
         } // end for i
     }
 
+    function hmm_Emit()
+    {
+        var y, x;
+        var tr, td;
+        var hmmTable = document.getElementById('hmmTable');
+        while ( hmmTable.firstChild )
+            hmmTable.removeChild( hmmTable.firstChild );
+
+        for ( y = 0; y < hmmCurrWord; y++ )
+        {
+            tr = document.createElement('tr');
+            td = document.createElement('td');
+            tr.appendChild(td);
+            hmmTable.appendChild( tr );
+            td.innerHTML = '<strong>' + hmmWords[y] + '</strong> - ' + hmmEnds[y] + ' folowers<br>&nbsp;&nbsp;&nbsp;&nbsp;';
+            for ( x = 0; x < hmmCurrWord; x++ )
+            {
+                if ( hmmBigram[y][x] > 0 )
+                {
+                    td.innerHTML += '[' + hmmWords[x] + '] ';
+                }
+            } // end for x
+        } // end for y
+    }
+
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function hmm_NextWord( word )
+    {
+        var nWord = word+1;
+        var max = hmmEnds[word];
+        var sum = 0;
+        var lim = _rnd_Int( 0, max ) + 1;
+        while ( 1 )
+        {
+            nWord = nWord % hmmCurrWord;
+            sum += hmmBigram[word][nWord];
+            if ( sum >= lim )
+                return nWord;
+            nWord++;
+        } // end while
+    }
+
+    function hmm_BuildSentence()
+    {
+        var sentence = '';
+        var word = hmm_NextWord( HMM_START_SYMBOL );
+        var max = 0;
+        while ( 1 )
+        {
+            sentence += hmmWords[word];
+            word = hmm_NextWord( word );
+            if ( word == HMM_END_SYMBOL ) break;
+            max += _rnd_Int( 1, 12 );
+            if ( max >= 100 )
+                break;
+            sentence += ' ';
+        } // end while
+        console.log( sentence + '.' );
+    }
+
     function hmm_Main()
     {
+        var y;
         hmm_Init();
         hmm_ParseText( hmmText );
+        hmm_Emit();
+        for ( y = 0; y < 10; y++ )
+            hmm_BuildSentence();
     }
     hmm_Main();
 </script>
+
+
 
 </body>
 </html>
