@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<input id="textPermutations" type="text" value="ABCD"><button onclick="permutations();">Do</button>
+<div id="divPermutations"></div>
+
+<script type="text/javascript">
+    var textPermutations = document.getElementById('textPermutations');
+    var divPermutations = document.getElementById('divPermutations');
+    var A, B;
+    function print_Sequence( sequence )
+    {
+        var i;
+        var s = '';
+        for ( i = 0; i < sequence.length; i++ )
+        {
+            s += sequence[i];
+        } // end for i
+        divPermutations.innerHTML += ( s + '<br>' );
+        return s;
+    }
+
+    function print_All( startPosition )
+    {
+        var i;
+        if ( startPosition >= A.length )
+        {
+            print_Sequence( B );
+            return 1;
+        }
+
+        for ( i = 0; i < A.length; i++ )
+        {
+            var exists = false;
+
+            for ( var k = 0; k < startPosition; k++ )
+            {
+                if ( B[k] == A[k] )
+                {
+                    exists = true;
+                    break;
+                } // end if
+            } // end for k
+
+            if ( exists == false )
+            {
+                B[startPosition] = A[i];
+                print_All( startPosition+1 );
+            }
+        } // end for i
+    }
+
+    function permutations()
+    {
+        var i;
+        divPermutations.innerHTML = '';
+        A = new Array( textPermutations.value.length );
+        for ( i = 0; i < textPermutations.value.length; i++ )
+            A[i] = textPermutations.value.charAt( i );
+
+        B = [];
+        print_All( 0 );
+    }
+</script>
+
+</body>
+</html>
