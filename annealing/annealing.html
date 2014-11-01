@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<style type="text/css">
+    #annTable { border: 1px solid black; }
+    #annTable td { border: 1px solid black; width: 25px; height: 25px; font-size: 10px; }
+</style>
+<table id="annTable" cellpadding="0" cellspacing="0"></table>
+<div id="annInfo"></div>
+
+<script type="text/javascript">
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+</script>
+<script type="text/javascript">
+    var annTable = document.getElementById('annTable');
+    var annInfo = document.getElementById('annInfo');
+
+    var ANN_SIZE = 5;
+    var annBoard;
+
+    function ann_BoardInit()
+    {
+        var y, x;
+        var board = new Array( ANN_SIZE );
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            board[y] = new Array( ANN_SIZE );
+            for ( x = 0; x < ANN_SIZE; x++ )
+                board[y][x] = 0;
+            board[y][y] = 1;
+        } // end for y
+        return board;
+    }
+
+    function ann_BoardCopy( board )
+    {
+        var y, x;
+        var copy = new Array( ANN_SIZE );
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            copy[y] = new Array( ANN_SIZE );
+            for ( x = 0; x < ANN_SIZE; x++ )
+                copy[y][x] = board[y][x];
+        } // end for y
+        return copy;
+    }
+    function ann_BoardChange( board )
+    {
+        var y, x;
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            if ( 0.5 > _rnd_Real( 0, 1 ) )
+                continue;
+
+            for ( x = 0; x < ANN_SIZE; x++ )
+                board[y][x] = 0;
+            x = _rnd_Int( 0, ANN_SIZE-1 );
+            board[y][x] = 1;
+        } // end for y
+        return board;
+    }
+
+    function ann_TablePaint( board )
+    {
+        var y, x;
+        var td;
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            for ( x = 0; x < ANN_SIZE; x++ )
+            {
+                td = document.getElementById(y+'_'+x);
+                if ( board[y][x] == 0 )
+                    td.style.backgroundColor = 'white';
+                else
+                    td.style.backgroundColor = 'black';
+            } // end for x
+        } // end for y
+    }
+
+    function ann_Init()
+    {
+        var y, x;
+        var tr, td;
+        annBoard = new Array( ANN_SIZE );
+        while ( annTable.firstChild )
+            annTable.removeChild( annTable.firstChild );
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            tr = document.createElement('tr');
+            annTable.appendChild( tr );
+            for ( x = 0; x < ANN_SIZE; x++ )
+            {
+                td = document.createElement( 'td' );
+                tr.appendChild( td );
+
+                td.setAttribute('id', y + '_' + x );
+//                td.innerHTML = y + ' ' + x;
+            } // end for x
+        } // end for y
+
+    }
+    ann_Init();
+
+    var annEnergy;
+    function ann_CalculateEnergy( board )
+    {
+        //          N   S   E   W   NE  NW  SE  SW
+        var dy = [ -1, +1, -0, +0, -1,  -1, +1, +1 ];
+        var dx = [ -0, +0, -1, +1, -1,  +1, -1, +1 ];
+        var y, x;
+        var k;
+        var ty, tx;
+        var energy = 0;
+        for ( y = 0; y < ANN_SIZE; y++ )
+        {
+            for ( x = 0; x < ANN_SIZE; x++ )
+            {
+                if ( board[y][x] == 0 )
+                    continue;
+
+                for ( k = 0; k < dy.length; k++ )
+                {
+                    ty = y;
+                    tx = x;
+                    while ( 1 == 1 )
+                    {
+                        ty += dy[k];
+                        tx += dx[k];
+                        if ( 0 > ty || ty >= ANN_SIZE ) break;
+                        if ( 0 > tx || tx >= ANN_SIZE ) break;
+                        energy += board[ty][tx];
+                    } /// end while
+                } // end for k
+
+            } // end for x
+        } // end for y
+        return energy;
+    }
+
+
+    var annCurr = ann_BoardInit();
+    ann_BoardChange( annCurr );
+    var annCurrEnergy = ann_CalculateEnergy( annCurr );
+
+    var annWorking;
+    var annWorkingEnergy;
+
+    var annBest;
+    var annBestEnergy = annCurrEnergy;
+
+    var annTemperature = 50.0;
+    var annTemp;
+    var annCalc;
+
+
+
+    function ann_Main()
+    {
+        var stepsPerChange;
+        if ( 0.1 > annTemperature )
+            return;
+        annTemperature *= 0.99;
+
+
+        for ( stepsPerChange = 0; stepsPerChange < 2; stepsPerChange++ )
+        {
+            annWorking = ann_BoardCopy( annCurr );
+            ann_BoardChange( annWorking );
+            ann_TablePaint( annWorking );
+            annWorkingEnergy = ann_CalculateEnergy( annWorking );
+
+            annInfo.innerHTML = 'Temperature = ' + annTemperature;
+            annInfo.innerHTML += '<br>Current energy: ' + annCurrEnergy;
+            annInfo.innerHTML += '<br>Working energy: ' + annWorkingEnergy;
+
+            if ( annWorkingEnergy == 0 )
+            {
+                return;
+            }
+
+            if ( annCurrEnergy > annWorkingEnergy )
+            {
+                annCurrEnergy = annWorkingEnergy;
+                annCurr = ann_BoardCopy( annWorking );
+                continue;
+            }
+
+            var delta = annWorkingEnergy - annCurrEnergy;
+            var test = _rnd_Real( 0, 1 );
+            var calc = Math.exp( -delta/annTemperature );
+            if ( calc > test )
+            {
+                annCurrEnergy = annWorkingEnergy;
+                annCurr = ann_BoardCopy( annWorking );
+            }
+
+        } // end for stepsPerChange
+
+        setTimeout( function() { ann_Main(); }, 100 );
+    }
+    ann_Main();
+
+</script>
+
+</body>
+</html>
