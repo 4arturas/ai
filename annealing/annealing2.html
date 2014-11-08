@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<style type="text/css">
+    #tableAnnealing { border: 0px solid black; }
+    #tableAnnealing td { border: 1px solid black; width: 20px; height: 20px }
+</style>
+<table id="tableAnnealing" cellpadding="0"></table>
+<div id="infoAnnealing"></div>
+
+<script type="text/javascript">
+    var tableAnnealing = document.getElementById('tableAnnealing');
+    var infoAnnealing = document.getElementById('infoAnnealing');
+
+    var ANN_HEIGHT = 5;
+    var ANN_WIDTH = 5;
+
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+                Math.random() * ( y - x + 1 ) + x
+        );
+    }
+
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+
+    function _log( l )
+    {
+        console.log( l );
+    }
+</script>
+
+<script type="text/javascript">
+    function ann_CreateRandom()
+    {
+        var y, x;
+        var box = new Array( ANN_HEIGHT );
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            box[y] = new Array( ANN_WIDTH );
+            for ( x = 0; x < ANN_WIDTH; x++ )
+            {
+                box[y][x] = 0;
+            } // end for x
+            x = _rnd_Int( 0, ANN_WIDTH-1 );
+            box[y][x] = 1;
+        } // end for y
+        return box;
+    }
+
+    function ann_Change( box )
+    {
+        var y, x;
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            if ( 1 == _rnd_Int( 0, 1 ) )
+                continue;
+            for ( x = 0; x < ANN_WIDTH; x++ )
+                box[y][x] = 0;
+            x = _rnd_Int( 0, ANN_WIDTH-1 );
+            box[y][x] = 1;
+        } // end for y
+    }
+
+    function ann_TableInit()
+    {
+        var y, x;
+        var tr, td;
+
+        while ( tableAnnealing.firstChild )
+            tableAnnealing.removeChild( tableAnnealing.firstChild );
+
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            tr = document.createElement('tr');
+            tableAnnealing.appendChild( tr );
+            for ( x = 0; x < ANN_WIDTH; x++ )
+            {
+                td = document.createElement('td');
+                tr.appendChild( td );
+
+                td.setAttribute( 'id', y + '_' + x );
+            } // end for x
+        } // end for y
+    }
+    ann_TableInit();
+
+    function ann_TableReset( box )
+    {
+        var y, x;
+        var tr, td;
+
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            for ( x = 0; x < ANN_WIDTH; x++ )
+            {
+                td = document.getElementById( y+'_'+x );
+                if ( box[y][x] == 1 )
+                    td.style.backgroundColor = 'black';
+                else
+                    td.style.backgroundColor = 'white';
+            } // end for x
+        } // end for y
+    }
+
+    function ann_Energy( box )
+    {
+        var energy = 0;
+        var y, x, ty, tx;
+        var i;
+        //          N   S   E   W  NE  NW  SE  SW
+        var dy = [ -1, +1, -0, +0, -1, -1, +1, +1 ];
+        var dx = [ -0, +0, -1, +1, -1, +1, -1, +1 ];
+
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            for ( x = 0; x < ANN_WIDTH; x++ )
+            {
+                if ( box[y][x] == 0 )
+                    continue;
+
+                for ( i = 0; i < dy.length; i++ )
+                {
+                    ty = y;
+                    tx = x;
+                    while ( 1 == 1 )
+                    {
+                        ty += dy[i];
+                        tx += dx[i];
+                        if ( 0 > ty || ty >= ANN_HEIGHT ) break;
+                        if ( 0 > tx || tx >= ANN_WIDTH ) break;
+
+                        energy += box[ty][tx];
+                    } // end while
+                } // end for i
+            } // end for x
+        } // end for y
+        return energy;
+    }
+
+    function ann_Copy( box )
+    {
+        var y, x;
+        var c;
+        c = new Array( ANN_HEIGHT );
+        for ( y = 0; y < ANN_HEIGHT; y++ )
+        {
+            c[y] = new Array( ANN_WIDTH );
+            for ( x = 0; x < ANN_WIDTH; x++ )
+            {
+                c[y][x] = box[y][x];
+            } // end for x
+        } // end for y
+        return c;
+    }
+
+
+    var annCurrent = ann_CreateRandom();
+    var annCurrentEnergy = ann_Energy( annCurrent );
+    _log( annCurrentEnergy );
+    ann_TableReset( annCurrent );
+
+    var annTemperature = 50.0;
+    function ann_Main()
+    {
+        var stepsPerChange;
+        var working;
+        var workingEnergy;
+
+        if ( 0.5 > annTemperature ) return;
+        annTemperature *= 0.99;
+
+        for ( stepsPerChange = 0; stepsPerChange < 2; stepsPerChange++ )
+        {
+            working = ann_Copy( annCurrent );
+            ann_Change( working );
+            workingEnergy = ann_Energy( working );
+
+            ann_TableReset( working );
+            infoAnnealing.innerHTML = 'Temperature='+annTemperature;
+            infoAnnealing.innerHTML += '<br>Current Energy='+annCurrentEnergy;
+            infoAnnealing.innerHTML += '<br>Working Energy='+workingEnergy;
+
+            if ( workingEnergy == 0 )
+            {
+                return;
+            }
+
+            if ( annCurrentEnergy > workingEnergy )
+            {
+                annCurrent = ann_Copy( working );
+                annCurrentEnergy = workingEnergy;
+                break;
+            }
+
+            var delta = workingEnergy - annCurrentEnergy;
+            var temp = _rnd_Real( 0, 1 );
+            var calc = Math.exp( -delta/annTemperature );
+            if ( calc > temp )
+            {
+                annCurrent = ann_Copy( working );
+                annCurrentEnergy = workingEnergy;
+                break;
+            }
+
+        } // end for stepsPerChange
+
+        setTimeout( function() { ann_Main(); }, 100 );
+    }
+    ann_Main();
+
+</script>
+
+</body>
+</html>
