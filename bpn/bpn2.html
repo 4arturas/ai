@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+                Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+</script>
+
+<script type="text/javascript">
+
+    var BPN_BIAS = 1.0;
+    var BPN_HI = 1.0;
+    var BPN_LO = 0.0;
+
+    var BPN_LAYERS = 3;
+    var BPN_INP = 2;
+    var BPN_HID = 4;
+    var BPN_OUT = 1;
+    var bpnUnits = [ BPN_INP, BPN_HID, BPN_OUT ];
+
+    var bpn;
+    function bpn_Init()
+    {
+        var l, i, j;
+        var layer = new Array( BPN_LAYERS );
+        for ( l = 0; l < BPN_LAYERS; l++ )
+        {
+            layer[l] = new Array( bpnUnits[l]+1 );
+            for ( i = 0; i < bpnUnits[l]+1; i++ )
+            {
+                layer[l][i] = { val: 0, err: 0, weight: null };
+            } // end for i
+            layer[l][0].val = BPN_BIAS;
+        } // end for l
+
+        for ( l = 0; l < BPN_LAYERS-1; l++ )
+        {
+            for ( i = 0; i <= bpnUnits[l]; i++ )
+            {
+                layer[l][i].weight = new Array( bpnUnits[l+1]+1 );
+                for ( j = 0; j <= bpnUnits[l+1]; j++ )
+                {
+                    layer[l][i].weight[j] = _rnd_Real( -0.5, +0.5 );
+                } // end for j
+            } // end for i
+        } // end for l
+        return { layer: layer, bpnNetError: 0 };
+    }
+    bpn = bpn_Init();
+
+    function bpn_Propagate()
+    {
+        var l, i, j;
+        var Sum;
+        for ( l = 1; l < BPN_LAYERS; l++ )
+        {
+            for ( i = 1; i <= bpnUnits[l]; i++ )
+            {
+                Sum = 0;
+                for ( j = 0; j < bpnUnits[l-1]; j++ )
+                    Sum += bpn.layer[l][i].weight[j] * bpn.layer[l-1][j].val;
+                bpn.layer[l][i].val = 1.0 / ( 1.0 + Math.exp(-Sum) );
+            } // end for i
+        } // end for l
+    }
+
+    function bpn_ComputeOutputError( Target )
+    {
+        var i;
+        var Out, Err;
+        bpn.bpnNetError = 0;
+        for ( i = 1; i <= BPN_OUT; i++ )
+        {
+            Out = bpn.layer[BPN_LAYERS-1][i];
+            Err = Target[i-1] - Out;
+            bpn.layer[BPN_LAYERS-1][i].err = Err * Out * ( 1.0 - Out );
+            bpn.bpnNetError += 0.5 * ( Err * Err );
+        } // end for i
+    }
+
+    function bpn_Backpropagate()
+    {
+        var l, i, j;
+        var Err, Out;
+        for ( l = BPN_LAYERS-1; l >= 1; l-- )
+        {
+            for ( i = 1; i <= bpnUnits[l-1]; i++ )
+            {
+                Out = bpn.layer[l][i].val;
+                Err = 0;
+                for ( j = 1; j <= bpnUnits[l]; j++ )
+                    Err += bpn.layer[l][j].weight[i] * bpn.layer[l][j].weight[i];
+                bpn.layer[l][i].err = Err * Out * ( 1.0 - Out );
+            } // end for i
+        } // end for l
+    }
+
+    function bpn_AdjustWeights()
+    {
+        var l, i, j;
+        var Out, Err;
+        for ( l = 1; l < BPN_LAYERS; l++ )
+        {
+            for ( i = 1; i <= bpnUnits[l]; i++ )
+            {
+                Err = bpn.layer[l][i].err;
+                for ( j = 0; j <= bpnUnits[l-1]; j++ )
+                {
+                    Out = bpn.layer[l-1][j].val;
+                    bpn.layer[l][i].weight[j] += 0.5 * Err * Out;
+                } // end for j
+            } // end for i
+        } // end for l
+    }
+
+    function bpn_SetInput( Inp )
+    {
+        var i;
+        for ( i = 1; i <= BPN_INP; i++ )
+            bpn.layer[0][i].val = Inp[i-1];
+    }
+
+    function bpn_Main()
+    {
+        var e, n;
+        var trainInp = [
+            [1,0],
+            [0,1]
+        ];
+        var trainOut = [
+            [1],
+            [0]
+        ];
+
+        for ( e = 0; e < 1000; e++ )
+        {
+            for ( n = 0; n < trainInp.length; n++ )
+            {
+                bpn_SetInput( trainInp[n] );
+                bpn_Propagate();
+                bpn_ComputeOutputError( trainOut[n] );
+                bpn_AdjustWeights();
+            } // end for n
+        } // end for e
+
+        // test
+        for ( n = 0; n < trainInp.length; n++ )
+        {
+            bpn_SetInput( trainInp[n] );
+            bpn_Propagate();
+            _log( bpn.layer[BPN_LAYERS-1][1].val );
+        }
+    }
+    bpn_Main();
+
+</script>
+
+</body>
+</html>
