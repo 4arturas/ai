@@ -118,7 +118,7 @@
                 Err = 0;
                 for ( j = 1; j <= bpnLayers[l]; j++ )
                     Err += bpnWeight[l][j][i] * bpnErr[l][j];
-                bpnErr[l-1][j] = Err * Out * ( 1.0 - Out );
+                bpnErr[l-1][i] = Err * Out * ( 1.0 - Out );
             } // end for i
         } // end for l
     }
