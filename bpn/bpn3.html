@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<div id="bpnDiv"></div>
+<style type="text/css">
+    #bpnTable { border: 1px solid black; margin: 100px 0px 0px 200px; }
+    #bpnTable td { border: 1px solid black; width: 80px; height: 30px; vertical-align: top; }
+</style>
+<table id="bpnTable"></table>
+
+<script type="text/javascript">
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+    function _min( x, y )
+    {
+        return ( x < y ) ? x : y;
+    }
+    function _max( x, y )
+    {
+        return ( x > y ) ? x : y;
+    }
+</script>
+
+<script type="text/javascript">
+    var bpnDiv = document.getElementById('bpnDiv');
+    var bpnTable = document.getElementById('bpnTable');
+
+    var BPN_HI = 1.0;
+    var BPN_LO = 0.0;
+    var BPN_BIAS = 1.0;
+
+    var BPN_INP = 2;
+    var BPN_OUT = 1;
+    var bpnLayer = [ BPN_INP, 3, 1, BPN_OUT ];
+
+    function bpn_TableCreate( bpn )
+    {
+        var y, x, z;
+        var max = -1;
+        var tr, td;
+
+        for ( x = 0; x < bpn.length; x++ )
+        {
+            max = _max( max, bpn[x].length );
+        } // end for x
+
+        for ( y = 0; y < max; y++ )
+        {
+            tr = document.createElement('tr');
+            tr.setAttribute( 'id', 'tr'+y );
+            bpnTable.appendChild( tr );
+        } // end for y
+
+        for ( x = 0; x < bpn.length; x++ )
+        {
+            for ( y = 0; y < max; y++ )
+            {
+                var tr1 = document.getElementById('tr'+y);
+                var n = bpn[x][y];
+                if ( n == null )
+                    td = document.createElement('td');
+                else
+                {
+                    td = n.td;
+                    td.innerHTML = y+'';
+                }
+
+                tr1.appendChild( td );
+            } // end for y
+        } // end for x
+    }
+
+    function bpn_Subtr( v )
+    {
+        v = v + '';
+        if ( v.length > 6 )
+            return v.substr( 0, 6 );
+        return v;
+    }
+    function bpn_TableUpdate( bpn )
+    {
+        var y, x, z;
+        var n;
+        var td;
+        var s;
+        for ( x = 0; x < bpn.length; x++ )
+        {
+            for ( y = 0; y < bpn[x].length; y++ )
+            {
+                n = bpn[x][y];
+                n.td.innerHTML = 'val: ' + bpn_Subtr( n.val );
+                n.td.innerHTML += '<br>err: ' + bpn_Subtr( n.err );
+                if (n.weight == null )
+                    continue;
+                s = '<br>';
+                for ( z = 0; z < n.weight.length; z++ )
+                {
+                    s += '[' + bpn_Subtr(n.weight[z]) + ']';
+                } // end for z
+                n.td.innerHTML += s;
+            } // end for y
+        } // end for x
+    }
+
+    function bpn_Create()
+    {
+        var y, x, z;
+        var w;
+        var n;
+        var bpn;
+        var td;
+        bpn = new Array( bpnLayer.length );
+        for ( x = 0; x < bpnLayer.length; x++ )
+        {
+            bpn[x] = new Array( bpnLayer[x]+1 );
+            for ( y = 0; y < bpn[x].length; y++ )
+            {
+                td = document.createElement('td');
+                td.setAttribute( 'id', 'td'+y+x );
+                bpn[x][y] = {
+                    val: 0, err: 0, weight: null, td: td
+                };
+            } // end for y
+            bpn[x][0].val = BPN_BIAS;
+        } // end for x
+
+        for ( x = bpn.length-1; x >= 1; x-- )
+        {
+            for ( y = 0; y < bpn[x].length; y++ )
+            {
+                n = bpn[x][y];
+                n.weight = new Array( bpn[x-1].length );
+                for ( z = 0; z < n.weight.length; z++ )
+                {
+                    w = _rnd_Real( -0.5, +0.5 );
+                    n.weight[z] = w;
+                } // end for z
+            } // end for y
+        } // end for x
+
+        return bpn;
+    }
+
+    function bpn_SetInput( bpn, Inp )
+    {
+        var y;
+        for ( y = 1; y <= BPN_INP; y++ )
+            bpn[0][y].val = Inp[y-1];
+    }
+
+    var trainInp = [
+            [0,1]
+    ];
+    var trainOut = [
+            [1]
+    ];
+
+    function bpn_Propagate( bpn )
+    {
+        var y, x, z;
+        var Sum;
+        for ( x = 1; x < bpn.length; x++ )
+        {
+            for ( y = 1; y < bpn[x].length; y++ )
+            {
+                Sum = 0;
+                for ( z = 0; z < bpn[x-1].length; z++ )
+                    Sum += bpn[x][y].weight[z] * bpn[x-1][z].val;
+                bpn[x][y].val = 1.0 / ( 1.0 + Math.exp( -Sum ) );
+            } // end for y
+        } // end for y
+    }
+
+    function bpn_ComputeOutputError( bpn, Target )
+    {
+        var y;
+        var Err, Out;
+        var bpnNetError = 0.0;
+        for ( y = 1; y <= BPN_OUT; y++ )
+        {
+            Out = bpn[bpn.length-1][y].val;
+            Err = Target[y-1] - Out;
+            bpn[bpn.length-1][y].err = Err * Out * ( 1.0 - Out );
+            bpnNetError += 0.5 * ( Err*Err );
+        } // end for i
+        return bpnNetError;
+    }
+
+    function bpn_Backpropagate( bpn )
+    {
+        var y, x, z;
+        var Err, Out;
+        for ( x = 1; x < bpn.length; x++ )
+        {
+            for ( y = 1; y < bpn[x-1].length; y++ )
+            {
+                Out = bpn[x-1][y].val;
+                Err = 0;
+                for ( z = 1; z < bpn[x].length; z++ )
+                    Err += bpn[x][z].weight[y] * bpn[x][z].err;
+                bpn[x-1][y].err = Err * Out * ( 1.0 - Out );
+            } // end for y
+        } // end for x
+    }
+
+    function bpn_AdjustWeights( bpn )
+    {
+        var y, x, z;
+        var n;
+        var Out, Err;
+        for ( x = 1; x < bpn.length; x++ )
+        {
+            for ( y = 1; y < bpn[x].length; y++ )
+            {
+                Err = bpn[x][y].err;
+                for ( z = 0; z < bpn[x-1].length; z++ )
+                {
+                    Out = bpn[x-1][z].val;
+                    bpn[x][y].weight[z] += 0.5 * Err * Out;
+                } // end for z
+            } // end for y
+        } // end for x
+    }
+
+    function bpn_Train( bpn, e )
+    {
+        var n;
+        var s;
+        var netError;
+        if ( e == 1000 )
+            return;
+
+        for ( s = 0; s < trainOut.length; s++ )
+        {
+            bpn_SetInput( bpn, trainInp[s] );
+            bpn_Propagate( bpn );
+            netError = bpn_ComputeOutputError( bpn, trainOut[s] );
+            bpnDiv.innerHTML = 'epoch: ' + e + ' netError: ' + netError;
+            bpn_Backpropagate( bpn );
+            bpn_AdjustWeights( bpn );
+        } // end for s
+        bpn_TableUpdate( bpn );
+
+        setTimeout( function() { bpn_Train( bpn, e+1 ); }, 10 );
+    }
+
+    function bpn_Main()
+    {
+        var bpn = bpn_Create();
+        bpn_TableCreate( bpn );
+        bpn_Train( bpn, 0 );
+    }
+    bpn_Main();
+</script>
+
+</body>
+</html>
