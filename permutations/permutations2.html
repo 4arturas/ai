@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<input id="inputPermutations" type="text" value="ABC"><button onclick="permutations();">Do</button>
+<div id="divPermutations"></div>
+<script type="text/javascript">
+    var inputPermutations = document.getElementById('inputPermutations');
+    var divPermutations = document.getElementById('divPermutations');
+
+    var A, B;
+    function print_All( startPosition )
+    {
+        var i, j;
+        if (startPosition >= A.length)
+        {
+            for (i = 0; i < B.length; i++)
+            {
+                divPermutations.innerHTML += B[i];
+            } // end for i
+            divPermutations.innerHTML += '<br>';
+        } // end for i
+
+        for (i = 0; i < A.length; i++)
+        {
+            var exists = 0;
+            for ( j = 0; j < startPosition; j++ )
+            {
+                if ( A[i] == B[j] )
+                {
+                    exists = 1;
+                    break;
+                }
+            } // end for j
+            if ( exists == 0 )
+            {
+                B[startPosition] = A[i];
+                print_All( startPosition+1 );
+            }
+        } // end for i
+    }
+    function permutations()
+    {
+        var i;
+        var text = inputPermutations.value;
+        A = new Array( text.length );
+        B = new Array();
+        for ( i = 0; i < text.length; i++ )
+            A[i] = text.charAt(i);
+        divPermutations.innerHTML = '';
+        print_All( 0 );
+    }
+</script>
+</body>
+</html>
