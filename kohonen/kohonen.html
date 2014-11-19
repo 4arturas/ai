@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<canvas id="kohCanvas" width="400" height="400"></canvas>
+<canvas id="kohCanvas" width="512" height="512"></canvas>
 <button>Treniruoti</button>
 
 <script type="text/javascript">
@@ -15,6 +15,14 @@
         return Math.floor(
             Math.random() * ( y - x + 1 ) + x
         );
+    }
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _log( l )
+    {
+        console.log( l );
     }
 </script>
 <script type="text/javascript">
@@ -35,30 +43,63 @@
             _rnd_Int( 0, 255 )
         );
     }
-    function koh_CanvasInit()
+
+
+    function koh_Show( som )
     {
         var y, x;
-        var canvasY = 512;
-        var canvasX = 512;
+        var c = document.getElementById("kohCanvas");
+        var canvasY = c.getAttribute('height')*1;
+        var canvasX = c.getAttribute('width')*1;
         var yStep = Math.floor(canvasY/SOM_HEIGHT);
         var xStep = Math.floor(canvasX/SOM_WIDTH);
+        var s;
 
-        var c = document.getElementById("kohCanvas");
-        c.setAttribute( 'height', ''+canvasY );
-        c.setAttribute( 'width', ''+canvasX );
         var ctx=c.getContext("2d");
 
-        for ( y = 0; y < canvasY; y += yStep )
+        var _y = 0;
+        var _x = 0;
+        for ( y = 0; y < SOM_HEIGHT; y++ )
         {
-            for ( x = 0; x < canvasX; x += xStep )
+            _x = 0;
+            for ( x = 0; x < SOM_WIDTH; x++ )
             {
-                ctx.fillStyle = koh_RGBRnd();
-                ctx.fillRect( x, y, xStep, yStep );
+                s = som[y][x];
+                ctx.fillStyle = koh_RGBStr(Math.floor(s.r*255), Math.floor(s.g*255), Math.floor(s.b*255));
+                ctx.fillRect( _x, _y, xStep, yStep );
+                _x += xStep;
             } // end for
+            _y += yStep;
         } // end for y
-
     }
-    koh_CanvasInit();
+
+    function koh_Create()
+    {
+        var y, x;
+        var som = new Array( SOM_HEIGHT );
+        for ( y = 0; y < SOM_HEIGHT; y++ )
+        {
+            som[y] = new Array( SOM_WIDTH );
+            for ( x = 0; x < SOM_WIDTH; x++ )
+            {
+                som[y][x] = {
+                    y: y,
+                    x: x,
+                    r: _rnd_Real( 0, 1 ),
+                    g: _rnd_Real( 0, 1 ),
+                    b: _rnd_Real( 0, 1 )
+                };
+            } // end for x
+        } // end for x
+        return som;
+    }
+
+    function koh_Main()
+    {
+        var som = koh_Create();
+        koh_Show( som );
+    }
+    koh_Main();
 </script>
 
 </body>
