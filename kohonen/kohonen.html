@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<canvas id="kohCanvas" width="400" height="400"></canvas>
+<button>Treniruoti</button>
+
+<script type="text/javascript">
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+</script>
+<script type="text/javascript">
+    var kohCanvas = document.getElementById('kohCanvas');
+
+    var SOM_HEIGHT = 32;
+    var SOM_WIDTH = 32;
+
+    function koh_RGBStr( r, g, b )
+    {
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+    function koh_RGBRnd( )
+    {
+        return koh_RGBStr(
+            _rnd_Int( 0, 255 ),
+            _rnd_Int( 0, 255 ),
+            _rnd_Int( 0, 255 )
+        );
+    }
+    function koh_CanvasInit()
+    {
+        var y, x;
+        var canvasY = 512;
+        var canvasX = 512;
+        var yStep = Math.floor(canvasY/SOM_HEIGHT);
+        var xStep = Math.floor(canvasX/SOM_WIDTH);
+
+        var c = document.getElementById("kohCanvas");
+        c.setAttribute( 'height', ''+canvasY );
+        c.setAttribute( 'width', ''+canvasX );
+        var ctx=c.getContext("2d");
+
+        for ( y = 0; y < canvasY; y += yStep )
+        {
+            for ( x = 0; x < canvasX; x += xStep )
+            {
+                ctx.fillStyle = koh_RGBRnd();
+                ctx.fillRect( x, y, xStep, yStep );
+            } // end for
+        } // end for y
+
+    }
+    koh_CanvasInit();
+</script>
+
+</body>
+</html>
