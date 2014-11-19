@@ -49,10 +49,10 @@
     {
         var y, x;
         var c = document.getElementById("kohCanvas");
-        var canvasY = c.getAttribute('height')*1;
-        var canvasX = c.getAttribute('width')*1;
-        var yStep = Math.floor(canvasY/SOM_HEIGHT);
-        var xStep = Math.floor(canvasX/SOM_WIDTH);
+        var canvasHeight = c.getAttribute('height')*1;
+        var canvasWidth = c.getAttribute('width')*1;
+        var yStep = Math.floor(canvasHeight/SOM_HEIGHT);
+        var xStep = Math.floor(canvasWidth/SOM_WIDTH);
         var s;
 
         var ctx=c.getContext("2d");
