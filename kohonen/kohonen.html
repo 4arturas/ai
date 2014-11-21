@@ -20,9 +20,22 @@
     {
         return Math.random() * ( y - x ) + x;
     }
+    function _max( x, y )
+    {
+        return x > y ? x : y;
+    }
+    function _min( x, y )
+    {
+        return x < y ? x : y;
+    }
     function _log( l )
     {
         console.log( l );
+    }
+    function _assert( a, msg )
+    {
+        if ( !a )
+            alert( 'ASSERTION FAILED: ' + msg );
     }
 </script>
 <script type="text/javascript">
@@ -65,7 +78,7 @@
             for ( x = 0; x < SOM_WIDTH; x++ )
             {
                 s = som[y][x];
-                ctx.fillStyle = koh_RGBStr(Math.floor(s.r*255), Math.floor(s.g*255), Math.floor(s.b*255));
+                ctx.fillStyle = koh_RGBStr(Math.floor(s.w[0]*255), Math.floor(s.w[1]*255), Math.floor(s.w[2]*255));
                 ctx.fillRect( _x, _y, xStep, yStep );
                 _x += xStep;
             } // end for
@@ -73,25 +86,120 @@
         } // end for y
     }
 
+    var somNumIterations = 1000;
+    var somIteration = 1;
+    var somMapRadius = _max( SOM_HEIGHT, SOM_WIDTH ) / 2.0;
+    var somLearningRate = 0.00000001;
+    var somTimeConst = somNumIterations / Math.log( somMapRadius );
+    var SOM_NUM_WEIGHTS = 3;
     function koh_Create()
     {
-        var y, x;
+        var y, x, z;
         var som = new Array( SOM_HEIGHT );
         for ( y = 0; y < SOM_HEIGHT; y++ )
         {
             som[y] = new Array( SOM_WIDTH );
             for ( x = 0; x < SOM_WIDTH; x++ )
             {
+                var weight = new Array( SOM_NUM_WEIGHTS );
+                for ( z = 0; z < SOM_NUM_WEIGHTS; z++ )
+                    weight[z] = _rnd_Int( 0, 1 );
                 som[y][x] = {
                     y: y,
                     x: x,
-                    r: _rnd_Real( 0, 1 ),
-                    g: _rnd_Real( 0, 1 ),
-                    b: _rnd_Real( 0, 1 )
+                    w: weight
                 };
             } // end for x
         } // end for x
         return som;
+    }
+
+    function SQR( a )
+    {
+        return a * a;
+    }
+
+    function som_Dist( v0, v1 )
+    {
+        var dist = 0.0;
+        var z;
+        for ( z = 0; z < SOM_NUM_WEIGHTS; z++ )
+            dist += SQR( Math.abs( v1[z] - v0[z] ) );
+        return Math.sqrt( dist );
+    }
+
+    function som_FindBMU( som, testVec )
+    {
+        var d, bestSoFar = 99999;
+        var i, bestIdx = -1;
+        var s;
+        for ( i = 0; i < som.length; i++ )
+        {
+            d = som_Dist( s.w, testVec );
+            if ( bestSoFar > d )
+            {
+                bestSoFar = d;
+                bestIdx = i;
+            }
+        } // end for i
+
+        _assert( bestIdx != -1, 'Best idx not set' );
+        return bestIdx;
+    }
+
+    function som_AdjustWeights( sample, v, learningRate, influence )
+    {
+        var z;
+        for ( z = 0; z < SOM_NUM_WEIGHTS; z++ )
+        {
+            v[z] += learningRate * influence * ( sample[z] - v[z] );
+        } // end for z
+        return v;
+    }
+
+    function som_DistSq( s0, s1 )
+    {
+        var x = Math.abs( s1.x - s0.x );
+        var y = Math.abs( s1.y - s0.y );
+        return Math.sqrt( SQR(x) + SQR(y) );
+    }
+
+    var somSamples = [
+            [1,0,0],
+            [0,1,0],
+            [0,0,1]
+    ];
+
+    function koh_Train( som )
+    {
+        var thisVector = _rnd_Int( 0, somSamples.length-1 );
+        var bmu = som_FindBMU( som, somSamples[thisVector] );
+        var sBmu = som[bmu];
+        var neighRadius;
+        var neighRadiusSqrt;
+        var distSq;
+        var influence;
+        var i;
+        var s;
+
+        somNumIterations--;
+        neighRadius = somMapRadius * Math.exp( -somIteration/somTimeConst );
+        neighRadiusSqrt = neighRadius*neighRadius;
+
+        for ( i = 0; i < som.length; i++ )
+        {
+            s = som[i];
+            distSq = som_DistSq( s, sBmu );
+            if ( neighRadiusSqrt > distSq )
+            {
+                influence = Math.exp( -neighRadiusSqrt/(distSq*2.0) );
+                som_AdjustWeights( somSamples[thisVector], s.w, somLearningRate, influence );
+            } // end if
+        } // end for i
+
+        somLearningRate += 0.01 * Math.exp( -somIteration/somNumIterations );
+        somIteration++;
+
     }
 
     function koh_Main()
