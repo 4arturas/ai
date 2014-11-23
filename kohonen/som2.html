@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script type="text/javascript">
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _max( x, y )
+    {
+        return Math.max( x, y );
+    }
+    function _min( x, y )
+    {
+        return Math.min( x, y );
+    }
+    function _assert( a, msg )
+    {
+        if ( !a )
+            alert( 'ASSERT FAIL: ' + msg );
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+    function _floor( v )
+    {
+        return Math.floor( v );
+    }
+    function _sqr( v )
+    {
+        return v * v;
+    }
+    function _sqrt( v )
+    {
+        return Math.sqrt( v );
+    }
+    function _abs( x, y )
+    {
+        return Math.abs( x, y );
+    }
+</script>
+
+<canvas id='somCanvas' height='64' width='64'></canvas>
+
+<script type="text/javascript">
+    var SOM_HEIGHT = 32;
+    var SOM_WIDTH = 32;
+    var SOM_DIM = 3;
+
+    function som_Create( height, width, dim )
+    {
+        var y, x, z;
+        var weight;
+        var som = new Array( height );
+        for ( y = 0; y < som.length; y++ )
+        {
+            som[y] = new Array( width );
+            for ( x = 0; x < som[y].length; x++ )
+            {
+                weight = new Array( dim );
+                for ( z = 0; z < dim; z++ )
+                    weight[z] = _rnd_Real( 0, 1 );
+
+                som[y][x] = { y: y, x: x, weight: weight };
+            } // end for x
+        } // end for y
+        return som;
+    }
+
+    function som_WeightToRGB( w )
+    {
+        var r = _floor( w[0] * 255 );
+        var g = _floor( w[1] * 255 );
+        var b = _floor( w[2] * 255 );
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+
+    function som_Emit( som )
+    {
+        var y, x, z;
+        var s;
+        var c = document.getElementById('somCanvas');
+        var ctx = c.getContext('2d');
+        var cHeight = c.getAttribute('height') * 1;
+        var cWidth = c.getAttribute('width') * 1;
+        var yStep = _floor( cHeight/som.length );
+        var xStep = _floor( cWidth/som[0].length );
+
+        var _y = 0, _x;
+        for ( y = 0; y < som.length; y++ )
+        {
+            _x = 0;
+            for ( x = 0; x < som[0].length; x++ )
+            {
+                s = som[y][x];
+                ctx.fillStyle = som_WeightToRGB(s.weight);
+                ctx.fillRect( _x, _y, xStep, yStep );
+                _x += xStep;
+            } // end for x
+            _y += yStep;
+        } // end for y
+    }
+
+    function som_Dist( s0, s1 )
+    {
+        var y = _abs( s0.y - s1.y );
+        var x = _abs( s0.x - s1.x );
+        var d = ( y*y + x*x );
+        return d;
+    }
+
+    function som_WeightLength( w0, w1 )
+    {
+        var z;
+        var l = 0;
+        for ( z = 0; z < w0.length; z++ )
+            l += _sqr( w0[z]-w1[z] );
+        return l;
+    }
+
+    function som_BMU( som, sampleVec )
+    {
+        var y, x;
+        var dist, bestDistSoFar = 999999999;
+        var sBest = null;
+        for ( y = 0; y < som.length; y++ )
+        {
+            for ( x = 0; x < som[0].length; x++ )
+            {
+                dist = som_WeightLength( som[y][x].weight, sampleVec );
+                if ( bestDistSoFar > dist )
+                {
+                    bestDistSoFar = dist;
+                    sBest = som[y][x];
+                }
+            } // end for x
+        } // end for y
+        _assert( sBest != null, 'som_BMU' );
+        return sBest;
+    }
+
+    var somNumIterations = 1000;
+    var somIteration = 0;
+    var somMapRadius;
+    var somTimeConst;
+    var somLerningRate = 0.00000001;
+
+    var somSample = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
+
+    function som_Epoch( som )
+    {
+        if ( somNumIterations == 0 )
+        {
+            _log( 'Done' );
+            return;
+        }
+
+        somNumIterations--;
+        somIteration++;
+
+        var neighRadius = somMapRadius * Math.exp( -somIteration/somTimeConst );
+        var neighRadiusSq = neighRadius*neighRadius;
+        var trainVectId = _rnd_Int( 0, somSample.length-1 );
+        var sampleVector = somSample[trainVectId];
+        var sBMU = som_BMU( som, sampleVector );
+        var s;
+        var dist;
+        var y, x, z;
+        var influence;
+
+        for ( y = 0; y < som.length; y++ )
+        {
+            for ( x = 0; x < som[0].length; x++ )
+            {
+                s = som[y][x];
+                dist = som_Dist( s, sBMU );
+                if ( neighRadiusSq > dist )
+                {
+                    influence = Math.exp( -neighRadiusSq/(dist*2) );
+                    for ( z = 0; z < s.weight.length; z++ )
+                    {
+                        s.weight[z] += somLerningRate * influence * ( sampleVector[z] - s.weight[z] );
+                        s.weight[z] = _max( _min(s.weight[z], 1 ), 0 );
+                    } // end for z
+                }
+            } // end for x
+        } // end for y
+
+        somLerningRate += 0.0001 * Math.exp( -somIteration/somNumIterations );
+
+        som_Emit( som );
+
+        setTimeout(
+            function() { som_Epoch( som ); }, 0
+        );
+    }
+
+
+    function som_Main()
+    {
+        var som = som_Create( SOM_HEIGHT, SOM_WIDTH, SOM_DIM );
+        somNumIterations = 10000;
+        somIteration = 0;
+        somMapRadius = _max( som.length, som[0].length );
+        somTimeConst = somNumIterations / Math.log( somMapRadius );
+        somLerningRate = 0.00000001;
+
+        som_Epoch( som );
+    }
+    som_Main();
+</script>
+
+</body>
+</html>
