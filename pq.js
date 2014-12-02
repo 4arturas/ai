@@ -3,7 +3,7 @@ function pq_Create( size )
     return {
         count: 0,
         arr: new Array(size+1),
-        fnCmp: null,
+        fnHeur: null,
         fnCmpTwoElementsAreEqual: null,
         ext1: null, ext2: null
     };
@@ -17,7 +17,7 @@ function pq_Enqueue( pq, e )
     child = pq.count;
     while ( parent > 0 )
     {
-        if ( pq.fnCmp( pq.arr[parent], e, pq ) )
+        if ( pq.fnHeur( pq.arr[parent], e, pq ) )
         {
             pq.arr[child] = pq.arr[parent];
             child = parent;
@@ -40,10 +40,10 @@ function pq_Dequeue( pq, idx )
     while ( pq.count > child )
     {
         if ( pq.count-1 > child )
-            if ( pq.fnCmp( pq.arr[child] , pq.arr[child+1], pq ) )
+            if ( pq.fnHeur( pq.arr[child] , pq.arr[child+1], pq ) )
                 child++;
 
-        if ( pq.fnCmp( e, pq.arr[child], pq ) )
+        if ( pq.fnHeur( e, pq.arr[child], pq ) )
         {
             pq.arr[parent] = pq.arr[child];
             parent = child;
@@ -82,7 +82,7 @@ function pq_Test()
     var e;
     var n = 10;
     var pq = pq_Create(n);
-    pq.fnCmp = pq_CmpTest;
+    pq.fnHeur = pq_CmpTest;
     for ( i = 0; i < n; i++ )
     {
         e = { f: i };

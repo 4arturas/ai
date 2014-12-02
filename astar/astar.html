@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    function pq_Create( size )
+    {
+        var pq = {
+            count: 0,
+            arr: new Array( size+1 ),
+            fnHeur: null,
+            fnEqual: null
+        };
+        return pq;
+    }
+
+    function pq_Enqueue( pq, n )
+    {
+        var parent, child;
+        pq.count++;
+        parent = Math.floor( pq.count/2 );
+        child = pq.count;
+        while ( parent > 0 )
+        {
+            if ( pq.fnHeur( pq.arr[parent], n ) )
+            {
+                pq.arr[child] = pq.arr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+        pq.arr[child] = n;
+    }
+
+    function pq_Dequeue( pq, idx )
+    {
+        var parent, child;
+        var n;
+        pq.arr[idx] = pq.arr[pq.count];
+        n = pq.arr[idx];
+        child = idx * 2;
+        parent = idx;
+        while ( pq.count > child )
+        {
+            if ( pq.count-1 > child )
+                if ( pq.fnHeur( pq.arr[child], pq.arr[child+1] ) )
+                    child++;
+
+            if ( pq.fnHeur( n, pq.arr[child] ) )
+            {
+                pq.arr[parent] = pq.arr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        } // end while
+        pq.arr[parent] = n;
+        pq.count--;
+    }
+
+    function pq_GetIdx( pq, n )
+    {
+        var i;
+        for ( i = 1; i <= pq.count; i++ )
+        {
+            if ( pq.fnEqual( pq.arr[i], n ) )
+                return i;
+        } // end for i
+        return -1;
+    }
+
+    function pq_Test()
+    {
+        var i;
+        var n;
+        var num = 10;
+        var pq = pq_Create( num );
+        pq.fnHeur = function( n0, n1 )
+        {
+            return n0.f > n1.f;
+        };
+        for ( i = 0; i < num; i++ )
+        {
+            n = { f: i };
+            pq_Enqueue( pq, n );
+        } // end for i
+
+        pq.fnEqual = function ( n0, n1 )
+        {
+            return n0.f == n1.f;
+        };
+        n = { f: 5 };
+        i = pq_GetIdx( pq, n );
+        console.log( 'idx=' + i );
+        pq_Dequeue( pq, i );
+
+        while ( pq.count > 0 )
+        {
+            n = pq.arr[1];
+            console.log(n.f);
+            pq_Dequeue( pq, 1 );
+        } // end while
+    }
+    pq_Test();
+</script>
+
+</body>
+</html>

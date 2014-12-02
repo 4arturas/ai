@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    var forwardMultiplyGate = function( x, y ) { return x * y; };
+    var x = -2, y = 3;
+
+    var tweakAmount = 0.01;
+    var bestOut = -Infinity;
+    var bestX = x, bestY = y;
+
+    for ( var i = 0; i < 100; i++ )
+    {
+//        console.log( ( Math.random() * 2 - 1  ) );
+        var xTry = x + tweakAmount * ( Math.random() * 2 - 1 );
+        var yTry = y + tweakAmount * ( Math.random() * 2 - 1 );
+        var out = forwardMultiplyGate( xTry, yTry );
+
+        if ( out > bestOut )
+        {
+            bestOut = out;
+            bestX = xTry;
+            bestY = yTry;
+        }
+    } // end for i
+
+    console.log( bestX + ' ' + bestY + ' ' + bestOut );
+</script>
+
+
+</body>
+</html>

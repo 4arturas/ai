@@ -149,7 +149,7 @@ function odobo_Slice( polygon, sliceType )
     // init
     {
         pqMain = pq_Create( polygon.length );
-        pqMain.fnCmp = fnHeur;
+        pqMain.fnHeur = fnHeur;
         for ( i = 0; i < polygon.length; i++ )
             pq_Enqueue( pqMain, polygon[i] );
     } // end init
@@ -182,7 +182,7 @@ function odobo_Slice( polygon, sliceType )
             {
                 pqTmp = pq_Create(pqMain.count);
                 pqTmp.count = pqMain.count;
-                pqTmp.fnCmp = fnHeur;
+                pqTmp.fnHeur = fnHeur;
                 for (i = 1; i <= pqMain.count; i++)
                     pqTmp.arr[i] = pqMain.arr[i];
             }  // end
