@@ -108,8 +108,204 @@
             pq_Dequeue( pq, 1 );
         } // end while
     }
-    pq_Test();
+//    pq_Test();
 </script>
+
+<style type="text/css">
+    #asTable { border: 1px solid black; }
+    #asTable td { border: 1px solid black; width: 25px; height: 25px; }
+</style>
+<table id="asTable" cellpadding="0" cellspacing="0"></table>
+
+<script type="text/javascript">
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+            Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+</script>
+<script type="text/javascript">
+
+    var AS_HEIGHT = 20;
+    var AS_WIDTH = 20;
+
+    function as_CreateTable()
+    {
+        var y, x;
+        var tr, td;
+        var asTable = document.getElementById('asTable');
+        for ( y = 0; y < AS_HEIGHT; y++ )
+        {
+            tr = document.createElement('tr');
+            asTable.appendChild( tr );
+            for ( x = 0; x < AS_WIDTH; x++ )
+            {
+                td = document.createElement('td');
+                tr.appendChild( td );
+                td.setAttribute( 'id', y + '_' + x );
+            } // end for x
+        } // end for y
+    }
+    as_CreateTable();
+
+    function as_NodesEqual( n0, n1 )
+    {
+        return n0.y == n1.y && n0.x == n1.x;
+    }
+
+    function as_CreateNode( y, x )
+    {
+        return {
+            y: y, x: x,
+            h: 0, f: 0, g: 0,
+            passable: 1, closed: 0, visited: 0, cost: 0
+        };
+    }
+    function as_Create()
+    {
+        var y, x;
+        var node;
+        var start = as_CreateNode( 0, 0 );
+        var goal = as_CreateNode( AS_HEIGHT-1, AS_WIDTH-1 );
+        var asMap = {
+            start: start,
+            goal: goal,
+            map: null
+        };
+        asMap.map = new Array( AS_HEIGHT );
+        for ( y = 0; y < AS_HEIGHT; y++ )
+        {
+            asMap.map[y] = new Array( AS_WIDTH );
+            for ( x = 0; x < AS_WIDTH; x++ )
+            {
+                var passable = 1;
+                if ( _rnd_Int( 0, 5 ) == 5 )
+                    passable = 0;
+
+                node = as_CreateNode( y, x );
+                node.passable = passable;
+
+                if ( as_NodesEqual( asMap.start, node ) )
+                    node.passable = 1;
+                if ( as_NodesEqual( asMap.goal, node ) )
+                    node.passable = 1;
+
+                asMap.map[y][x] = node;
+            } // end for x
+        } // end for y
+        return asMap;
+    }
+
+    function as_EmitTable( asMap )
+    {
+        var y, x;
+        var td;
+        var node;
+        for ( y = 0; y < asMap.map.length; y++ )
+        {
+            for ( x = 0; x < asMap.map[y].length; x++ )
+            {
+                td = document.getElementById(y + '_' + x);
+                node = asMap.map[y][x];
+                if ( node.passable == 0 )
+                    td.style.backgroundColor = 'black';
+                else
+                    td.style.backgroundColor = 'white';
+
+                if ( node.visited == 1 )
+                    td.style.backgroundColor = 'lightblue';
+            } // end for x
+        } // end for y
+
+        td = document.getElementById(asMap.start.y + '_' + asMap.start.x);
+        td.style.backgroundColor = 'yellow';
+        td = document.getElementById(asMap.goal.y + '_' + asMap.goal.x);
+        td.style.backgroundColor = 'red';
+    }
+
+    function as_Manhattan( n0, n1 )
+    {
+        var y = Math.abs( n0.y - n1.y );
+        var x = Math.abs( n0.x - n1.x );
+        return (y*y)+(x*x);
+    }
+
+    function as_Main()
+    {
+        var asMap = as_Create();
+        var node, currentNode;
+        var idx;
+        var dirY = [ -1, +1, -0, +0 ];
+        var dirX = [ -0, +0, -1, +1 ];
+
+        var pq = pq_Create( AS_HEIGHT*AS_WIDTH );
+        pq.fnHeur = function( n0, n1 )
+        {
+            return n0.f > n1.f;
+        };
+        pq.fnEqual = function( n0, n1 )
+        {
+            return as_NodesEqual( n0, n1 );
+        };
+
+        pq_Enqueue( pq, asMap.start );
+        while ( pq.count > 0 )
+        {
+            currentNode = pq.arr[1];
+            pq_Dequeue( pq, 1 );
+
+            if ( as_NodesEqual( asMap.goal, currentNode ) )
+            {
+                as_EmitTable( asMap );
+                _log( 'found' );
+                return;
+            } // end if
+
+            currentNode.closed = 1;
+
+            for ( var i = 0; i < dirY.length; i++ )
+            {
+                var y = currentNode.y + dirY[i];
+                var x = currentNode.x + dirX[i];
+
+                if ( 0 > y || y >= AS_HEIGHT ) continue;
+                if ( 0 > x || x >= AS_WIDTH ) continue;
+
+                node = asMap.map[y][x];
+
+                if ( node.closed == 1 ) continue;
+                if ( node.passable == 0 ) continue;
+
+                var g = node.cost + currentNode.g;
+
+                if ( node.visited == 0 || node.g > g )
+                {
+                    node.g = g;
+                    node.h = as_Manhattan( node, asMap.goal );
+                    node.f = node.g + node.h;
+                    if ( node.visited == 1 )
+                    {
+                        idx = pq_GetIdx( pq, node );
+                        pq_Dequeue( pq, idx );
+                    } // end if
+
+                    pq_Enqueue( pq, node );
+                    node.visited = 1;
+                } // end if
+            } // end for i
+
+        } // end while
+        as_EmitTable( asMap );
+
+    }
+    as_Main();
+</script>
+
 
 </body>
 </html>
