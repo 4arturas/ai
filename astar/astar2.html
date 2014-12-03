@@ -1,0 +1,382 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    function pq_Create( size )
+    {
+        return {
+            count: 0,
+            arr: new Array( size + 1 ),
+            fnHeurirstics: function( n0, n1 ) { alert('Not implemented fnHeurirstics'); },
+            fnEquals: function( n0, n1 ) { alert('Not implemented fnEquals'); }
+        };
+    }
+
+    function pq_Enqueue( pq, n )
+    {
+        var parent, child;
+        pq.count++;
+        parent = Math.floor( pq.count/2 );
+        child = pq.count;
+        while ( parent > 0 )
+        {
+            if ( pq.fnHeurirstics( pq.arr[parent], n ) )
+            {
+                pq.arr[child] = pq.arr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+        pq.arr[child] = n;
+    }
+    function pq_Dequeue( pq, idx )
+    {
+        var parent, child;
+        var n;
+        pq.arr[idx] = pq.arr[pq.count];
+        n = pq.arr[idx];
+        parent = idx;
+        child = idx * 2;
+        while ( pq.count > child )
+        {
+            if ( pq.count-1 > child )
+                if ( pq.fnHeurirstics( pq.arr[child], pq.arr[child+1] ) )
+                    child++;
+
+            if ( pq.fnHeurirstics( n, pq.arr[child] ) )
+            {
+                pq.arr[parent] = pq.arr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        } // end while
+        pq.arr[parent] = n;
+        pq.count--;
+    }
+    function pq_GetIdx( pq, n )
+    {
+        var i;
+        for ( i = 1; i <= pq.count; i++ )
+            if ( pq.fnEquals( pq.arr[i], n ) )
+                return i;
+        return -1;
+    }
+    function pq_Test()
+    {
+        var i;
+        var n;
+        var size = 10;
+        var pq = pq_Create( size );
+        pq.fnHeurirstics = function( n0, n1 )
+        {
+            return n0.f > n1.f;
+        };
+        pq.fnEquals = function( n0, n1 )
+        {
+            return n0.f == n1.f;
+        };
+        for ( i = 0; i < size; i++ )
+        {
+            n = { f: i };
+            pq_Enqueue( pq, n );
+        } // end for i
+
+        n = { f: 1 };
+        i = pq_GetIdx( pq, n );
+        pq_Dequeue( pq, i );
+
+        while ( pq.count > 0 )
+        {
+            n = pq.arr[1];
+            console.log(n.f);
+            pq_Dequeue( pq, 1 );
+        } // end while
+    }
+//    pq_Test();
+</script>
+
+<script type="text/javascript">
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+                Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+    function _min( x, y )
+    {
+        return x < y ? x : y;
+    }
+    function _max( x, y )
+    {
+        return x > y ? x : y;
+    }
+</script>
+
+<style type="text/css">
+    #asTable { border: 1px solid black; }
+    #asTable td { border: 1px solid black; height: 25px; width: 25px; vertical-align: middle; text-align: center; }
+</style>
+<table id="asTable" cellpadding="0" cellspacing="0"></table>
+
+<script type="text/javascript">
+    var AS_HEIGHT = 20;
+    var AS_WIDTH = 20;
+    var AS_HI_NORM = 1.0;
+    var AS_LO_NORM = 0.0;
+
+    function as_CreateTable()
+    {
+        var y, x;
+        var tr, td;
+        var asTable = document.getElementById('asTable');
+        for ( y = 0; y < AS_HEIGHT; y++ )
+        {
+            tr = document.createElement('tr');
+            asTable.appendChild( tr );
+            for ( x = 0; x < AS_WIDTH; x++ )
+            {
+                td = document.createElement('td');
+                tr.appendChild( td );
+                td.setAttribute( 'id', y + '_' + x );
+            } // end for x
+        } // end for y
+    }
+    as_CreateTable();
+
+    function as_CreateNode( y, x )
+    {
+        return {
+            y: y, x: x,
+            h: 0, g: 0, f: 0,
+            parent: null,
+            passable: 1, closed: 0, visited: 0, cost: 0,
+            td: null
+        };
+    }
+
+    function as_Manhattan( n0, n1 )
+    {
+        var y = Math.abs( n0.y - n1.y );
+        var x = Math.abs( n0.x - n1.x );
+        return (y*y) + (x*x);
+    }
+
+    function as_NodesEqual( n0, n1 )
+    {
+        return n0.y == n1.y && n0.x == n1.x;
+    }
+
+    var minCost = Infinity;
+    var maxCost = -minCost;
+    function as_CreateMap()
+    {
+        var y, x;
+        var n;
+        var minDist = Infinity;
+        var maxDist = -minDist;
+
+        var start = as_CreateNode( 0, 0 );
+        var goal = as_CreateNode( AS_HEIGHT-1, AS_WIDTH-1 );
+        var asMap = {
+            start: start,
+            goal: goal,
+            map: new Array( AS_HEIGHT ),
+            dist: new Array( AS_HEIGHT ),
+            pq: pq_Create( AS_HEIGHT*AS_WIDTH )
+        };
+
+        asMap.pq.fnHeurirstics = function( n0, n1 )
+        {
+            return n0.f > n1.f;
+        };
+        asMap.pq.fnEquals = function( n0, n1 )
+        {
+            return as_NodesEqual( n0, n1 );
+        };
+
+        asMap.start.td = document.getElementById(start.y+'_'+start.x);
+        asMap.goal.td = document.getElementById(goal.y+'_'+goal.x);
+
+        for ( y = 0; y < asMap.map.length; y++ )
+        {
+            asMap.map[y] = new Array( AS_WIDTH );
+            asMap.dist[y] = new Array( AS_WIDTH );
+            for ( x = 0; x < AS_WIDTH; x++ )
+            {
+                n = as_CreateNode( y, x );
+                n.td = document.getElementById( y+'_'+x );
+                n.cost = _rnd_Int( 50, 99 );
+//                n.cost = 99;
+                var passable = 1;
+                if ( _rnd_Int( 0, 5 ) == 5 )
+                    passable = 0;
+                passable = 1;
+                n.passable = passable;
+
+                asMap.map[y][x] = n;
+                asMap.dist[y][x] = as_Manhattan( n, asMap.goal );
+                minDist = _min( minDist, asMap.dist[y][x] );
+                maxDist = _max( maxDist, asMap.dist[y][x] );
+                minCost = _min( minCost, n.cost );
+                maxCost = _max( maxCost, n.cost );
+            } // end for x
+        } // end for y
+
+        asMap.map[1][AS_WIDTH-10].cost = 1;
+        asMap.map[0][AS_WIDTH-1].cost = 1;
+
+        for ( y = 0; y < asMap.map.length; y++ )
+        {
+            for ( x = 0; x < asMap.map[y].length; x++ )
+            {
+                asMap.map[y][x].cost = (asMap.map[y][x].cost-minCost) / (maxCost-minCost) * (AS_HI_NORM-AS_LO_NORM) + AS_LO_NORM;
+                asMap.dist[y][x] = ( asMap.dist[y][x] - minDist ) / ( maxDist-minDist ) * ( AS_HI_NORM - AS_LO_NORM ) + AS_LO_NORM;
+            } // end for x
+        } // end for y
+
+
+        return asMap;
+    }
+
+    function as_EmitTable( asMap )
+    {
+        var y, x;
+        var c;
+        for ( y = 0; y < asMap.map.length; y++ )
+        {
+            for ( x = 0; x < asMap.map[y].length; x++ )
+            {
+                var node = asMap.map[y][x];
+                if ( node.passable == 0 )
+                {
+                    node.td.style.backgroundColor = 'black';
+                }
+                else if ( node.passable == 1 )
+                {
+                    node.td.style.backgroundColor = 'rgb(0,'+Math.floor(node.cost*255)+',0)';
+                }
+                node.td.innerHTML = Math.floor(node.cost*(maxCost-minCost)+minCost);
+            } // end for x
+        } // end for y
+        asMap.start.td.style.backgroundColor = 'yellow';
+        asMap.goal.td.style.backgroundColor = 'red';
+    }
+
+    function as_Main_3( node )
+    {
+        node.td.style.backgroundColor = 'rgb(0,0,' + Math.floor(node.cost*255.0) + ')';
+    }
+    var dirY = [-1,+1,-0,+0];
+    var dirX = [-0,+0,-1,+1];
+    function as_Main_2( asMap, currNode, idx )
+    {
+        var node;
+        var y, x;
+        var r = 0;
+        var g;
+        var idx;
+        if ( idx >= dirY.length )
+        {
+            as_Main_1( asMap );
+            return;
+        }
+
+        y = currNode.y + dirY[idx];
+        x = currNode.x + dirX[idx];
+
+        if ( 0 > y || y >= AS_HEIGHT ) r++;
+        if ( 0 > x || x >= AS_WIDTH ) r++;
+
+
+        if ( r == 0 )
+        {
+            node = asMap.map[y][x];
+            if ( node.closed == 0 && node.passable == 1 )
+            {
+                var _cost = 130.0;
+                var _dist = 0.0;
+                var c = ((node.cost-minCost) / (maxCost-minCost) * (AS_HI_NORM-AS_LO_NORM) + AS_LO_NORM);
+                c *= _cost;
+                g = c + currNode.g;
+//                g = currNode.g;
+                if ( node.visited == 0 || node.g > g )
+                {
+                    node.parent = currNode;
+                    node.g = g;
+                    node.h = _dist*asMap.dist[y][x];
+                    node.f = node.g + node.h;
+                    if ( node.visited == 1 )
+                    {
+                        idx = pq_GetIdx( asMap.pq, node );
+                        pq_Dequeue( asMap.pq, idx );
+                    }
+                    pq_Enqueue( asMap.pq, node );
+                    node.visited = 1;
+                    if ( !as_NodesEqual( node, asMap.start ) && !as_NodesEqual( node, asMap.goal ) )
+                        as_Main_3( node );
+                } // end if
+            } // end if
+        } // end if
+
+        setTimeout(
+                function()
+                {
+                    as_Main_2( asMap, currNode, idx+1 );
+                }, 0 );
+    }
+    function as_Main_1( asMap )
+    {
+        if ( asMap.pq.count == 0 )
+        {
+            _log( 'not found' );
+            return;
+        }
+        var currNode = asMap.pq.arr[1];
+        pq_Dequeue( asMap.pq, 1 );
+        currNode.closed = 1;
+
+        if ( as_NodesEqual( currNode, asMap.goal ) )
+        {
+            _log( 'found' );
+            var node = currNode;
+            while ( currNode != null )
+            {
+                currNode.td.style.color = 'white';
+                currNode = currNode.parent;
+            }
+            return;
+        }
+
+        as_Main_2( asMap, currNode, 0 );
+    }
+
+    function as_Main()
+    {
+        var asMap = as_CreateMap();
+        pq_Enqueue( asMap.pq, asMap.start );
+
+        as_EmitTable( asMap );
+        as_Main_1( asMap );
+    }
+    as_Main();
+</script>
+
+</body>
+</html>
