@@ -48,11 +48,17 @@
     #somTable { border: 1px solid black; }
 </style>
 <canvas id="somTable" width="512" height="512"></canvas>
+<div id="somInfo"></div>
 
 <script type="text/javascript">
-    var SOM_HEIGHT = 128;
-    var SOM_WIDTH = 128;
+    var SOM_HEIGHT = 64;
+    var SOM_WIDTH = 64;
     var SOM_DEPTH = 3;
+
+    function som_Info( msg )
+    {
+        document.getElementById('somInfo').innerHTML = msg;
+    }
 
     function som_Create()
     {
@@ -237,6 +243,10 @@
         } // end for y
         somLearningRate = 0.09 * Math.exp( -somIteration/somNumIterations );
 
+        var msg = 'iteration = '+somIteration;
+        msg += '<br>neighRadius = ' + neighRadius;
+        som_Info( msg );
+
         som_Emit( som, neighRadius );
 
         setTimeout( function()
@@ -248,7 +258,6 @@
     function som_EntryPoint()
     {
         var som = som_Create();
-        som_Emit( som );
 
         som_Epoch( som );
     }
