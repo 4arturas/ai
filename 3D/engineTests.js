@@ -7,7 +7,7 @@ function engineTest_Quads1()
     var angle = 0.1;
     if ( testQuadsCounter++ == 10000 ) return 0;
 
-    odobo_ResetObjects();
+    //odobo_ResetObjects();
 
     gEngine.objectsArr[gEngine.OBJ_QUAD_0].matrix = mat4x3_RotXX( testQuadsAngle0 );
     gEngine.objectsArr[gEngine.OBJ_QUAD_1].matrix = mat4x3_RotYY( testQuadsAngle0 );
@@ -45,7 +45,7 @@ function engineTest_QuadsBackFaceCulling()
 
 function engineTest_QuadsSolid()
 {
-    odobo_ResetObjects();
+    //odobo_ResetObjects();
 
     gEngine.objectsArr[gEngine.OBJ_QUAD_0].matrix = mat4x3_RotXX( 0 );
     gEngine.objectsArr[gEngine.OBJ_QUAD_0].state |= STATE_ON;

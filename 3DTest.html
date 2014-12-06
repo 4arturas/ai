@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript" src="utils.js"></script>
+
+<script type="text/javascript" src="2D/geom.js"></script>
+<script type="text/javascript" src="2D/viewer.js"></script>
+<script type="text/javascript" src="2D/pixel.js"></script>
+<script type="text/javascript" src="2D/videobuff.js"></script>
+<script type="text/javascript" src="2D/line.js"></script>
+
+<script type="text/javascript" src="3D/global.js"></script>
+<script type="text/javascript" src="3D/vector.js"></script>
+<script type="text/javascript" src="3D/poly.js"></script>
+<script type="text/javascript" src="3D/camera.js"></script>
+<script type="text/javascript" src="3D/renderer.js"></script>
+<script type="text/javascript" src="3D/obj.js"></script>
+<script type="text/javascript" src="3D/engine.js"></script>
+<script type="text/javascript" src="3D/engineTests.js"></script>
+
+<script type="text/javascript" src="timer.js"></script>
+
+<script type="text/javascript">
+    function getWidth()
+    {
+        var x = 0;
+        if (self.innerHeight)
+        {
+            x = self.innerWidth;
+        }
+        else if (document.documentElement && document.documentElement.clientHeight)
+        {
+            x = document.documentElement.clientWidth;
+        }
+        else if (document.body)
+        {
+            x = document.body.clientWidth;
+        }
+        return x;
+    }
+
+    function getHeight()
+    {
+        var y = 0;
+        if (self.innerHeight)
+        {
+            y = self.innerHeight;
+        }
+        else if (document.documentElement && document.documentElement.clientHeight)
+        {
+            y = document.documentElement.clientHeight;
+        }
+        else if (document.body)
+        {
+            y = document.body.clientHeight;
+        }
+
+        return y;
+    }
+</script>
+
+<script type="text/javascript">
+    var gEngine;
+    function _3D_Test_Init()
+    {
+        var width, height;
+        var bgColor;
+
+        width = 640/2;
+        height = 480/2;
+
+        gEngine = engine_Create( VIEWER_TYPE_HTML5, width, height );
+
+        gEngine.viewer.canvas.style.border = '1px solid black';
+        gEngine.viewer.canvas.style.position = 'absolute';
+        gEngine.viewer.canvas.style.top = (getHeight()/2-height/2) + 'px';
+        gEngine.viewer.canvas.style.top = '120px';
+        gEngine.viewer.canvas.style.left = (getWidth()/2-width/2) + 'px';
+
+        engine_InitObjects( gEngine );
+
+        document.body.appendChild( gEngine.viewer.canvas );
+
+    }
+    _3D_Test_Init();
+
+    var gAngle = 0.0;
+    function _3D_Test_Run()
+    {
+        var i;
+        videobuff_Clear( gEngine.videobuff );
+
+        camera_Euler( gEngine.camera );
+        renderer_Reset( gEngine.rlist );
+
+        for ( i = 0; i < gEngine.objectsArr.length; i++ )
+        {
+            var obj = gEngine.objectsArr[i];
+            if ( (obj.state&STATE_ON) != STATE_ON ) continue;
+            if (renderer_CameraCull(gEngine.rlist, obj, gEngine.camera) == 1)
+                renderer_AddObject(gEngine.rlist, obj, gEngine.camera);
+        } // end for i
+
+        renderer_Render( gEngine.rlist, gEngine.videobuff, gEngine.camera );
+        engine_Draw( gEngine.viewer, gEngine.videobuff );
+
+    }
+
+    function _3D_Test_ResetObjects() // not good only for test todo: rethink
+    {
+        _log( 'ba' );
+        var i;
+        for ( i = 0; i < gEngine.numObjects; i++ )
+        {
+            gEngine.objectsArr[i].state = 0;
+            gEngine.objectsArr[i].attr = 0;
+            gEngine.objectsArr[i].matrix = mat4x3_CreateIdentity();
+        }
+        _log( 'bo' );
+    }
+    function _3D_Test_FnAI()
+    {
+        alert( '_3D_Test_FnAI not implemented');
+        return 0;
+    }
+
+</script>
+
+<style type="text/css">
+    #testPanel { width:150px; font-size: 10px; }
+</style>
+<fieldset id="testPanel">
+    <legend>Engine tests:</legend>
+
+    <div style="color:green;">
+    <input type="radio" name="viewerTest"
+           onclick="_3D_Test_ResetObjects(); _3D_Test_FnAI = engineTest_Quads1; _3D_Test_Main();"> Quads
+    </div>
+    <div style="color:green;">
+    <input type="radio" name="viewerTest"
+           onclick="_3D_Test_ResetObjects(); _3D_Test_FnAI = engineTest_QuadsBackFaceCulling; _3D_Test_Main();"> Quads back face culling
+    </div>
+    <div style="color:red;">
+    <input type="radio" name="viewerTest"
+           onclick="_3D_Test_ResetObjects(); _3D_Test_FnAI = engineTest_QuadsSolid; _3D_Test_Main();"> Quads solid
+    </div>
+    <div style="color:red;">
+        <input type="radio" name="viewerTest" onclick="alert(1);"> Test zbuffer
+    </div>
+
+    <div style="color:red;">
+        TODO:<br>
+        clip on y axis<br>
+        clip on x axis<br>
+        near plane z clip<br>
+        skins<br>
+        cob<br>
+        md2<br>
+    </div>
+
+</fieldset>
+
+<script type="text/javascript">
+
+    var gTimer = timer_Create( 25 );
+    _3D_Test_FnAI = engineTest_Quads1;
+//    _3D_Test_FnAI = engineTest_QuadsBackFaceCulling;
+    function _3D_Test_Main()
+    {
+        if ( timer_NextFrame( gTimer ) == 1 )
+        {
+            if (_3D_Test_FnAI() == 0) return;
+            _3D_Test_Run();
+        }
+        setTimeout( function() { _3D_Test_Main(); }, 20 );
+    }
+    _3D_Test_Main();
+</script>
+
+</body>
+</html>

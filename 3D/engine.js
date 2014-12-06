@@ -48,15 +48,15 @@ function engine_InitObjects( engine )
 
 function engine_Draw( viewer, videobuff )
 {
-    if ( viewer.viewerType == VIEWER_TYPE_HTML4 )
-    {
-        viewerHTML4_Draw(viewer, videobuff);
-    }
-    else if ( viewer.viewerType == VIEWER_TYPE_HTML5 )
-    {
+    //if ( viewer.viewerType == VIEWER_TYPE_HTML4 )
+    //{
+    //    viewerHTML4_Draw(viewer, videobuff);
+    //}
+    //else if ( viewer.viewerType == VIEWER_TYPE_HTML5 )
+    //{
         viewerHTML5_Draw(viewer, videobuff);
-    }
-    else
-        _assert( false, 'viewer_Draw: not known engine type' )
+    //}
+    //else
+    //    _assert( false, 'viewer_Draw: not known engine type' )
 
 }

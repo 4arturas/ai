@@ -47,3 +47,8 @@ function _abs( v )
     return Math.abs( v );
 }
 
+function _floor( v )
+{
+    return Math.floor( v );
+}
+
