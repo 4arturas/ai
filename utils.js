@@ -51,4 +51,20 @@ function _floor( v )
 {
     return Math.floor( v );
 }
+function _sqrt( v )
+{
+    return Math.sqrt( v );
+}
+function _sqr( v )
+{
+    return v*v;
+}
+function _log( v )
+{
+    return Math.log( v );
+}
+function _exp( v )
+{
+    return Math.exp( v );
+}
 

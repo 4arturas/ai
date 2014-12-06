@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript" src="../utils.js"></script>
+
+<canvas id="somCanvas" width="512" height="512"></canvas>
+<div id="somInfo"></div>
+
+<script type="text/javascript">
+
+    var SOM_HEIGHT = 32;
+    var SOM_WIDTH = 32;
+    var SOM_SIZE = SOM_HEIGHT*SOM_WIDTH;
+    var SOM_DEPTH = 3;
+
+    var gSomCanvas = document.getElementById('somCanvas');
+    var gSomCTX = gSomCanvas.getContext('2d');
+    var gSomInfo = document.getElementById('somInfo');
+    var gStepY, gStepX;
+    {
+        var gCanvasHeight = gSomCanvas.getAttribute('height') * 1;
+        var gCanvasWidth = gSomCanvas.getAttribute('width') * 1;
+        gStepY = _floor( gCanvasHeight/SOM_HEIGHT );
+        gStepX = _floor( gCanvasWidth/SOM_WIDTH );
+    }
+
+    function som_Create()
+    {
+        var y, x, z;
+        var weight;
+        var som = {
+            map: new Array( SOM_SIZE )
+        };
+
+        var ctx = 0;
+        for ( y = 0; y < SOM_HEIGHT; y++ )
+        {
+            for ( x = 0; x < SOM_WIDTH; x++ )
+            {
+                weight = new Array( SOM_DEPTH );
+                for ( z = 0; z < SOM_DEPTH; z++ )
+                    weight[z] = _randomReal( 0, 1 );
+
+                som.map[ctx++] = {
+                    y: y, x: x,
+                    weight: weight
+                };
+            } // end for x
+        } // end for y
+        return som;
+    }
+    function som_WeightToRGB( w )
+    {
+        var r = _floor( w[0]*255.0 );
+        var g = _floor( w[1]*255.0 );
+        var b = _floor( w[2]*255.0 );
+        return 'rgb('+r+','+g+','+b+')';
+    }
+    function som_PaintNode( node )
+    {
+        gSomCTX.fillStyle = som_WeightToRGB( node.weight );
+        gSomCTX.fillRect( node.x*gStepX, node.y*gStepY, gStepX, gStepY );
+    }
+    function som_Circle( node, radius )
+    {
+        gSomCTX.strokeStyle = 'black';
+        gSomCTX.lineWidth = 1;
+        gSomCTX.fillStyle = 'black';
+        gSomCTX.beginPath();
+        gSomCTX.arc( node.x*gStepX+gStepX*0.5, node.y*gStepY+gStepY*0.5, radius, 0, Math.PI*2, false );
+        gSomCTX.stroke();
+    }
+    function som_Emit( som )
+    {
+        var y;
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            som_PaintNode( som.map[y] );
+        } // end for y
+    }
+    function som_Info( msg )
+    {
+        gSomInfo.innerHTML = msg;
+    }
+    function som_EntryPoint()
+    {
+        var i = 200;
+        var som = som_Create();
+        var node = som.map[i];
+
+//        som_PaintNode( node );
+//        som_Circle( node, 10 );
+
+        som_Emit( som );
+        node = som_BMU( som, somTrainData[0] );
+        som_Circle( node, gStepY );
+
+        som_Epoch( som );
+    }
+</script>
+
+<script type="text/javascript">
+    var somTrainData = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1],
+        [0,0,0],
+        [1,1,1]
+    ];
+    var somNumEpochs = 1000;
+    var somEpoch = 0;
+    var somMapRadius = _max( SOM_HEIGHT,SOM_WIDTH ) * 0.8;
+    var somTimeConst = somNumEpochs / Math.log( somMapRadius );
+    var somLearningRate = 0.000000001;
+    function som_BMU( som, sample )
+    {
+        var y, z;
+        var dist, bestDistSoFar = Infinity;
+        var bmu = null, node;
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            node = som.map[y];
+            dist = 0;
+            for ( z = 0; z < sample.length; z++ )
+                dist += _sqr( node.weight[z] - sample[z] );
+            dist = _sqrt( dist );
+            if ( bestDistSoFar > dist )
+            {
+                bestDistSoFar = dist;
+                bmu = node;
+            }
+        } // end for y
+        _assert( bmu!=null, 'som_BMU' );
+        return bmu;
+    }
+    function som_DistBetweenNodesSQR( n0, n1 )
+    {
+        var y = _abs( n0.y - n1.y );
+        var x = _abs( n0.x - n1.x );
+        var d = _sqr(y) + _sqr(x);;
+        return d;
+    }
+    var somTrainDataIDX = -1;
+    function som_Epoch( som )
+    {
+        if ( somNumEpochs == 0 ) return;
+
+        var y, z;
+        var neighRadius = somMapRadius * Math.exp( -somEpoch/somTimeConst );
+        var neighRadiusSQR = neighRadius*neighRadius;
+        var distSQR;
+        var bmu, node;
+        var influence;
+        var msg;
+
+        somTrainDataIDX++;
+        somTrainDataIDX = somTrainDataIDX % somTrainData.length;
+        somNumEpochs--;
+        somEpoch++;
+
+        bmu = som_BMU( som, somTrainData[somTrainDataIDX] );
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            node = som.map[y];
+            distSQR = som_DistBetweenNodesSQR( node, bmu );
+            if ( neighRadiusSQR > distSQR )
+            {
+                influence = _exp( -distSQR / ( neighRadiusSQR*2.0 ) );
+                for ( z = 0; z < node.weight.length; z++ )
+                {
+                    node.weight[z] += somLearningRate * influence * ( somTrainData[somTrainDataIDX][z] - node.weight[z] );
+                } // end for z
+            } // end if
+        } // end for y
+
+        somLearningRate = 0.08 * _exp( -somEpoch / somNumEpochs );
+
+        msg = 'somEpoch: ' + somEpoch;
+        msg += '<br>neighRadiusSQR: ' + neighRadiusSQR;
+        msg += '<br>somLearningRate: ' + somLearningRate;
+        som_Info( msg );
+
+        som_Emit( som );
+
+        for ( z = 0; z < somTrainData.length; z++ )
+        {
+            bmu = som_BMU( som, somTrainData[z] );
+            som_Circle( bmu, neighRadiusSQR );
+        }
+
+        setTimeout( function()
+        {
+            som_Epoch( som );
+        }, 0 );
+    }
+
+
+
+    som_EntryPoint();
+</script>
+
+</body>
+</html>
