@@ -173,21 +173,23 @@
     var trainOut = [
             [1]
     ];
-
+    function bpn_PropagateLayer( bpn, lower, upper )
+    {
+        var y, z;
+        var Sum;
+        for ( y = 1; y < bpn.val[upper].length; y++ )
+        {
+            Sum = 0.0;
+            for ( z = 0; z < bpn.val[lower].length; z++ )
+                Sum += bpn.weight[upper][y][z] * bpn.val[lower][z];
+            bpn.val[upper][y] = 1.0 / ( 1.0 + Math.exp( -Sum ) );
+        } // end for y
+    }
     function bpn_Propagate( bpn )
     {
         var y, x, z;
-        var Sum;
-        for ( x = 1; x < bpn.length; x++ )
-        {
-            for ( y = 1; y < bpn[x].length; y++ )
-            {
-                Sum = 0;
-                for ( z = 0; z < bpn[x-1].length; z++ )
-                    Sum += bpn[x][y].weight[z] * bpn[x-1][z].val;
-                bpn[x][y].val = 1.0 / ( 1.0 + Math.exp( -Sum ) );
-            } // end for y
-        } // end for y
+        for ( x = 0; x < bpn.val.length-1; x++ )
+            bpn_PropagateLayer( bpn, x, x+1 );
     }
 
     function bpn_ComputeOutputError( bpn, Target )
