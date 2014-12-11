@@ -10,12 +10,12 @@ function polygon_CreateRandom( tops )
     polygon.push( vec2D_Create( x, _y ) );
     for ( i = 0; i < tops; i++ )
     {
-        y = _y - _randomReal( 20, 100 );
+        y = _y - _rnd_Real( 20, 100 );
 
         // vertical
         v0 = vec2D_Create( x, y );
         // horizontal
-        x += _randomReal( 20, 30 );
+        x += _rnd_Real( 20, 30 );
         v1 = vec2D_Create( x, y );
         polygon.push( v0 );
         polygon.push( v1 );

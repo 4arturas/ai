@@ -239,11 +239,11 @@ function line_Test( vb )
 
     for ( i = 0; i < 300; i++ )
     {
-        p = pixel_Create(_randomInt(0, 255), _randomInt(0, 255), _randomInt(0, 255));
-        x0 = _randomInt(-s, s);
-        y0 = _randomInt(-s, s);
-        x1 = _randomInt(-s, s);
-        y1 = _randomInt(-s, s);
+        p = pixel_Create(_rnd_Int(0, 255), _rnd_Int(0, 255), _rnd_Int(0, 255));
+        x0 = _rnd_Int(-s, s);
+        y0 = _rnd_Int(-s, s);
+        x1 = _rnd_Int(-s, s);
+        y1 = _rnd_Int(-s, s);
         line_Log( x0, y0, x1, y1 );
         line_Draw(vb, x0, y0, x1, y1, p);
     } // end for i

@@ -14,7 +14,7 @@ function spinner_Effect_2()
             for ( i = 0; i < spinnerEffectType2.length; i++ )
             {
                 spinnerEffectType2[i] = i % 2;
-//                spinnerEffectType2[i] = _randomInt(0, 2);
+//                spinnerEffectType2[i] = _rnd_Int(0, 2);
             }
 
 

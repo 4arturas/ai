@@ -246,7 +246,7 @@ function odobo_CreateRandomPolygon()
     {
         for ( i = 0; i < num; i++ )
         {
-            radius = _randomInt( 100, 150 );
+            radius = _rnd_Int( 100, 150 );
             x = Math.sin( angle ) * radius + center.x;
             y = Math.cos( angle ) * radius + center.y;
             v0 = vec2D_Create( x, y );

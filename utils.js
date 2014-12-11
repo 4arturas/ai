@@ -2,11 +2,11 @@ function _log( l )
 {
     console.log( l );
 }
-function _randomReal( x, y )
+function _rnd_Real( x, y )
 {
     return Math.random() * ( y - x ) + x
 }
-function _randomInt( x, y )
+function _rnd_Int( x, y )
 {
     return Math.floor(
             Math.random() * ( y - x + 1 ) + x

@@ -6,7 +6,7 @@ function spinner_Effect_5_CreateTargets()
         gSpinner.targetArr[i] = -1;
         while (gSpinner.targetArr[i] == -1)
         {
-            r = _randomInt(0, gSpinner.homeArr.length - 1);
+            r = _rnd_Int(0, gSpinner.homeArr.length - 1);
             var exists = false;
             for ( j = 0; j < gSpinner.homeArr.length; j++ )
             {

@@ -2,7 +2,7 @@
 
 function spinner_Effect_3_SetStep()
 {
-    var r = _randomInt( 0, 1 );
+    var r = _rnd_Int( 0, 1 );
     if ( r == 0 )
         return gSpinner.angleStep;
     return -gSpinner.angleStep;
@@ -26,7 +26,7 @@ function spinner_Effect_3()
                 gSpinner.effectTypeArr[i] = -1;
                 gSpinner.angle[i] = 0.0;
                 gSpinner.angleStepArr[i] = gSpinner.angleStep;
-//                gSpinner.effectTypeArr[i] = _randomInt(0, 2);
+//                gSpinner.effectTypeArr[i] = _rnd_Int(0, 2);
             }
             break;
 
@@ -37,7 +37,7 @@ function spinner_Effect_3()
 
                 if ( gSpinner.effectTypeArr[i] == -1 ) // 1. if effect is not set
                 {
-                    var r = _randomInt( 0, 50 );
+                    var r = _rnd_Int( 0, 50 );
                     if ( r == 1 )
                     {
                         gSpinner.effectTypeArr[i] = SPINNER_EFFECT_1;

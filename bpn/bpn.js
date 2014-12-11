@@ -38,10 +38,10 @@ function bpn_Create( bpnUnits )
                 var s = 'val: ' + bpn_Substr(this.val);
                 s += '<br><span style="color:red; border-bottom: 1px solid black;">err: ' + bpn_Substr(this.err) + '</span>';
                 if ( this.weight != null )
-                for ( var w = 0; w < this.weight.length; w++ )
-                {
-                    s += '<br>' + bpn_Substr(this.weight[w]);
-                } // end for w
+                    for ( var w = 0; w < this.weight.length; w++ )
+                    {
+                        s += '<br>' + bpn_Substr(this.weight[w]);
+                    } // end for w
                 document.getElementById(this.y+'_'+this.x).innerHTML = s;
             };
             node = { y: r, x: layer, val:0, err:0, weight:null, fnVisualise: fnVisualise };
