@@ -101,6 +101,57 @@ var somMapRadius = _max( SOM_HEIGHT, SOM_WIDTH ) * 0.8;
 var somTimeConst = somNumEpoch / Math.log( somMapRadius );
 var somLearningRate = 0.0000001;
 var somTrainVecId = -1;
+function som_PostTraining( som, trainInp )
+{
+    var div = document.createElement('div');
+    var y, x;
+
+    for ( y = 0; y < 8; y++ )
+    {
+        trainInp.push([_rnd_Real(0,1),_rnd_Real(0,1),_rnd_Real(0,1)]);
+    }
+
+
+    for( y = 0; y < trainInp.length; y++ )
+    for ( x = 0; x < trainInp[y].length; x++ )
+        trainInp[y][x] = (''+trainInp[y][x]).substr(0,3);
+
+    for( y = 0; y < trainInp.length; y++ )
+    {
+        var trainTxt = '';
+        var rgb = '';
+        for ( x = 0; x < trainInp[y].length-1; x++ )
+        {
+            trainTxt += trainInp[y][x]+', ';
+            rgb += _floor(trainInp[y][x]*1.0*255.0) + ',';
+        } // end for x
+        trainTxt += trainInp[y][x];
+        rgb += _floor(trainInp[y][x]*1.0*255.0);
+
+        div.appendChild( document.createElement('br') );
+
+        var span = document.createElement('span');
+        span.innerHTML = '&nbsp&nbsp&nbsp&nbsp';
+        span.style.height = '25px';
+        span.style.width = '25px';
+        span.style.marginLeft = '5px';
+        span.style.backgroundColor = 'rgb(' + rgb + ')';
+        span.style.cursor = 'pointer';
+        span.setAttribute('name',trainTxt);
+        span.onclick = function()
+        {
+            som_Visualise( som );
+            var arr = eval( '['+this.getAttribute('name')+']' );
+            var bmu = som_BMU( som, arr );
+            bmu.radius = bmu.stepX;
+            bmu.fnCircle();
+        };
+        div.appendChild( document.createTextNode('['+trainTxt+']') );
+        div.appendChild( span );
+    } // end for y
+
+    document.body.appendChild( div );
+}
 function som_Epoch( som, trainInp, epochNum, epoch )
 {
     var y, z;
@@ -137,7 +188,7 @@ function som_Epoch( som, trainInp, epochNum, epoch )
         }
     } // end for y
 
-    somLearningRate = 0.09 * Math.exp(-epoch/epochNum);
+    somLearningRate = 0.08 * Math.exp(-epoch/epochNum);
 
     som_Visualise( som );
     for ( y = 0; y < trainInp.length; y++ )
@@ -155,13 +206,17 @@ function som_Epoch( som, trainInp, epochNum, epoch )
     msg += '<br>neighRadius: ' + neighRadius;
     som_Msg( msg );
 
-    //if ( epochNum == 0 ) return;
-    if ( 1.5 > neighRadius ) return;
+    //if ( 1.2 > neighRadius ) return;
+    if ( epochNum == 0 )
+    {
+        som_PostTraining( som, trainInp );
+        return;
+    }
 
     setTimeout( function()
     {
         som_Epoch( som, trainInp, epochNum, epoch );
-    }, 10 );
+    }, 0 );
 }
 function som_EntryPoint()
 {
