@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<script type="text/javascript">
+    function _floor( v )
+    {
+        return Math.floor( v );
+    }
+    function _rnd_Int( x, y )
+    {
+        return Math.floor(
+                Math.random() * ( y - x + 1 ) + x
+        );
+    }
+    function _rnd_Real( x, y )
+    {
+        return Math.random() * ( y - x ) + x;
+    }
+    function _log( l )
+    {
+        console.log( l );
+    }
+    function _abs( v )
+    {
+        return Math.abs( v );
+    }
+    function _max( x, y )
+    {
+        return x > y ? x : y;
+    }
+    function _min( x, y )
+    {
+        return x < y ? x : y;
+    }
+    function _assert( a, msg )
+    {
+        if ( !a )
+            alert( 'ASSERT FAIL: ' + msg );
+    }
+</script>
+
+<style type="text/css">
+    #somTable { border: 1px solid black; }
+</style>
+<canvas id="somTable" width="512" height="512"></canvas>
+<div id="somInfo"></div>
+
+<script type="text/javascript">
+    var SOM_HEIGHT = 64;
+    var SOM_WIDTH = 64;
+    var SOM_DEPTH = 3;
+
+    function som_Info( msg )
+    {
+        document.getElementById('somInfo').innerHTML = msg;
+    }
+
+    function som_Create()
+    {
+        var y, x, z;
+        var node;
+        var som =
+        {
+            map: new Array( SOM_HEIGHT )
+        };
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            som.map[y] = new Array( SOM_WIDTH );
+            for ( x = 0; x < som.map[y].length; x++ )
+            {
+                node = {
+                    y: y, x: x,
+                    z: new Array( SOM_DEPTH )
+                };
+                for ( z = 0; z < node.z.length; z++ )
+                {
+                    node.z[z] = _rnd_Real(0, 1);
+                }
+                som.map[y][x] = node;
+            } // end for x
+        } // end for y
+        return som;
+    }
+    function som_NodeToRGB( node )
+    {
+        var r = _floor(node.z[0]*255.0);
+        var g = _floor(node.z[1]*255.0);
+        var b = _floor(node.z[2]*255.0);
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+    function som_Emit( som, radius )
+    {
+        var y, x, z;
+        var node;
+        var somTable = document.getElementById('somTable');
+        var ctx = somTable.getContext('2d');
+        var canY = somTable.getAttribute('height') * 1;
+        var canX = somTable.getAttribute('width') * 1;
+        var stepY = _floor( canY/SOM_HEIGHT );
+        var stepX = _floor( canX/SOM_WIDTH );
+        var _y = 0, _x;
+        var color;
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            _x = 0;
+            for ( x = 0; x < som.map[y].length; x++ )
+            {
+                node = som.map[y][x];
+                ctx.fillStyle = som_NodeToRGB( node );
+                ctx.fillRect( _x, _y, stepY, stepX );
+                _x += stepX;
+            } // end for x
+            _y += stepY;
+        } // end for y
+
+        som_DrawCircles( som, radius );
+    }
+
+    function som_DrawCircles( som, radius )
+    {
+        var y;
+        var nodeBMU;
+        var somTable = document.getElementById('somTable');
+        var ctx = somTable.getContext('2d');
+        var canY = somTable.getAttribute('height') * 1;
+        var canX = somTable.getAttribute('width') * 1;
+        var stepY = _floor( canY/SOM_HEIGHT );
+        var stepX = _floor( canX/SOM_WIDTH );
+        for ( y = 0; y < somSample.length; y++ )
+        {
+            nodeBMU = som_BMU( som, somSample[y] );
+            ctx.fillStyle = 'black';
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.arc( nodeBMU.x*stepX, nodeBMU.y*stepY, radius*2, 0, 2*Math.PI, false );
+            ctx.stroke();
+        } // end for y
+    }
+
+    var somNumIterations = 1000;
+    var somIteration = 0;
+    var somMapRadius = _max( SOM_HEIGHT, SOM_WIDTH ) * 0.8;
+    var somTimeConst = somNumIterations / Math.log( somMapRadius );
+    var somLearningRate = 0.0000001;
+
+    var somSample = [
+        [0,0,0],
+        [1,0,0],
+        [0,1,0],
+        [0,0,1],
+        [0,1,1],
+        [1,1,0],
+        [1,0,1],
+        [1,1,1]
+    ];
+
+    function som_Dist( v0, v1 )
+    {
+        var d = 0;
+        var y;
+        for ( y = 0; y < v0.length; y++ )
+        {
+            d += _abs( v0[y] - v1[y] );
+        }
+        return Math.sqrt( d );
+    }
+    function som_BMU( som, trainVector )
+    {
+        var y, x;
+        var somBest = null;
+        var node;
+        var dist, bestDistSoFar = Infinity;
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            for ( x = 0; x < som.map[y].length; x++ )
+            {
+                node = som.map[y][x];
+                dist = som_Dist( node.z, trainVector );
+                if ( bestDistSoFar > dist )
+                {
+                    bestDistSoFar = dist;
+                    somBest = node;
+                }
+            } // end for x
+        } // end for y
+        _assert( (som!=null), 'som_BUM' );
+        return somBest;
+    }
+    function som_DistBetweenNodes( n0, n1 )
+    {
+        var y = _abs(n0.y - n1.y);
+        var x = _abs(n0.x - n1.x);
+        var d = (y*y) + (x*x);
+        return d;
+    }
+    var gTrainVectorID = 1;
+    function som_Epoch( som )
+    {
+        if ( somNumIterations == 0 )
+            return;
+
+        gTrainVectorID++;
+        gTrainVectorID = ( gTrainVectorID % (somSample.length) );
+
+
+        var trainVectorID = _rnd_Int( 0, somSample.length-1 );
+        trainVectorID = gTrainVectorID;
+        var somBMU = som_BMU( som, somSample[trainVectorID] );
+
+        var neighRadius, neighRadiusSq;
+        var y, x, z;
+        var influence;
+        var distNodeSq;
+        var node;
+
+        somIteration++;
+        somNumIterations--;
+        neighRadius = somMapRadius * Math.exp( -somIteration/somTimeConst );
+        neighRadiusSq = neighRadius*neighRadius;
+
+        for ( y = 0; y < som.map.length; y++ )
+        {
+            for ( x = 0; x < som.map[y].length; x++ )
+            {
+                node = som.map[y][x];
+                distNodeSq = som_DistBetweenNodes( somBMU, node );
+                if ( neighRadiusSq > distNodeSq )
+                {
+                    influence = Math.exp( -distNodeSq/(neighRadiusSq*2));
+                    for ( z = 0; z < node.z.length; z++ )
+                    {
+                        node.z[z] += somLearningRate * influence * ( somSample[trainVectorID][z] - node.z[z] );
+//                        node.z[z] += somLearningRate * influence * ( somBMU.z[z] - node.z[z] );
+                    } // end for z
+                }
+            } // end for x
+        } // end for y
+        somLearningRate = 0.09 * Math.exp( -somIteration/somNumIterations );
+
+        var msg = 'iteration = '+somIteration;
+        msg += '<br>neighRadius = ' + neighRadius;
+        som_Info( msg );
+
+        som_Emit( som, neighRadius );
+
+        setTimeout( function()
+        {
+            som_Epoch( som );
+        }, 0 );
+    }
+
+    function som_EntryPoint()
+    {
+        var som = som_Create();
+
+        som_Epoch( som );
+    }
+    som_EntryPoint();
+</script>
+
+</body>
+</html>
