@@ -57,7 +57,6 @@ function article3()
     x = x + stepSize * xGradient;
     y = y + stepSize * yGradient;
     var outNew = forward_MultiplyGate( x, y );
-    outNew;
 }
 article3();
 
