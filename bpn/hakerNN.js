@@ -3,6 +3,10 @@ function forward_MultiplyGate( x, y )
     return x * y;
 }
 
+//////////////////////////////////////////////
+/// Стратегия №1: Произвольный локальный поиск
+/// http://habrahabr.ru/company/paysto/blog/244723/
+//////////////////////////////////////////////
 function article1()
 {
     var x = -2, y = 3;
@@ -27,6 +31,35 @@ function article1()
 }
 article1();
 
+function article1a()
+{
+    var x = -2, y = 3;
+    var tweakAmount = 0.01;
+    var out;
+    var outBest = -Infinity;
+    var xBest = x, yBest = y;
+    var i;
+    var xTry, yTry;
+    for ( i = 0; i < 100; i++ )
+    {
+        xTry = x + tweakAmount * ( Math.random() * 2 - 1 );
+        yTry = y + tweakAmount * ( Math.random() * 2 - 1 );
+        out = forward_MultiplyGate( xTry, yTry );
+        if ( out > outBest )
+        {
+            outBest = out;
+            xBest = xTry;
+            yBest = yTry;
+        }
+    } // end for i
+    console.log( outBest + ' ' + xBest + ' ' + yBest );
+}
+article1a();
+
+//////////////////////////////////////////////
+/// Стратегия №2: Числовой градиент
+/// http://habrahabr.ru/company/paysto/blog/244935/
+//////////////////////////////////////////////
 function article2()
 {
     var x = -2, y = 3;
@@ -46,6 +79,15 @@ function article2()
 }
 article2();
 
+function article2a()
+{
+
+}
+
+//////////////////////////////////////////////
+/// Стратегия №3: Аналитический градиент
+/// http://habrahabr.ru/company/paysto/blog/245051/
+//////////////////////////////////////////////
 function article3()
 {
     var x = -2, y = 3;
@@ -59,5 +101,23 @@ function article3()
     var outNew = forward_MultiplyGate( x, y );
 }
 article3();
+
+//////////////////////////////////////////////
+/// Схемы с несколькими логическими элементами
+/// Обратное распространение ошибки
+/// http://habrahabr.ru/company/paysto/blog/245403/
+//////////////////////////////////////////////
+
+
+//////////////////////////////////////////////
+/// Шаблоны в «обратном» потоке
+/// Пример "Один нейрон"
+/// http://habrahabr.ru/company/paysto/blog/246093/
+//////////////////////////////////////////////
+
+//////////////////////////////////////////////
+/// Становимся мастером обратного распространения ошибки
+/// http://habrahabr.ru/company/paysto/blog/246397/
+//////////////////////////////////////////////
 
 
