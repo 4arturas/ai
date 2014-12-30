@@ -1,6 +1,10 @@
-function forward_MultiplyGate( x, y )
+function forward_MultiplyGate( a, b )
 {
-    return x * y;
+    return a * b;
+}
+function forward_AddGage( a, b )
+{
+    return a + b;
 }
 
 //////////////////////////////////////////////
@@ -107,6 +111,33 @@ article3();
 /// Обратное распространение ошибки
 /// http://habrahabr.ru/company/paysto/blog/245403/
 //////////////////////////////////////////////
+function article4()
+{
+    var x = -2, y = 5, z = -4;
+    var q = forward_AddGage( x, y );
+    var f = forward_MultiplyGate( q, z );
+
+    var derivative_f_wrt_z = q;
+    var derivative_f_wrt_q = z;
+
+    var derivative_q_wrt_x = 1.0;
+    var derivative_q_wrt_y = 1.0;
+
+    // cepnoe pravilo
+    var derivative_f_wrt_x = derivative_q_wrt_x * derivative_f_wrt_q;
+    var derivative_f_wrt_y = derivative_q_wrt_y * derivative_f_wrt_q;
+
+    var gradient_f_wrt_xyz = [ derivative_f_wrt_x, derivative_f_wrt_y, derivative_f_wrt_z ];
+
+    var stepSize = 0.01;
+    x = x + stepSize * derivative_f_wrt_x;
+    y = y + stepSize * derivative_f_wrt_y;
+    z = z + stepSize * derivative_f_wrt_z;
+
+    q = forward_AddGage( x, y );
+    f = forward_MultiplyGate( q, z );
+
+}
 
 
 //////////////////////////////////////////////
