@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<style type="text/css">
+    #tblMatrix { border: 0; margin: auto; padding-top: 200px; }
+    #tblMatrix td { border: 0; height: 60px; width: 60px; }
+</style>
+<table id="tblMatrix" cellpadding="0" cellspacing="0"></table>
+
+<script type="text/javascript" src="../utils.js"></script>
+
+<script type="text/javascript">
+    var tblMatrix = document.getElementById('tblMatrix');
+    function create_RandomColor()
+    {
+        var r = _rnd_Int( 0, 255 );
+        var g = _rnd_Int( 0, 255 );
+        var b = _rnd_Int( 0, 255 );
+        return 'rgb('+r+','+g+','+b+')';
+    }
+    function create_Matrix( num )
+    {
+        var tr, td;
+        var y, x;
+        for ( x = 0; x < num; x++ )
+        {
+            tr = document.createElement('tr');
+            tblMatrix.appendChild( tr );
+            for ( y = 0; y < num; y++ )
+            {
+                td = document.createElement('td');
+//                td.innerHTML = y;
+                td.style.backgroundColor = create_RandomColor();
+                tr.appendChild(td);
+            } // end for y
+        } // end for x
+    }
+    create_Matrix( 2 );
+</script>
+
+</body>
+</html>
