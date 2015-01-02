@@ -16,6 +16,7 @@
 
 <script type="text/javascript">
     var tblMatrix = document.getElementById('tblMatrix');
+    var num = 2;
     function create_RandomColor()
     {
         var r = _rnd_Int( 0, 255 );
@@ -27,6 +28,8 @@
     {
         var tr, td;
         var y, x;
+        while ( tblMatrix.firstChild )
+            tblMatrix.removeChild( tblMatrix.firstChild );
         for ( x = 0; x < num; x++ )
         {
             tr = document.createElement('tr');
@@ -40,7 +43,11 @@
             } // end for y
         } // end for x
     }
-    create_Matrix( 2 );
+    create_Matrix( num );
+    window.onclick = function()
+    {
+        create_Matrix( num );
+    };
 </script>
 
 </body>
