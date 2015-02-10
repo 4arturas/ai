@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+<canvas id="dotCanvas" style="border:1px solid white;"></canvas>
+
+<script type="text/javascript">
+    function dot_Create()
+    {
+        var height = 500;
+        var width = 500;
+        var y, x;
+        var numDots = 13;
+        var stepSize = Math.floor( height/numDots );
+        var padding = 20;
+
+        var dotCanvas = document.getElementById('dotCanvas');
+        dotCanvas.setAttribute('height', height+'px');
+        dotCanvas.setAttribute('width', width+'px');
+        var ctx = dotCanvas.getContext('2d');
+        var radius = 12;
+        var color = 'green';
+
+        for ( y = padding; y < height; y += stepSize )
+        {
+            for ( x = padding; x < width; x += stepSize )
+            {
+                ctx.beginPath();
+                ctx.arc( x, y, radius, 0, 2*Math.PI, false );
+
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            } // end for x
+        } // end for y
+
+    }
+    dot_Create();
+</script>
+
+</body>
+</html>
