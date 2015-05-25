@@ -1,3 +1,4 @@
+// http://habrahabr.ru/post/241941/
 var states = { initial: 0, state_1: 1, state_final: 2 };
 var signals = { sign0: 0, sign1: 1, sign2: 2 };
 
