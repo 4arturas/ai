@@ -18,6 +18,101 @@ function log( l )
     console.log( l );
 }
 //////////////////////////////////////////////////////////////////////
+function pq_Create( size )
+{
+    return {
+        count: 0,
+        arr: new Array(size+1),
+        fnHeur: function( n0, n1 ) { alert('Not implemented fnHeur'); },
+        fnEquals: function( n0, n1 ) { alert('Not implemented fnEquals'); }
+    };
+}
+function pq_Enqueue( pq, n )
+{
+    var parent, child;
+    pq.count++;
+    parent = Math.floor(pq.count/2);
+    child = pq.count;
+    while ( parent > 0 )
+    {
+        if ( pq.fnHeur( pq.arr[parent], n ) )
+        {
+            pq.arr[child] = pq.arr[parent];
+            child = parent;
+            parent = Math.floor( parent/2 );
+        }
+        else
+            break;
+    } // end while
+    pq.arr[child] = n;
+}
+function pq_Dequeue( pq, idx )
+{
+    var parent, child;
+    pq.arr[idx] = pq.arr[pq.count];
+    var n = pq.arr[idx];
+    parent = idx;
+    child = idx*2;
+    while ( pq.count > child )
+    {
+        if ( pq.count-1 > child )
+            if ( pq.fnHeur( pq.arr[child], pq.arr[child+1] ) )
+                child++;
+        if ( pq.fnHeur( n, pq.arr[child] ) )
+        {
+            pq.arr[parent] = pq.arr[child];
+            parent = child;
+            child *= 2;
+        }
+        else
+            break;
+    } // end while
+    pq.arr[parent] = n;
+    pq.count--;
+}
+function pq_GetIdx( pq, n )
+{
+    var y;
+    for ( y = 1; y <= pq.count; y++ )
+    {
+        if ( pq.fnEquals(pq.arr[y], n ) )
+            return y;
+    } // end for y
+    return -1;
+}
+function pq_Test()
+{
+    var y;
+    var n;
+    var size = 10;
+    var pq = pq_Create( size );
+    pq.fnHeur = function( n0, n1 )
+    {
+        return n0.f > n1.f;
+    };
+    pq.fnEquals = function( n0, n1 )
+    {
+        return n0.f == n1.f;
+    };
+    for ( y = 0; y < size; y++ )
+    {
+        var num = rnd_Int(0,10);
+        //log( num );
+        n = { f: num };
+        pq_Enqueue( pq, n );
+    } // end for y
+    n = {f:8};
+    y = pq_GetIdx( pq, n );
+    //pq_Dequeue( pq, y );
+    while ( pq.count > 0 )
+    {
+        n = pq.arr[1];
+        console.log(n.f);
+        pq_Dequeue( pq, 1 );
+    } // end while
+}
+//pq_Test();
+
 var ENC_GENE = [
     '0000', // 0
     '0001', // 1
@@ -37,71 +132,210 @@ var ENC_GENE = [
 
 var GA_GENE_LENGTH = 4;
 var GA_CHROMO_LENGTH = 100*GA_GENE_LENGTH;
-
 function ga_CreateChromo()
 {
     var y;
     var g = { fitness: 0, chromo: '', str: '' };
     for ( y = 0; y < GA_CHROMO_LENGTH; y++ )
-    {
         g.chromo += rnd_Int( 0, 1 );
-    }
     return g;
 }
-function ga_GeneDecode( gene )
+function ga_DecodeGene( gene )
 {
     var y;
     for ( y = 0; y < ENC_GENE.length; y++ )
     {
         if ( ENC_GENE[y] == gene )
             return y;
-    }
+    } // end for y
     return -1;
 }
-var GA_GENE_DIGIT = 0;
-var GA_GENE_OPERATION = 1;
-function ga_ChromoDecode( chromo )
+var GA_STATE_DIGIT = 0;
+var GA_STATE_OPERATION = 1;
+function ga_DecodeChromo( chromo )
 {
-    var buff = new Array();
-    var y, x = 0;
-    var gene, g;
-    var op = GA_GENE_OPERATION;
+    var y;
+    var g, gene;
+    var buff = [];
+    var state = GA_STATE_OPERATION;
     for ( y = 0; y < GA_CHROMO_LENGTH; y += GA_GENE_LENGTH )
     {
         g = chromo.substr( y, GA_GENE_LENGTH );
-        gene = ga_GeneDecode( g );
+        gene = ga_DecodeGene( g );
         if ( gene == -1 )
             continue;
-
-        if ( op == GA_GENE_OPERATION )
+        if ( state == GA_STATE_OPERATION )
         {
             if ( 10 > gene || gene > 13 )
                 continue;
-            op = GA_GENE_DIGIT;
+            state = GA_STATE_DIGIT;
         }
-        else if ( op == GA_GENE_DIGIT )
+        else if ( state == GA_STATE_DIGIT )
         {
-            if ( gene > 9 || 0 > gene )
+            if ( 0 > gene || gene > 9 )
                 continue;
-            op = GA_GENE_OPERATION;
+            state = GA_STATE_OPERATION;
         }
         else
-            assert( false, 'ga_ChromoDecode' );
+            assert( false, 'ga_DecodeChromo' );
 
         buff.push( gene );
     } // end for y
 
     for ( y = 0; y < buff.length; y += 2 )
     {
-        var vOperation = buff[y];
-        var vDigit = buff[y+1];
-        if ( vOperation == 13 && vDigit == 0 )
-            buff[y] = 10; // +
-    }
+        var valOperation = buff[y];
+        var valDigit = buff[y+1];
+        if ( valOperation == 13 && valDigit == 0 )
+            buff[y] = 10;
+    } // end for y
 
     return buff;
 }
-function ga_CalcFitness( chromo, targetValue )
+function ga_CalculateFitness( chromo, targetValue )
 {
+    var sum = 0;
+    var buff = ga_DecodeChromo( chromo.chromo );
+    chromo.str = '';
+    var y;
+    var valOp, valDi;
+    for ( y = 0; y < buff.length; y += 2 )
+    {
+        valOp = buff[y];
+        valDi = buff[y+1];
+        switch ( valOp )
+        {
+            case 10:
+                sum += valDi;
+                chromo.str += '+'+valDi;
+                break;
+            case 11:
+                sum -= valDi;
+                chromo.str += '-'+valDi;
+                break;
+            case 12:
+                sum *= valDi;
+                chromo.str += '*'+valDi;
+                break;
+            case 13:
+                sum /= valDi;
+                chromo.str += '/'+valDi;
+                break;
+            default:
+                assert( false, 'ga_CalculateFitness' );
+        } // end switch
+    } // end for y
+
+    chromo.fitness = 1.0 / ( targetValue - sum );
+    if ( Math.floor(targetValue) == Math.floor(sum) )
+        return 999;
+
+    return chromo.fitness;
+}
+var GA_POP_SIZE = 100;
+function ga_RouletteWheel( POP, totalFitness )
+{
+    var y;
+    var fitnessScale = rnd_Real( 0, totalFitness );
+    var fitnessSoFar = 0;
+    for ( y = 0; y < GA_POP_SIZE; y++ )
+    {
+        fitnessSoFar += POP[y].fitness;
+        if ( fitnessSoFar >= fitnessScale )
+            return POP[y];
+    } // end for y
+    assert( false, 'ga_RouletteWheel' );
+}
+function ga_Mutate( chromo )
+{
+    var y;
+    var c0 = '';
+    for ( y = 0; y < GA_CHROMO_LENGTH; y++ )
+    {
+        if ( rnd_Real(0,1) > 0.005 )
+            c0 += chromo.charAt(y)=='1'?'0':'1';
+        else
+            c0 += chromo.charAt(y);
+    } // end for y
+    return c0;
+}
+function ga_CrossoverAndMutate( mum, dad )
+{
+    var y, cross;
+    var baby0 = ga_CreateChromo();
+    var baby1 = ga_CreateChromo();
+    if ( 0.7 > rnd_Real(0,1) )
+    {
+        baby0.chromo = mum.chromo;
+        baby1.chromo = dad.chromo;
+        return [baby0, baby1];
+    }
+
+    cross = rnd_Int( 0, GA_CHROMO_LENGTH-1 );
+    baby0.chromo = '';
+    baby1.chromo = '';
+    for ( y = 0; y < cross; y++ )
+    {
+        baby0.chromo += mum.chromo.charAt(y);
+        baby1.chromo += dad.chromo.charAt(y);
+    } // end for y
+    for ( ; y < GA_CHROMO_LENGTH; y++ )
+    {
+        baby0.chromo += dad.chromo.charAt(y);
+        baby1.chromo += mum.chromo.charAt(y);
+    } // end for y
+
+    return [baby0,baby1];
+}
+function ga_Main()
+{
+    var y, e;
+    var targetValue = 25;
+    var totalFitness;
+    var POP = new Array( GA_POP_SIZE );
+    var pq = pq_Create( GA_POP_SIZE );
+    pq.fnHeur = function( n0, n1 )
+    {
+        return n1.fitness > n0.fitness;
+    };
+    for ( y = 0; y < GA_POP_SIZE; y++ )
+    {
+        POP[y] = ga_CreateChromo();
+    } // end for y
+    for ( e = 0; e < 1000; e++ )
+    {
+        var solutionFound = 0;
+        totalFitness = 0;
+        pq.count = 0;
+        for ( y = 0; y < GA_POP_SIZE; y++ )
+        {
+            POP[y].fitness = ga_CalculateFitness( POP[y], targetValue );
+            if ( POP[y].fitness == 9999 )
+            {
+                solutionFound = 1;
+            }
+            pq_Enqueue( pq, POP[y] );
+            totalFitness += POP[y].fitness;
+        } // end for y
+        var POPT = new Array( GA_POP_SIZE );
+        for ( y = 0; y < GA_POP_SIZE; y++ )
+        {
+            POPT[y] = pq.arr[1];
+            pq_Dequeue( pq, 1 );
+        } // end for y
+        var POPTT = new Array();
+        for ( y = 0; y < GA_POP_SIZE/2; y++ )
+        {
+            var mum = ga_RouletteWheel( POPT, totalFitness );
+            var dad = ga_RouletteWheel( POPT, totalFitness );
+            var res = ga_CrossoverAndMutate( mum, dad );
+            var baby0 = res[0];
+            var baby1 = res[1];
+            POPTT.push( baby0 );
+            POPTT.push( baby1 );
+        } // end for y
+        POP = POPT;
+    } // end for e
 
 }
+
