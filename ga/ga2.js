@@ -136,7 +136,7 @@ var GA_GENE_LENGTH = 4;
 var GA_CHROMO_LENGTH = GA_GENE_LENGTH*100;
 function ga_CreateChromo()
 {
-    var c = { fitness: 0, chromo: '', str: '', sum: 0 };
+    var c = { fitness: 0, chromo: '', str: '', result: 0 };
     var y;
     for ( y = 0; y < GA_CHROMO_LENGTH; y++ )
         c.chromo += rnd_Int( 0,1 );
@@ -196,9 +196,10 @@ function ga_DecodeChromo( chromo )
 }
 function ga_CalculateFitness( chromo, targetValue )
 {
-    var sum = 0;
+    var result = 0;
     var buff = ga_DecodeChromo( chromo.chromo );
-    chromo.sum = 0;
+    chromo.result = 0;
+    chromo.str = ''+result;
     for ( var y = 0; y < buff.length; y += 2 )
     {
         var valOperation = buff[y];
@@ -206,28 +207,27 @@ function ga_CalculateFitness( chromo, targetValue )
         switch ( valOperation )
         {
             case 10:
-                sum += valDigit;
+                result += valDigit;
                 chromo.str += '+'+valDigit;
                 break;
             case 11:
-                sum -= valDigit;
+                result -= valDigit;
                 chromo.str += '-'+valDigit;
                 break;
             case 12:
-                sum *= valDigit;
+                result *= valDigit;
                 chromo.str += '*'+valDigit;
                 break;
             case 13:
-                sum /= valDigit;
+                result /= valDigit;
                 chromo.str += '/'+valDigit;
                 break;
             default:
                 assert( false, 'ga_CalculateFitness' );
         } // end switch
     } // end for y
-    //log( 'sum:' + sum + ' = ' + chromo.str );
-    chromo.fitness = 1.0 / ( targetValue - sum );
-    chromo.sum = sum;
+    chromo.fitness = 1.0 / ( targetValue - result );
+    chromo.result = result;
     return chromo;
 }
 function ga_Mutate( chromo )
@@ -312,10 +312,10 @@ function ga_Main()
         for ( y = 0; y < GA_POP_SIZE; y++ )
         {
             var agent = ga_CalculateFitness( POP[y], targetValue );
-            //if ( Math.floor(agent.sum) == targetValue )
-            if ( agent.sum == targetValue )
+            //if ( Math.floor(agent.result) == targetValue )
+            if ( agent.result == targetValue )
             {
-                log( 'epoch=' + e + ' targetValue='+targetValue+' ' + agent.str + ' ='+agent.sum );
+                log( 'epoch=' + e + ' targetValue='+targetValue+' ' + agent.str + '='+agent.result );
                 return;
             }
             totalFitness += agent.fitness;
