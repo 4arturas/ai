@@ -8,15 +8,17 @@ function rnd_Int(x,y)
         Math.random() * ( y - x + 1 ) + x
     );
 }
-function assert(a, msg)
-{
-    if ( !a )
-        alert( 'Assertion failed: ' + msg );
-}
 function log( l )
 {
     console.log( l );
 }
+function assert(a, msg)
+{
+    if ( !a )
+        log( 'Assertion failed: ' + msg );
+        //alert( 'Assertion failed: ' + msg );
+}
+
 //////////////////////////////////////////////////////////////////////
 function pq_Create( size )
 {
@@ -131,23 +133,21 @@ var ENC_GENE = [
 ];
 
 var GA_GENE_LENGTH = 4;
-var GA_CHROMO_LENGTH = 100*GA_GENE_LENGTH;
+var GA_CHROMO_LENGTH = GA_GENE_LENGTH*100;
 function ga_CreateChromo()
 {
+    var c = { fitness: 0, chromo: '', str: '', sum: 0 };
     var y;
-    var g = { fitness: 0, chromo: '', str: '' };
     for ( y = 0; y < GA_CHROMO_LENGTH; y++ )
-        g.chromo += rnd_Int( 0, 1 );
-    return g;
+        c.chromo += rnd_Int( 0,1 );
+    return c;
 }
 function ga_DecodeGene( gene )
 {
     var y;
     for ( y = 0; y < ENC_GENE.length; y++ )
-    {
         if ( ENC_GENE[y] == gene )
             return y;
-    } // end for y
     return -1;
 }
 var GA_STATE_DIGIT = 0;
@@ -155,8 +155,8 @@ var GA_STATE_OPERATION = 1;
 function ga_DecodeChromo( chromo )
 {
     var y;
-    var g, gene;
-    var buff = [];
+    var gene, g;
+    var buff = new Array();
     var state = GA_STATE_OPERATION;
     for ( y = 0; y < GA_CHROMO_LENGTH; y += GA_GENE_LENGTH )
     {
@@ -164,29 +164,31 @@ function ga_DecodeChromo( chromo )
         gene = ga_DecodeGene( g );
         if ( gene == -1 )
             continue;
-        if ( state == GA_STATE_OPERATION )
+        switch ( state )
         {
-            if ( 10 > gene || gene > 13 )
-                continue;
-            state = GA_STATE_DIGIT;
-        }
-        else if ( state == GA_STATE_DIGIT )
-        {
-            if ( 0 > gene || gene > 9 )
-                continue;
-            state = GA_STATE_OPERATION;
-        }
-        else
-            assert( false, 'ga_DecodeChromo' );
+            case GA_STATE_OPERATION:
+                if ( 10 > gene || gene > 13 )
+                    continue;
+                state = GA_STATE_DIGIT;
+                break;
+            case GA_STATE_DIGIT:
+                if ( 0 > gene || gene > 9 )
+                    continue;
+                state = GA_STATE_OPERATION;
+                break;
+            default:
+                assert( false, 'ga_DecodeChromo' );
+        } // end switch
 
         buff.push( gene );
+
+        if ( buff.length == 10 )
+            break;
     } // end for y
 
     for ( y = 0; y < buff.length; y += 2 )
     {
-        var valOperation = buff[y];
-        var valDigit = buff[y+1];
-        if ( valOperation == 13 && valDigit == 0 )
+        if ( buff[y] == 13 && buff[y+1] == 0 )
             buff[y] = 10;
     } // end for y
 
@@ -196,64 +198,46 @@ function ga_CalculateFitness( chromo, targetValue )
 {
     var sum = 0;
     var buff = ga_DecodeChromo( chromo.chromo );
-    chromo.str = '';
-    var y;
-    var valOp, valDi;
-    for ( y = 0; y < buff.length; y += 2 )
+    chromo.sum = 0;
+    for ( var y = 0; y < buff.length; y += 2 )
     {
-        valOp = buff[y];
-        valDi = buff[y+1];
-        switch ( valOp )
+        var valOperation = buff[y];
+        var valDigit = buff[y+1];
+        switch ( valOperation )
         {
             case 10:
-                sum += valDi;
-                chromo.str += '+'+valDi;
+                sum += valDigit;
+                chromo.str += '+'+valDigit;
                 break;
             case 11:
-                sum -= valDi;
-                chromo.str += '-'+valDi;
+                sum -= valDigit;
+                chromo.str += '-'+valDigit;
                 break;
             case 12:
-                sum *= valDi;
-                chromo.str += '*'+valDi;
+                sum *= valDigit;
+                chromo.str += '*'+valDigit;
                 break;
             case 13:
-                sum /= valDi;
-                chromo.str += '/'+valDi;
+                sum /= valDigit;
+                chromo.str += '/'+valDigit;
                 break;
             default:
                 assert( false, 'ga_CalculateFitness' );
         } // end switch
     } // end for y
-
+    //log( 'sum:' + sum + ' = ' + chromo.str );
     chromo.fitness = 1.0 / ( targetValue - sum );
-    if ( Math.floor(targetValue) == Math.floor(sum) )
-        return 999;
-
-    return chromo.fitness;
-}
-var GA_POP_SIZE = 100;
-function ga_RouletteWheel( POP, totalFitness )
-{
-    var y;
-    var fitnessScale = rnd_Real( 0, totalFitness );
-    var fitnessSoFar = 0;
-    for ( y = 0; y < GA_POP_SIZE; y++ )
-    {
-        fitnessSoFar += POP[y].fitness;
-        if ( fitnessSoFar >= fitnessScale )
-            return POP[y];
-    } // end for y
-    assert( false, 'ga_RouletteWheel' );
+    chromo.sum = sum;
+    return chromo;
 }
 function ga_Mutate( chromo )
 {
-    var y;
     var c0 = '';
+    var y;
     for ( y = 0; y < GA_CHROMO_LENGTH; y++ )
     {
-        if ( rnd_Real(0,1) > 0.005 )
-            c0 += chromo.charAt(y)=='1'?'0':'1';
+        if ( rnd_Real(0,1) > 0.07 )
+            c0 += chromo.charAt(y) == '1' ? '0' : '1';
         else
             c0 += chromo.charAt(y);
     } // end for y
@@ -261,24 +245,25 @@ function ga_Mutate( chromo )
 }
 function ga_CrossoverAndMutate( mum, dad )
 {
-    var y, cross;
+    var y, crossover;
     var baby0 = ga_CreateChromo();
     var baby1 = ga_CreateChromo();
-    if ( 0.7 > rnd_Real(0,1) )
+    if ( rnd_Real(0,1) > 0.5 )
     {
         baby0.chromo = mum.chromo;
         baby1.chromo = dad.chromo;
-        return [baby0, baby1];
+        return [baby0,baby1];
     }
 
-    cross = rnd_Int( 0, GA_CHROMO_LENGTH-1 );
+    crossover = rnd_Int( 0, GA_CHROMO_LENGTH-1 );
+
     baby0.chromo = '';
     baby1.chromo = '';
-    for ( y = 0; y < cross; y++ )
+    for ( y = 0; y < crossover; y++ )
     {
         baby0.chromo += mum.chromo.charAt(y);
         baby1.chromo += dad.chromo.charAt(y);
-    } // end for y
+    }
     for ( ; y < GA_CHROMO_LENGTH; y++ )
     {
         baby0.chromo += dad.chromo.charAt(y);
@@ -287,12 +272,27 @@ function ga_CrossoverAndMutate( mum, dad )
 
     return [baby0,baby1];
 }
+var GA_POP_SIZE = 100;
+function ga_RouletteWheel( POP, totalFitness )
+{
+    var y;
+    var fitnessScale = rnd_Real(0,totalFitness);
+    var fitnessSoFar = 0.0;
+    for ( y = 0; y < GA_POP_SIZE; y++ )
+    {
+        fitnessSoFar += POP[y].fitness;
+        if ( fitnessSoFar >= fitnessScale )
+            return POP[y];
+    } // end for y
+    assert( false, 'ga_RouletteWheel' );
+}
 function ga_Main()
 {
-    var y, e;
     var targetValue = 25;
     var totalFitness;
-    var POP = new Array( GA_POP_SIZE );
+    var solutionFound = 0;
+    var y, e;
+    var POP = new Array(GA_POP_SIZE);
     var pq = pq_Create( GA_POP_SIZE );
     pq.fnHeur = function( n0, n1 )
     {
@@ -304,38 +304,48 @@ function ga_Main()
     } // end for y
     for ( e = 0; e < 1000; e++ )
     {
-        var solutionFound = 0;
         totalFitness = 0;
         pq.count = 0;
         for ( y = 0; y < GA_POP_SIZE; y++ )
         {
-            POP[y].fitness = ga_CalculateFitness( POP[y], targetValue );
-            if ( POP[y].fitness == 9999 )
+            var agent = ga_CalculateFitness( POP[y], targetValue );
+            if ( Math.floor(agent.sum) == targetValue )
             {
-                solutionFound = 1;
+                log( 'epoch=' + e + ' targetValue='+targetValue+' result='+agent.sum );
+                return;
             }
-            pq_Enqueue( pq, POP[y] );
-            totalFitness += POP[y].fitness;
+            totalFitness += agent.fitness;
+            pq_Enqueue( pq, agent );
         } // end for y
-        var POPT = new Array( GA_POP_SIZE );
-        for ( y = 0; y < GA_POP_SIZE; y++ )
+
+        POP = new Array();
+        log('////////////////////');
+        while ( pq.count > 0 )
         {
-            POPT[y] = pq.arr[1];
-            pq_Dequeue( pq, 1 );
-        } // end for y
-        var POPTT = new Array();
+            log(pq.arr[1].fitness);
+            POP.push( pq.arr[1] );
+            pq_Dequeue( pq, 1 )
+        } // end while
+
+        var POPT = new Array();
         for ( y = 0; y < GA_POP_SIZE/2; y++ )
         {
-            var mum = ga_RouletteWheel( POPT, totalFitness );
-            var dad = ga_RouletteWheel( POPT, totalFitness );
+            var mum = ga_RouletteWheel( POP, totalFitness );
+            var dad = ga_RouletteWheel( POP, totalFitness );
             var res = ga_CrossoverAndMutate( mum, dad );
             var baby0 = res[0];
             var baby1 = res[1];
-            POPTT.push( baby0 );
-            POPTT.push( baby1 );
+            POPT.push( baby0 );
+            POPT.push( baby1 );
         } // end for y
+
         POP = POPT;
-    } // end for e
+
+        //log( e );
+    } // end for y
+
+
 
 }
+ga_Main();
 
