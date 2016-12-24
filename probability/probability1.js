@@ -16,5 +16,6 @@ function N_choose_K( nAttempts, kScores ) // k scores in n attempts
     return nomitator/denominator;
 
 }
+
 var r = N_choose_K( 5, 2 );
 console.log( r );
