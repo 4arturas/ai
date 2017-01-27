@@ -9,12 +9,15 @@
 <canvas id="dotCanvas" style="border:1px solid white;"></canvas>
 
 <script type="text/javascript">
+    var color = 'red';
+    var colors = ['red', 'green', 'blue', 'yellow', 'gray', 'black'];
+    var colorId = 0;
     function dot_Create()
     {
-        var height = 500;
-        var width = 500;
+        var height = 1000;
+        var width = 1000;
         var y, x;
-        var numDots = 13;
+        var numDots = 20;
         var stepSize = Math.floor( height/numDots );
         var padding = 20;
 
@@ -23,7 +26,6 @@
         dotCanvas.setAttribute('width', width+'px');
         var ctx = dotCanvas.getContext('2d');
         var radius = 12;
-        var color = 'green';
 
         for ( y = padding; y < height; y += stepSize )
         {
@@ -41,8 +43,20 @@
             } // end for x
         } // end for y
 
+        setTimeout(
+            function ()
+            {
+                colorId = (colorId+1) % colors.length;
+                console.log( colorId );
+                color = colors[colorId];
+
+                dot_Create();
+
+            }, 1000*60 );
     }
     dot_Create();
+
+
 </script>
 
 </body>
