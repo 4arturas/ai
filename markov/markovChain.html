@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Markov chain</title>
+</head>
+<body>
+<script type="text/javascript">
+    var shopA = 200;
+    var shopB = 120;
+    var shopC = 180;
+    var totalCustomers = shopA+shopB+shopC;
+
+    var shop = [[
+        shopA/totalCustomers,
+        shopB/totalCustomers,
+        shopC/totalCustomers
+    ]];
+    var srautas = [
+        [ 160/shopA,    24/shopB,       18/shopC ],
+        [ 20/shopA,     84/shopB,       54/shopC ],
+        [ 20/shopA,     12/shopB,       108/shopC ]
+    ];
+</script>
+
+<style type="text/css">
+    .matTable { border: 1px solid black; }
+    .matTable td { border: 1px solid black; height: 30px; width: 30px; vertical-align: middle; text-align: center; }
+</style>
+
+<script type="text/javascript">
+    function mat_Emit( M )
+    {
+        var table = document.createElement('table');
+        table.className = 'matTable';
+        table.cellSpacing = '0';
+        for ( var y = 0; y < M.length; y++ )
+        {
+            var tr = document.createElement('tr');
+            for ( var x = 0; x < M[0].length; x++ )
+            {
+                var td = document.createElement('td');
+                td.innerHTML = M[y][x];
+                tr.appendChild(td);
+            } // end for x
+            table.appendChild(tr);
+        } // end for y
+        return table;
+    }
+    var table = mat_Emit( srautas );
+    document.body.appendChild(table);
+    document.body.appendChild(document.createElement('br'));
+
+</script>
+
+</body>
+</html>
