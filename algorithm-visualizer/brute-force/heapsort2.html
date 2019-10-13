@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>heapsort1</title>
+</head>
+<body>
+<script type="text/javascript">
+    // https://youtu.be/2DmK_H7IdTo?t=232
+    // https://medium.com/basecs/heapify-all-the-things-with-heap-sort-55ee1c93af82
+    var D = [2,4,1,6,3,20,0];
+    heap_Sort( D, D.length );
+    for ( var i = 0; i < D.length; i++ )
+        console.log( D[i] );
+
+    function heap_Sort( arr, size )
+    {
+        var lastElement;
+        heap_BuildMaxHeap( arr, size );
+        for ( lastElement = size-1; lastElement >= 0; lastElement-- )
+        {
+            heap_Swap( arr, lastElement, 0 );
+            heapyfy( arr, lastElement, 0 );
+        }
+    }
+    function  heap_BuildMaxHeap( heap, size )
+    {
+        var root;
+        for ( root = Math.floor( size/2 )-1; root >= 0; root-- )
+            heapyfy( heap, size, root );
+    }
+
+    function heapyfy( heap, size, root )
+    {
+        var left = 2 * root + 1;
+        var right = left + 1;
+        var max = root;
+
+        if ( size > left )
+            if ( heap[max] > heap[left] )
+                max = left;
+        if ( size > right )
+            if ( heap[max] > heap[right] )
+                max = right;
+        if ( max !== root )
+        {
+            heap_Swap(heap, max, root);
+            heapyfy(heap, size, max);
+        }
+    }
+    function heap_Swap( heap, a, b )
+    {
+        var t = heap[a];
+        heap[a] = heap[b];
+        heap[b] = t;
+    }
+
+</script>
+
+</body>
+</html>
