@@ -2,9 +2,60 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-    <title>$Title$</title>
+    <title>heapsort1</title>
 </head>
 <body>
-$END$
+<script type="text/javascript">
+    // https://youtu.be/2DmK_H7IdTo?t=232
+    // https://medium.com/basecs/heapify-all-the-things-with-heap-sort-55ee1c93af82
+    function heap_Swap( heap, a, b )
+    {
+        var t = heap[a];
+        heap[a] = heap[b];
+        heap[b] = t;
+    }
+    function heapyfy( heap, size, root )
+    {
+        var max = root;
+        var leftChild = 2 * root + 1;
+        var rightChild = leftChild + 1;
+
+        if ( size > leftChild )
+            if ( heap[leftChild] > heap[max] )
+                max = leftChild;
+
+        if ( size > rightChild )
+            if ( heap[rightChild] > heap[max] )
+                max = rightChild;
+
+        if ( root !== max )
+        {
+            heap_Swap(heap, root, max);
+            heapyfy(heap, size, max);
+        }
+    }
+    function heap_BuildMax( heap, size )
+    {
+        var root;
+        for ( root = Math.floor( size/2 ) - 1; root >= 0; root-- )
+            heapyfy( heap, size, root );
+    }
+    function heap_Sort( heap, size )
+    {
+        var lastElement;
+        heap_BuildMax( heap, size );
+        for ( lastElement = size-1; lastElement >= 0; lastElement-- )
+        {
+            heap_Swap( heap, lastElement, 0 );
+            heapyfy( heap, lastElement, 0 );
+        }
+    }
+    var heap = [2,4,1,6,3,20,0];
+    heap_Sort( heap, heap.length );
+    for ( var h = 0; h < heap.length; h++ )
+        console.log( heap[h] );
+
+</script>
+
 </body>
 </html>

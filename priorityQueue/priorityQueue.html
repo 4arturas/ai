@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>OQ</title>
+</head>
+<body>
+<script type="text/javascript">
+    function pq_Create( size )
+    {
+        return {
+            arr: new Array( size + 1 ),
+            count: 0
+        };
+    }
+    function pq_Heur( e0, e1 )
+    {
+        return e0.f > e1.f;
+    }
+    function pq_Enqueue(pq, e)
+    {
+        var parent, child;
+        pq.count++;
+        parent = Math.floor( pq.count / 2 );
+        child = pq.count;
+        while ( parent > 0 )
+        {
+            if ( pq_Heur(pq.arr[parent], e ) )
+            {
+                pq.arr[child] = pq.arr[parent];
+                child = parent;
+                parent = Math.floor( parent/2 );
+            }
+            else
+                break;
+        } // end while
+        pq.arr[child] = e;
+    }
+    function pq_Dequeue( pq, idx )
+    {
+        var parent, child;
+        var e;
+        pq.arr[idx] = pq.arr[pq.count];
+        e = pq.arr[idx];
+        child = idx*2;
+        parent = idx;
+        while ( pq.count > child )
+        {
+            if ( pq.count-1 > child )
+                 if ( pq.arr[child].f > pq.arr[child+1].f )
+                     child++;
+            if ( pq_Heur( e, pq.arr[child] ) )
+            {
+                pq.arr[parent] = pq.arr[child];
+                parent = child;
+                child *= 2;
+            }
+            else
+                break;
+        }
+        pq.arr[parent] = e;
+        pq.count--;
+    }
+    function pq_Test()
+    {
+        var size = 10;
+        var pq = pq_Create( size );
+        var i;
+        var e = { f: null };
+        for ( i = 0; i < size; i++ )
+        {
+            e = { f: i };
+            pq_Enqueue( pq, e );
+        }
+        while ( pq.count !== 0 )
+        {
+            e = pq.arr[1];
+            console.log( e.f );
+            pq_Dequeue( pq, 1 );
+        } // end while
+    }
+    pq_Test();
+</script>
+</body>
+</html>

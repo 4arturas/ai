@@ -5,55 +5,74 @@
     <title>heapsort1</title>
 </head>
 <body>
+<style>
+    .dv { border: 1px solid black; width: 30px; height: 30px; }
+</style>
+<div id="box" style="text-align: center"></div>
 <script type="text/javascript">
     // https://youtu.be/2DmK_H7IdTo?t=232
     // https://medium.com/basecs/heapify-all-the-things-with-heap-sort-55ee1c93af82
-    var D = [2,4,1,6,3,20,0];
-    heap_Sort( D, D.length );
-    for ( var i = 0; i < D.length; i++ )
-        console.log( D[i] );
+
+    var box = document.getElementById('box');
+    var D = [1,4,3,7,2,9,5];
+    // heap_Sort( D, D.length );
+    // for ( var i = 0; i < D.length; i++ )
+    //     console.log( D[i] );
+
+    var TYPE_MAX = 0;
+    var TYPE_MIN = 1;
+    var heapType = TYPE_MAX;
 
     function heap_Sort( arr, size )
     {
         var lastElement;
-        heap_BuildMaxHeap( arr, size );
         for ( lastElement = size-1; lastElement >= 0; lastElement-- )
         {
-            heap_Swap( arr, lastElement, 0 );
+            heap_Swap( arr, lastElement, 0);
             heapyfy( arr, lastElement, 0 );
         }
     }
-    function  heap_BuildMaxHeap( heap, size )
+    heap_Sort( D, D.length );
+    function heap_BuildHeap( heap, size )
     {
         var root;
-        for ( root = Math.floor( size/2 )-1; root >= 0; root-- )
+        for ( root = Math.floor( size/2 ) - 1; root >= 0; root-- )
             heapyfy( heap, size, root );
     }
 
     function heapyfy( heap, size, root )
     {
-        var left = 2 * root + 1;
-        var right = left + 1;
         var max = root;
+        var leftChild = 2 * root + 1;
+        var rightChild = leftChild + 1;
 
-        if ( size > left )
-            if ( heap[max] > heap[left] )
-                max = left;
-        if ( size > right )
-            if ( heap[max] > heap[right] )
-                max = right;
-        if ( max !== root )
-        {
-            heap_Swap(heap, max, root);
-            heapyfy(heap, size, max);
-        }
+        if ( leftChild > size )
+            return;
+        if ( rightChild > size )
+            return;
+
+        if ( heap[leftChild] > heap[max] )
+            max = leftChild;
+
+        if ( heap[rightChild] > heap[max] )
+            max = rightChild;
+
+        if ( max === root )
+            return;
+
+
+        heap_Swap( heap, max, root );
+        heapyfy( heap, size, max );
+
     }
+
     function heap_Swap( heap, a, b )
     {
         var t = heap[a];
         heap[a] = heap[b];
         heap[b] = t;
     }
+
 
 </script>
 
