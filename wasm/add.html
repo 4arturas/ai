@@ -1,0 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Add</title>
+</head>
+<script type="module">
+    async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+            fetch("./add.wasm")
+        );
+        console.log(instance.exports.add(4, 1));
+    }
+    init();
+</script>
+<body>
+https://surma.dev/things/c-to-webassembly/
+</body>
+</html>
