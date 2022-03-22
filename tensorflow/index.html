@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tensorflow</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/qna"></script>
+</head>
+<body>
+<script>
+    var searchText = 'We believe cats are the real stars of YouTube.'
+    var question = 'What is important to YouTube?'
+
+    qna.load().then( model => {
+        model.findAnswers( question, searchText ).then( answers => {
+            console.log( 'Answers: ', answers );
+        })
+    })
+</script>
+
+</body>
+</html>
