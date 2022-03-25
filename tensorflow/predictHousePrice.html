@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tensor</title>
+    <!-- Import TensorFlow.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
+    <!-- Load the coco-ssd model to use to recognize things in images -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+<script>
+    const MODEL_PATH = 'https://storage.googleapis.com/jmstore/TensorFlowJS/EdX/SavedModels/sqftToPropertyPrice/model.json';
+    let model = undefined;
+    async function loadModel()
+    {
+        model = await tf.loadLayersModel(MODEL_PATH);
+        model.summary();
+
+        const input = tf.tensor2d([[870]]);
+        const inputBatch = tf.tensor2d([[500], [1100], [970]]);
+
+        const result = model.predict( input );
+        const resultBatch = model.predict( inputBatch );
+
+        result.print();
+        resultBatch.print();
+
+        input.dispose();
+        inputBatch.dispose();
+
+        result.dispose();
+        resultBatch.dispose();
+
+        model.dispose();
+    }
+    loadModel();
+</script>
+</body>
+</html>
