@@ -1,0 +1,29 @@
+Normalization
+
+we need to normalize the following values
+a) [-100...100]
+b) [0...1000]
+
+1) Range - ( max - min )
+a) 100 - (-100) = 200
+b) 1000 - 0 = 1000
+
+2) ( value - min ) - for the value of 50
+a) 50 - (-100) = 150
+b) 50 - 0 = 50
+
+3) Normalized
+a) 150 / 200 = 0.75
+b) 50 / 1000 = 0.05
+
+
+Summary
+a)
+Range = 200
+50 - (-100) = 150
+Normalized: 150 / 200 = 0.75
+
+b)
+Range = 1000
+50 - 0 = 50
+Normalized: 50 / 1000 = 0.05
