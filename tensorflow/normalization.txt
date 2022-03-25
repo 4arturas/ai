@@ -27,3 +27,5 @@ b)
 Range = 1000
 50 - 0 = 50
 Normalized: 50 / 1000 = 0.05
+
+normalized = ( x - min ) / ( max - min )
