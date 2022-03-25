@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PreTrained Model</title>
+    <!-- Import TensorFlow.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
+    <!-- Load the coco-ssd model to use to recognize things in images -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+
+<img id="exampleImg" width="640" height="360" crossorigin src="https://storage.googleapis.com/jmstore/TensorFlowJS/EdX/standing.jpg" />
+
+<script>
+    const MODEL_PATH = 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4';
+    const EXAMPLE_IMG = document.getElementById('exampleImg');
+
+    let movenet = undefined;
+
+    async function loadAndRunModel()
+    {
+        movenet = await tf.loadGraphModel( MODEL_PATH, {fromTFHub: true} );
+
+        const exampleInputTensor = tf.zeros([1,192,192,3], 'int32');
+
+        const imageTensor = tf.browser.fromPixels(EXAMPLE_IMG);
+        console.log( imageTensor.shape );
+
+        const cropStartPoint = [15, 170, 0];
+        const cropSize = [345,345,3];
+        const croppedTensor = tf.slice( imageTensor, cropStartPoint, cropSize );
+
+        const resizedTensor = tf.image.resizeBilinear(croppedTensor, [192, 192], true ).toInt();
+
+        const tensorOutput = movenet.predict(tf.expandDims( resizedTensor ));
+        const arrayOutput = await tensorOutput.array();
+
+        console.log( arrayOutput );
+    }
+    loadAndRunModel();
+</script>
+
+</body>
+</html>
