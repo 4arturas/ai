@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+  const SOM_HEIGHT = 64;
+  const SOM_WIDTH = 64;
+  const SOM_DEPTH = 3;
+  const rnd_Real = ( x, y ) => Math.random() * ( y - x ) + x;
+  const som_Init = () => {
+    let y, x, z;
+    const map = new Array( SOM_HEIGHT );
+    for ( y = 0; y < SOM_HEIGHT; y++ )
+    {
+        map[y] = new Array( SOM_WIDTH );
+        for ( x = 0; x < SOM_WIDTH; x++ )
+        {
+            const zArr = new Array( SOM_DEPTH );
+            for ( z = 0; z < SOM_DEPTH; z++ )
+                zArr[z] = rnd_Real( 0, 1 );
+            const node = { y: y, x: x, z: zArr };
+            map[y][x] = node;
+        }
+    }
+    return map;
+  }
+  const somSample = [
+      [0,0,0],
+      [1,0,0],
+      [0,1,0],
+      [0,0,1],
+      [0,1,1],
+      [1,1,0],
+      [1,0,1],
+      [1,1,1]
+  ];
+  const som_Dist = ( v0, v1 ) => {
+      let d = 0;
+      for ( let y = 0; y < SOM_DEPTH; y++ )
+          d += ( v0[y] - v1[y] )
+      return Math.sqrt( d );
+  }
+  const som_BMU = ( som, trainVector ) => {
+      let y, x;
+      let somBest = null;
+      let dist, bestDistSoFar = Infinity;
+      for ( y = 0; y < SOM_HEIGHT; y++ )
+      {
+          for ( x = 0; x < SOM_WIDTH; x++ )
+          {
+              const node = som[y][x];
+              dist = som_Dist( node.z, trainVector );
+              if ( bestDistSoFar > dist )
+              {
+                  bestDistSoFar = dist;
+                  somBest = node;
+              }
+          }
+      } // end for y
+      return somBest;
+  }
+  const som_DistBetweenNodes = ( n0, n1 ) => {
+      const y = Math.abs( n0.y - n1.y );
+      const x = Math.abs( n0.x - n1.x );
+      return Math.pow( y, 2 ) + Math.pow( x, 2 );
+  }
+  let somNumIterations = 1000;
+  let somIterations = 0;
+  const somMapRadius = Math.max( SOM_HEIGHT, SOM_WIDTH ) * 0.8;
+  const somTimeConst = somMapRadius / Math.log( somMapRadius );
+  const somLearningRate = 0.000001;
+
+</script>
+
+</body>
+</html>
