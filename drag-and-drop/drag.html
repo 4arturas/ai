@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drag & Drop</title>
+  <script src="https://unpkg.com/xstate@4/dist/xstate.js"></script>
+  <style>
+    * {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+<div id="info" style="position: absolute; right: 30rem"></div>
+<div id="box" style="height: 20vmin; width: 20vmin; border-radius: 1rem; background-color: black"></div>
+
+<script src="drag.machine.js"></script>
+<script>
+  const body = document.body;
+  const box = document.getElementById('box');
+  const info = document.getElementById('info');
+
+  const dragDropService = interpret(dragDropMachine)
+          .onTransition(state => {
+            if (!state.changed)
+              return;
+
+            box.style.setProperty('left', state.context.x + 'px')
+
+            box.style.setProperty('top', state.context.y + 'px')
+
+            box.style.setProperty('background-color', state.context.color)
+
+            info.innerHTML = state.toStrings().join(' ');
+            console.log( state.matches('dragging') );
+            console.log( state.value );
+            console.log( JSON.stringify(state.context) );
+
+          })
+          .start();
+
+  box.addEventListener('mousedown', (event) => {
+    dragDropService.send( event );
+  })
+  box.addEventListener('mouseup', (event) => {
+    dragDropService.send( event );
+  })
+  box.addEventListener('mousemove', (event) => {
+    dragDropService.send( event );
+  })
+</script>
+</body>
+</html>
