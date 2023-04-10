@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Logic</title>
+</head>
+<body>
+<table id="tbody"></table>
+<script>
+  function create_Sylogism(title,a,b,c) {
+    const create_Div = ( v ) => {
+        const replaceFn = (txt) => {
+            return txt
+                .replace('Все', '<b>Все</b>')
+                .replace('Ни одна', '<b>Ни одна</b>')
+                .replace('Ни один', '<b>Ни один</b>')
+                .replace('Некоторые', '<b>Некоторые</b>')
+                .replace('Некоторое', '<b>Некоторое</b>')
+        }
+      const div = document.createElement('div');
+      div.style.whiteSpace = 'nowrap';
+      div.innerHTML = replaceFn(v);
+      return div;
+    }
+    const titleDiv = create_Div(title);
+    titleDiv.style.fontWeight = 'bold';
+    const aDiv = create_Div(a);
+    const bDiv = create_Div(b);
+    const cDiv = create_Div(c);
+    cDiv.style.borderTop = '1px solid black';
+    cDiv.style.marginBottom = '15px';
+    const td = document.createElement('td');
+    td.style.verticalAlign = 'top';
+    td.appendChild( titleDiv );
+    td.appendChild( aDiv );
+    td.appendChild( bDiv );
+    td.appendChild( cDiv );
+    return td;
+  }
+  function create_Table() {
+    const tbody = document.getElementById('tbody');
+    const tr0 = document.createElement('tr');
+    const tr1 = document.createElement('tr');
+    const tr2 = document.createElement('tr');
+    const tr3 = document.createElement('tr');
+    const tr4 = document.createElement('tr');
+    const tr5 = document.createElement('tr');
+    tbody.appendChild(tr0);
+    tbody.appendChild(tr1);
+    tbody.appendChild(tr2);
+    tbody.appendChild(tr3);
+    tbody.appendChild(tr4);
+    tbody.appendChild(tr5);
+
+    tr0.appendChild( create_Sylogism(
+            'bArbArA',
+            'Все животные смертны.',
+            'Все люди — животные.',
+            'Все люди смертны.',
+    ));
+
+    tr1.appendChild( create_Sylogism(
+            'cElArEnt',
+            'Ни одна рептилия не имеет меха.',
+            'Все змеи — рептилии.',
+            'Ни одна змея не имеет меха.',
+    ));
+
+    tr2.appendChild( create_Sylogism(
+            'dArII',
+            'Все котята игривы.',
+            'Некоторые домашние животные — котята.',
+            'Некоторые домашние животные игривы.',
+    ));
+
+    tr3.appendChild( create_Sylogism(
+            'fErIO',
+            'Ни одна домашняя работа не весела.',
+            'Некоторое чтение — домашняя работа.',
+            'Некоторое чтение не весело.',
+    ));
+
+    tr4.appendChild( create_Sylogism(
+            'bArbArI',
+            'Все животные смертны.',
+            'Все люди — животные.',
+            'Некоторые люди смертны.',
+    ));
+
+    tr5.appendChild( create_Sylogism(
+            'cElArOnt',
+            'Ни одна рептилия не имеет меха.',
+            'Все змеи — рептилии.',
+            'Некоторые змеи не имеют меха.',
+    ));
+    /////////////////////////////////////////////////////
+    tr0.appendChild( create_Sylogism(
+            'cEsArE',
+            'Ни одна здоровая еда не полнит.',
+            'Все торты полнят.',
+            'Ни один торт — не здоровая еда.',
+    ));
+
+    tr1.appendChild( create_Sylogism(
+            'cAmEstrEs',
+            'Все лошади имеют вздутие живота.',
+            'Ни один человек не имеет вздутия живота.',
+            'Ни один человек — не лошадь.',
+    ));
+
+    tr2.appendChild( create_Sylogism(
+            'fEstInO',
+            'Ни один ленивый человек не сдаёт экзамены.',
+            'Некоторые студенты сдают экзамены.',
+            'Некоторые студенты не ленивы.',
+    ));
+
+    tr3.appendChild( create_Sylogism(
+            'bArOcO',
+            'Все информативные вещи полезны.',
+            'Некоторые сайты не полезны.',
+            'Некоторые сайты не информативны.',
+    ));
+
+    tr4.appendChild( create_Sylogism(
+            'cEsArO',
+            'Ни одна здоровая еда не полнит.',
+            'Все торты полнят.',
+            'Некоторые торты — не здоровая еда.',
+    ));
+
+    tr5.appendChild( create_Sylogism(
+            'cAmEstrOs',
+            'Все лошади имеют вздутие живота.',
+            'Ни один человек не имеет вздутия живота.',
+            'Некоторые люди — не лошади.',
+    ));
+    /////////////////////////////////////////////////////
+      tr0.appendChild( create_Sylogism(
+          'dArAptI',
+          'Все фрукты питательны.',
+          'Все фрукты вкусны.',
+          'Некоторые вкусные продукты питательны.',
+      ));
+
+      tr1.appendChild( create_Sylogism(
+          'dIsAmIs',
+          'Некоторые кружки красивы.',
+          'Все кружки полезны.',
+          'Некоторые полезные вещи красивы.',
+      ));
+
+      tr2.appendChild( create_Sylogism(
+          'dAtIsI',
+          'Все прилежные мальчики в этой школе рыжие.',
+          'Некоторые прилежные мальчики в этой школе — пансионеры.',
+          'Некоторые пансионеры в этой школе рыжие.',
+      ));
+
+      tr3.appendChild( create_Sylogism(
+          'fElAptOn',
+          'Ни один кувшин в этом шкафу не нов.',
+          'Все кувшины в этом шкафу треснутые.',
+          'Некоторые треснутые вещи в этом шкафу не новы.',
+      ));
+
+      tr4.appendChild( create_Sylogism(
+          'bAcArdO',
+          'Некоторые кошки не имеют хвоста.',
+          'Все кошки — млекопитающие.',
+          '\tНекоторые млекопитающие не имеют хвоста.',
+      ));
+
+      tr5.appendChild( create_Sylogism(
+          'fErIsOn',
+          'Ни одно дерево не съедобно.',
+          'Некоторые деревья зелёные.',
+          'Некоторые зелёные вещи не съедобны.',
+      ));
+      /////////////////////////////////////////////////////
+      tr0.appendChild( create_Sylogism(
+          'brAmAntIp',
+          'Все яблоки в моём саду полезны.',
+          'Все полезные фрукты зрелы.',
+          'Некоторые зрелые фрукты — яблоки в моём саду.',
+      ));
+
+      tr1.appendChild( create_Sylogism(
+          'cAmEnEs',
+          'Все яркие цветы ароматны.',
+          'Ни один ароматный цветок не выращен в помещении.',
+          'Ни один выращенный в помещении цветок не ярок.',
+      ));
+
+      tr2.appendChild( create_Sylogism(
+          'dImArIs',
+          'Некоторые небольшие птицы питаются мёдом.',
+          'Все питающиеся мёдом птицы цветные.',
+          'Некоторые цветные птицы небольшие.',
+      ));
+
+      tr3.appendChild( create_Sylogism(
+          'fEsApO',
+          'Ни один человек не совершенен.',
+          'Все совершенные существа мифические.',
+          'Некоторые мифические существа — не люди.',
+      ));
+
+      tr4.appendChild( create_Sylogism(
+          'frEsIsOn',
+          'Ни один компетентный человек не ошибается.',
+          'Некоторые ошибающиеся люди работают здесь.',
+          'Некоторые работающие здесь люди некомпетентны.',
+      ));
+
+      tr5.appendChild( create_Sylogism(
+          'cAmEnOs',
+          'Все яркие цветы ароматны.',
+          'Ни один ароматный цветок не выращен в помещении.',
+          'Некоторые выращенные в помещении цветы не ярки.',
+      ));
+      /////////////////////////////////////////////////////
+  }
+  create_Table();
+</script>
+
+</body>
+</html>
