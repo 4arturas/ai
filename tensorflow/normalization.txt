@@ -29,3 +29,14 @@ Range = 1000
 Normalized: 50 / 1000 = 0.05
 
 normalized = ( x - min ) / ( max - min )
+
+<script type="text/javascript">
+    const arr = [0, 5, 10];
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
+    const range = max - min;
+    const num = 3;
+    const normalized = num / range;
+    const numOriginal = normalized * range;
+    console.log( 'range', range, 'normalized', normalized, 'numOriginal', numOriginal );
+</script>
