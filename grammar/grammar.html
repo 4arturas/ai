@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+</head>
+<body>
+<script>
+
+    const rules2 = {
+        "S": [
+            ["The", "N", "V"]
+        ],
+        "N": [
+            ["cat"],
+            ["dog"]
+        ],
+        "V": [
+            ["meows"],
+            ["barks"]
+        ]
+    };
+
+    const rules = {
+        "S": [
+            ["NP", "VP"],
+            ["Interj", "NP", "VP"]
+        ],
+        "NP": [
+            ["Det", "N"],
+            ["Det", "N", "that", "VP"],
+            ["Det", "Adj", "N"]
+        ],
+        "VP": [
+            ["Vtrans", "NP"],
+            ["Vintr"]
+        ],
+        "Interj": [
+            ["oh"],
+            ["my"],
+            ["wow"],
+            ["darn"]
+        ],
+        "Det": [
+            ["this"],
+            ["that"],
+            ["the"]
+        ],
+        "N": [
+            ["amoeba"],
+            ["dichotomy"],
+            ["seagull"],
+            ["trombone"],
+            ["overstaffed"],
+            ["corsage"]
+        ],
+        "Adj": [
+            ["bald"],
+            ["smug"],
+            ["important"],
+            ["tame"],
+            ["overstaffed"],
+            ["corsage"]
+        ],
+        "Vtrans": [
+            ["computes"],
+            ["examines"],
+            ["foregrounds"],
+        ],
+        "Vintr": [
+            ["coughs"],
+            ["daydreams"],
+            ["whines"],
+        ]
+    };
+
+    function get_RandomInt( min, max )
+    {
+        const minCeiled = Math.ceil(min);
+        const maxFloored = Math.floor(max);
+        return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+    }
+
+    function random(obj)
+    {
+        const rnd = get_RandomInt(0, obj.length);
+        return obj[rnd];
+    }
+
+    function expand( start, expansion )
+    {
+        if ( rules[start] )
+        {
+            const pick = random(rules[start] );
+            for ( let i = 0; i < pick.length; i++ )
+                expand( pick[i], expansion );
+        }
+        else
+        {
+            expansion.push( start );
+        }
+        return expansion.join( " " );
+    }
+
+    const result = expand( start = "S", expansion = [] );
+    console.log( result );
+
+</script>
+</body>
+</html>
