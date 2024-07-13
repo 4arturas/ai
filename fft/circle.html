@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FFT</title>
+</head>
+<script src="p5.js"></script>
+<body>
+<script>
+
+    const TWO_PI = Math.PI*2;
+    const HALF_PI = Math.PI/2;
+
+    function dft(x) {
+
+        let X = [];
+        const N = x.length;
+
+        for (let k = 0; k < N; k++) {
+            let real = 0;
+            let imag = 0;
+
+            for (let n = 0; n < N; n++) {
+                const phi = (TWO_PI * k * n) / N;
+                real += x[n] * Math.cos(phi);
+                imag -= x[n] * Math.sin(phi);
+            }
+            real = real / N;
+            imag = imag / N;
+
+            let freq = k;
+            let amp = Math.sqrt(real * real + imag * imag);
+            let phase = Math.atan2(imag, real);
+
+            X[k] = { real, imag, freq, amp, phase};
+        }
+
+        return X;
+    }
+
+    function epicycles(x, y, rotation, fourier) {
+        for (let i = 0; i < fourier.length; i++) {
+            let prevx = x;
+            let prevy = y;
+
+            let freq = fourier[i].freq;
+            let radius = fourier[i].amp;
+            let phase = fourier[i].phase + rotation;
+            x += radius * Math.cos(freq * time + phase);
+            y += radius * Math.sin(freq * time + phase);
+
+            stroke(255, 100);
+            noFill();
+            ellipse(prevx, prevy, radius * 2);
+
+            fill(200);
+            stroke(255);
+            ellipse(x, y, 5);
+            line(prevx, prevy, x, y);
+        }
+        return createVector(x, y);
+    }
+
+    //DFT
+    let signalX = [];
+    let signalY = [];
+    let fourierX;
+    let fourierY;
+
+    function setData()
+    {
+        const radius = 150;
+        for ( let i = 0; i < Math.PI*2; i += 0.1 )
+        {
+            const x = Math.cos(i) * radius;
+            const y = Math.sin(i) * radius;
+
+            signalX.unshift( x );
+            signalY.unshift( y );
+        }
+
+        fourierX = dft(signalX);
+        fourierY = dft(signalY);
+
+        // fourierX.sort((a,b) => b.amp - a.amp);
+        // fourierY.sort((a,b) => b.amp - a.amp);
+    }
+    setData();
+
+    // Set up
+    let time = 0;
+    let path = [];
+
+    const myWidth = 700;
+    const myHeight = 400;
+
+    function setup() {
+        frameRate(30);
+        createCanvas(myWidth, myHeight);
+    }
+
+    function draw() {
+        background(31);
+
+        const vx = epicycles(width / 2, 75, 0, fourierX);
+        const vy = epicycles(75, height / 2, HALF_PI, fourierY);
+
+        let v = createVector(vx.x, vy.y);
+
+        // Add final point to the array
+        path.unshift(v);
+
+        // Draw the result
+        line(vx.x, vx.y, path[0].x, path[0].y);
+        line(vy.x, vy.y, path[0].x, path[0].y);
+
+        noFill();
+        beginShape();
+        for (let i = 0; i < path.length; i++) {
+            vertex(path[i].x, path[i].y);
+        }
+        endShape();
+
+        // Increment Time
+        const dt = TWO_PI / fourierY.length;
+        time += dt;
+        // time += 0.05;
+
+        if (time > TWO_PI) {
+            time = 0;
+            path = [];
+        }
+
+    }
+
+</script>
+</body>
+</html>
