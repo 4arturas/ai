@@ -38,7 +38,8 @@
         return X;
     }
 
-    function epicycles(x, y, rotation, fourier) {
+    function epicycles(x = 0, y = 0, rotation = 0, fourier = [{real:0,imag:0,freq:0,amp:0,phase:0}] )
+    {
         for (let i = 0; i < fourier.length; i++) {
             let prevx = x;
             let prevy = y;
