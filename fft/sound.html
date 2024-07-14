@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FFT</title>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.3.1/lib/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.3.1/lib/addons/p5.sound.min.js"></script>
+<body>
+<script>
+
+  let signal = [];
+  let noisySignal = [];
+  let filteredSignal = [];
+  let noiseThreshold = 0.2; // Threshold to filter out noise
+  let soundNoisy, soundFiltered;
+  let fft;
+
+  function setup() {
+    createCanvas(800, 600);
+    generateSignal();
+    addNoise();
+    fourierTransform = dft(noisySignal);
+    filterNoise();
+    filteredSignal = idft(fourierTransform);
+
+    // Convert signals to sound objects
+    soundNoisy = new p5.SoundFile();
+    soundFiltered = new p5.SoundFile();
+    createSoundFile(noisySignal, soundNoisy);
+    createSoundFile(filteredSignal, soundFiltered);
+
+    // Create buttons
+    let playNoisyButton = createButton('Play Noisy Signal');
+    playNoisyButton.position(10, 10);
+    playNoisyButton.mousePressed(() => playSound(soundNoisy));
+
+    let playFilteredButton = createButton('Play Filtered Signal');
+    playFilteredButton.position(150, 10);
+    playFilteredButton.mousePressed(() => playSound(soundFiltered));
+  }
+
+  function draw() {
+    background(255);
+    stroke(0);
+
+    // Draw original noisy signal
+    beginShape();
+    noFill();
+    for (let i = 0; i < noisySignal.length; i++) {
+      let x = (i / noisySignal.length) * width;
+      let y = ((1 - noisySignal[i]) * (height / 2)) / 2;
+      vertex(x, y);
+    }
+    endShape();
+
+    // Draw filtered signal
+    stroke(255, 0, 0);
+    beginShape();
+    noFill();
+    for (let i = 0; i < filteredSignal.length; i++) {
+      let x = (i / filteredSignal.length) * width;
+      let y = ((1 - filteredSignal[i]) * (height / 2)) / 2;
+      vertex(x, y);
+    }
+    endShape();
+  }
+
+  function generateSignal() {
+    for (let i = 0; i < 256; i++) {
+      let t = i / 256;
+      let y = sin(2 * PI * t * 5); // Original signal with a frequency of 5 Hz
+      signal.push(y);
+    }
+  }
+
+  function addNoise() {
+    for (let i = 0; i < signal.length; i++) {
+      let noise = random(-0.5, 0.5); // Adding random noise
+      noisySignal.push(signal[i] + noise);
+    }
+  }
+
+  function filterNoise() {
+    const N = fourierTransform.length;
+    for (let i = 0; i < N; i++) {
+      if (fourierTransform[i].magnitude < noiseThreshold) {
+        fourierTransform[i].real = 0;
+        fourierTransform[i].imag = 0;
+      }
+    }
+  }
+
+  function dft(signal) {
+    const N = signal.length;
+    let X = [];
+    for (let k = 0; k < N; k++) {
+      let real = 0;
+      let imag = 0;
+      for (let n = 0; n < N; n++) {
+        const angle = (TWO_PI * k * n) / N;
+        real += signal[n] * cos(angle);
+        imag -= signal[n] * sin(angle);
+      }
+      real = real / N;
+      imag = imag / N;
+      let magnitude = sqrt(real * real + imag * imag);
+      let phase = atan2(imag, real);
+      X[k] = { real, imag, magnitude, phase };
+    }
+    return X;
+  }
+
+  function idft(X) {
+    const N = X.length;
+    let signal = [];
+    for (let n = 0; n < N; n++) {
+      let real = 0;
+      let imag = 0;
+      for (let k = 0; k < N; k++) {
+        const angle = (TWO_PI * k * n) / N;
+        real += X[k].real * cos(angle) - X[k].imag * sin(angle);
+        imag += X[k].real * sin(angle) + X[k].imag * cos(angle);
+      }
+      signal[n] = real;
+    }
+    return signal;
+  }
+
+  function createSoundFile(signal, soundFile) {
+    let sampleRate = 44100;
+    let buffer = new Float32Array(signal.length * (sampleRate / signal.length));
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = signal[Math.floor(i * (signal.length / buffer.length))];
+    }
+    soundFile.setBuffer([buffer]);
+  }
+
+  function playSound(sound) {
+    if (sound.isPlaying()) {
+      sound.stop();
+    } else {
+      sound.play();
+    }
+  }
+
+
+</script>
+</body>
+</html>
