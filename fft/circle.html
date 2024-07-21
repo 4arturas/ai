@@ -13,6 +13,43 @@
 
     let time = 0;
 
+    //DFT
+    let signalX = [];
+    let signalY = [];
+    let fourierX;
+    let fourierY;
+
+    function setData()
+    {
+        const radius = 150;
+        for ( let i = 0; i < Math.PI*2; i += 0.1 )
+        {
+            const x = Math.cos(i) * radius;
+            const y = Math.sin(i) * radius;
+
+            signalX.unshift( x );
+            signalY.unshift( y );
+        }
+
+        fourierX = dft(signalX);
+        fourierY = dft(signalY);
+
+        // fourierX.sort((a,b) => b.amp - a.amp);
+        // fourierY.sort((a,b) => b.amp - a.amp);
+    }
+    setData();
+
+    // Set up
+    let path = [];
+
+    const myWidth = 700;
+    const myHeight = 400;
+
+    function setup() {
+        frameRate(30);
+        createCanvas(myWidth, myHeight);
+    }
+
     function dft( x = [] )
     {
 
@@ -63,43 +100,6 @@
             line(prevx, prevy, x, y);
         }
         return createVector(x, y);
-    }
-
-    //DFT
-    let signalX = [];
-    let signalY = [];
-    let fourierX;
-    let fourierY;
-
-    function setData()
-    {
-        const radius = 150;
-        for ( let i = 0; i < Math.PI*2; i += 0.1 )
-        {
-            const x = Math.cos(i) * radius;
-            const y = Math.sin(i) * radius;
-
-            signalX.unshift( x );
-            signalY.unshift( y );
-        }
-
-        fourierX = dft(signalX);
-        fourierY = dft(signalY);
-
-        // fourierX.sort((a,b) => b.amp - a.amp);
-        // fourierY.sort((a,b) => b.amp - a.amp);
-    }
-    setData();
-
-    // Set up
-    let path = [];
-
-    const myWidth = 700;
-    const myHeight = 400;
-
-    function setup() {
-        frameRate(30);
-        createCanvas(myWidth, myHeight);
     }
 
     function draw() {
