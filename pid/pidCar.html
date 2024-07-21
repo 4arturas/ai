@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PID Controller Example with p5.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+<script>
+    let car, target;
+    let kp = 0.5, ki = 0.01, kd = 0.1;
+    let integral = 0, prevError = 0;
+    let prevTime = 0;
+    let desiredDistance = 100; // Desired distance from the target
+
+    function setup() {
+        createCanvas(800, 400);
+        car = createVector(100, height / 2);
+        target = createVector(700, height / 2);
+        prevTime = millis();
+    }
+
+    function draw() {
+        background(220);
+
+        // Draw the track
+        stroke(0);
+        line(0, height / 2, width, height / 2);
+
+        // Draw the car
+        fill(255, 0, 0);
+        circle(car.x, car.y, 30);
+
+        // Draw the target
+        fill(0, 255, 0);
+        circle(target.x, target.y, 20);
+
+        // Update the target's position
+        updateTarget();
+
+        // Calculate the time elapsed since the last frame
+        let currentTime = millis();
+        let elapsedTime = (currentTime - prevTime) / 1000; // Convert to seconds
+        prevTime = currentTime;
+
+        // Calculate the error
+        let error = (target.x - car.x) - desiredDistance;
+
+        // Integral term
+        integral += error * elapsedTime;
+
+        // Derivative term
+        let derivative = (error - prevError) / elapsedTime;
+        prevError = error;
+
+        // Control signal
+        let control = kp * error + ki * integral + kd * derivative;
+
+        // Update the car's position
+        car.x += control * elapsedTime;
+
+        // Constrain the car within the track
+        car.x = constrain(car.x, 0, width);
+    }
+
+    function updateTarget() {
+        // Move the target left or right
+        let speed = random(1, 6); // Random speed for the target
+        target.x += speed * (random() < 0.5 ? 1 : -1); // Randomly move left or right
+
+        // Constrain the target within the canvas
+        target.x = constrain(target.x, 0, width);
+    }
+
+</script>
+</body>
+</html>

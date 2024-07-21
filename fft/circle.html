@@ -19,6 +19,17 @@
     let fourierX;
     let fourierY;
 
+    // Set up
+    let path = [];
+
+    const myWidth = 700;
+    const myHeight = 400;
+
+    function setup() {
+        frameRate(30);
+        createCanvas(myWidth, myHeight);
+    }
+
     function setData()
     {
         const radius = 150;
@@ -38,17 +49,6 @@
         // fourierY.sort((a,b) => b.amp - a.amp);
     }
     setData();
-
-    // Set up
-    let path = [];
-
-    const myWidth = 700;
-    const myHeight = 400;
-
-    function setup() {
-        frameRate(30);
-        createCanvas(myWidth, myHeight);
-    }
 
     function dft( x = [] )
     {
