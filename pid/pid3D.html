@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D PID Controller with Three.js</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    let scene, camera, renderer;
+    let car, target;
+    let kp = 0.1, ki = 0.01, kd = 0.1;
+    let integral = 0, prevError = 0;
+    let desiredDistance = 5; // Desired distance from the target
+
+    function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create the car (sphere)
+        const carGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const carMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        car = new THREE.Mesh(carGeometry, carMaterial);
+        scene.add(car);
+
+        // Create the target (cube)
+        const targetGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const targetMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        target = new THREE.Mesh(targetGeometry, targetMaterial);
+        scene.add(target);
+
+        camera.position.z = 10;
+
+        animate();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Update the target's position
+        updateTarget();
+
+        // Calculate the PID control
+        const error = (target.position.x - car.position.x) - desiredDistance;
+        integral += error;
+        const derivative = error - prevError;
+        prevError = error;
+
+        const control = kp * error + ki * integral + kd * derivative;
+
+        // Update the car's position
+        car.position.x += control;
+
+        // Render the scene
+        renderer.render(scene, camera);
+    }
+
+    function updateTarget() {
+        // Move the target back and forth
+        target.position.x += Math.sin(Date.now() * 0.001) * 0.05; // Move left and right
+        target.position.x = Math.max(-5, Math.min(5, target.position.x)); // Constrain within bounds
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
