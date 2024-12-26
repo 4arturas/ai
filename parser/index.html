@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Binary Tree Visualization</title>
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <style>
+        body { font-family: sans-serif; }
+        #cy { width: 100%; height: 800px; display: block; border: 1px solid black}
+    </style>
+</head>
+<body>
+<div id="cy"></div>
+
+<script>
+    class Node {
+        constructor(data, color = '#666', linkText = '') {
+            this.data = data;
+            this.color = color;
+            this.linkText = linkText;
+            this.left = null;
+            this.right = null;
+        }
+
+        addLeft(node) {
+            if (this.left) {
+                console.error("Node already has a left child. Cannot add another.");
+                return;
+            }
+            this.left = node;
+        }
+
+        addRight(node) {
+            if (this.right) {
+                console.error("Node already has a right child. Cannot add another.");
+                return;
+            }
+            this.right = node;
+        }
+    }
+
+    class BinaryTree {
+        constructor() {
+            this.root = null;
+        }
+
+        render() {
+            const elements = [];
+
+            const addNode = (node, parentId) => {
+                if (!node) return;
+                const nodeId = `node-${node.data}`;
+                const label = node.data;
+                const width = Math.max(label.length * 8, 50);
+                const height = 20; 
+                elements.push({ data: { id: nodeId, label: label, width: width, height: height, color: node.color } });
+                if (parentId) {
+                    elements.push({ data: { id: `${parentId}-${nodeId}`, source: parentId, target: nodeId, label: node.linkText } });
+                }
+                addNode(node.left, nodeId);
+                addNode(node.right, nodeId);
+            };
+
+            if (!this.root) {
+                console.error("Tree has no root node!");
+                return;
+            }
+
+            addNode(this.root, null);
+
+            const cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: elements,
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'background-color': 'data(color)',
+                            'label': 'data(label)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'color': 'white',
+                            'font-size': '15px',
+                            'font-weight': 'bold',
+                            'width': 'data(width)',
+                            'height': 'data(height)',
+                            'text-wrap': 'wrap',
+                            'text-max-width': 'data(width)',
+                            'padding': '10px'
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-color': '#ccc',
+                            'target-arrow-color': '#ccc',
+                            'target-arrow-shape': 'triangle',
+                            'label': 'data(label)',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': '-10px',
+                            'color': 'black',
+                            'font-size': '12px'
+                        }
+                    }
+                ],
+                layout: {
+                    name: 'breadthfirst',
+                    directed: true,
+                    padding: 10
+                }
+            });
+        }
+    }
+
+    const tree = new BinaryTree();
+    tree.root = new Node('Root', '#ff6347'); // Tomato color
+    const leftNode = new Node('Left', '#4682b4', 'Link to Left'); // SteelBlue color
+    const rightNode = new Node('Right', '#32cd32', 'Link to Right'); // LimeGreen color
+
+    tree.root.addLeft(leftNode);
+    tree.root.addRight(rightNode);
+
+    const leftNodeLeft = new Node('Left Node Left', '#ff69b4', 'Link to Left Node Left'); // HotPink color
+    const leftNodeRight = new Node('Left Node Right', '#ffd700', 'Link to Left Node Right'); // Gold color
+    leftNode.addLeft(leftNodeLeft);
+    leftNode.addRight(leftNodeRight);
+
+    const rightNodeLeft = new Node('Right Node Left', '#8a2be2', 'Link to Right Node Left'); // BlueViolet color
+    const rightNodeRight = new Node('Right Node Right', '#dc143c'); // Crimson color
+    rightNode.addLeft(rightNodeLeft);
+    rightNode.addRight(rightNodeRight);
+
+    tree.render();
+</script>
+
+</body>
+</html>
