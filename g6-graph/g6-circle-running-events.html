@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G6 Animation Example</title>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/g6.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #container {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+
+<script>
+    const container = document.getElementById('container');
+
+    // Generate random duration between min and max
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min) + min);
+    }
+
+    // Create graph data with nodes and edges
+    function createGraphData() {
+        const shiftX = 500;
+        const shiftY = 300;
+        const nodeCount = 10;
+        const radius = 180;
+        const nodes = [];
+        const edges = [];
+        let eventStart = new Date();
+
+        for (let i = 0; i < nodeCount; i++) {
+            const angle = (2 * Math.PI * i) / nodeCount;
+            nodes.push({
+                id: `node${i}`,
+            x: Math.cos(angle) * radius + shiftX,
+                y: Math.sin(angle) * radius + shiftY,
+                label: `${i}`,
+            labelCfg: { position: 'top' },
+        });
+
+            const duration = getRandomInt(2000, 5000);
+            const eventEnd = new Date(eventStart.getTime() + duration);
+            edges.push({
+                id: `edge${i}`, // Assign unique ID to each edge
+            source: `node${i}`,
+            target: `node${(i + 1) % nodeCount}`,
+            data: { eventStart, eventEnd },
+        });
+
+            eventStart = eventEnd;
+        }
+
+        return { nodes, edges };
+    }
+
+    // Animate a circle from source node to target node along the edge
+    function animateCircle(graph, edge) {
+        const { eventStart, eventEnd } = edge.data;
+        const duration = eventEnd - eventStart;
+
+        const edgeItem = graph.findById(edge.id);
+        if (!edgeItem) {
+            console.error(`Edge with ID ${edge.id} not found.`);
+            return;
+        }
+
+        // Add a red circle shape for animation
+        const circle = graph.get('canvas').addShape('circle', {
+            attrs: {
+                x: edgeItem.getModel().startPoint.x,
+                y: edgeItem.getModel().startPoint.y,
+                r: 5,
+                fill: 'red',
+            },
+            draggable: false,
+        });
+
+        // Animate the circle along the edge
+        circle.animate(
+            (ratio) => {
+                const point = edgeItem.getPoint(ratio); // Get the position on the edge
+                return { x: point.x, y: point.y };
+            },
+            {
+                duration,
+                easing: 'easeLinear',
+                repeat: false,
+                onEnd: () => circle.remove(), // Remove the circle when animation ends
+            }
+        );
+    }
+
+    // Initialize graph
+    const width = container.scrollWidth;
+    const height = container.scrollHeight || 500;
+    const graph = new G6.Graph({
+        container: 'container',
+        width,
+        height,
+        defaultNode: {
+            size: 45,
+            style: {
+                fill: '#DEE9FF',
+                stroke: '#5B8FF9',
+            },
+        },
+        defaultEdge: {
+            style: {
+                lineWidth: 2,
+                stroke: '#bae7ff',
+            },
+        },
+        modes: {
+            default: ['drag-node'], // Enable node dragging
+        },
+    });
+
+    // Load graph data
+    const { nodes, edges } = createGraphData();
+    graph.data({ nodes, edges });
+    graph.render();
+
+    // Trigger animation for each edge based on event timings
+    setInterval(() => {
+        const now = new Date();
+        edges.forEach((edge) => {
+            const { eventStart, eventEnd } = edge.data;
+            if (eventStart <= now && now <= eventEnd) {
+                animateCircle(graph, edge);
+            }
+        });
+    }, 100);
+</script>
+</body>
+</html>

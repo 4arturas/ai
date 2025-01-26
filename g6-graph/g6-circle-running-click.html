@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial Demo</title>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/g6.js"></script>
+
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/minimap.js"></script>
+
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/grid.js"></script>
+</head>
+<body>
+<!--http://g6-v3-2.antv.vision/en/docs/manual/tutorial/example-->
+
+
+<div id="container"></div>
+<h1>Click node to start/stop</h1>
+<script>
+    let circle0 = null;
+    // Register a type of edge named 'can-running'
+    G6.registerEdge(
+        'can-running',
+        {
+            afterDraw(cfg, group) {
+                const shape = group.get('children')[0];
+                const startPoint = shape.getPoint(0);
+
+                circle0 = group.addShape('circle', {
+                    attrs: {
+                        x: startPoint.x,
+                        y: startPoint.y,
+                        fill: '#1890ff',
+                        r: 3
+                    }
+                });
+
+                console.log( group.getShape('circle') );
+            },
+            // Rewrite setState
+            setState(name, value, item) {
+                const shape = item.get('keyShape');
+                if (name === 'running') {
+                    if (value)
+                    {
+                        circle0._attrs.r = 3;
+                        circle0.animate({
+                            // repeat: true,
+                            onFrame(ratio) {
+                                const tmpPoint = shape.getPoint(ratio);
+                                return {
+                                    x: tmpPoint.x,
+                                    y: tmpPoint.y
+                                };
+                            }
+                        }, 3000);
+                    }
+                    else
+                    {
+                        circle0.stopAnimate();
+                        // circle0._attrs.r = 0;
+                    }
+                }
+            },
+        },
+        'cubic-horizontal',
+    );
+
+
+    const data = {
+        nodes: [{
+            id: 'node1',
+            x: 100,
+            y: 100,
+            label: '1',
+            labelCfg: {
+                position: 'top'
+            }
+        }, {
+            id: 'node2',
+            x: 300,
+            y: 200,
+            color: '#40a9ff',
+            label: '2',
+            labelCfg: {
+                position: 'left',
+                offset: 10
+            }
+        }],
+        edges: [{
+            source: 'node1',
+            target: 'node2'
+        }
+        ]
+    };
+
+    const width = document.getElementById('container').scrollWidth;
+    const height = document.getElementById('container').scrollHeight || 500;
+    const graph = new G6.Graph({
+        container: 'container',
+        width,
+        height,
+        defaultNode: {
+            size: 45,
+            style: {
+                fill: '#DEE9FF',
+                stroke: '#5B8FF9'
+            }
+        },
+        defaultEdge: {
+            shape: 'can-running',
+            style: {
+                lineWidth: 2,
+                stroke: '#bae7ff'
+            }
+        }
+    });
+    graph.data(data);
+    graph.render();
+
+
+    let mouseClicked = false;
+    graph.on('node:click', ev => {
+        if ( !mouseClicked ) {
+        // Get the target node of the event
+        const node = ev.item;
+        // Get the related edges of the target node
+        const edges = node.getEdges();
+        // Turn the running state of all the related edges to be true. The setState function will be activated now
+        edges.forEach(edge => graph.setItemState(edge, 'running', true));
+        }
+        else
+        {
+            // Get the target node of the event
+            const node = ev.item;
+            // Get the related edges of the target node
+            const edges = node.getEdges();
+            // Turn the running state of all the related edges to be false. The setState function will be activated now
+            edges.forEach(edge => graph.setItemState(edge, 'running', false));
+        }
+        mouseClicked = !mouseClicked;
+    });
+
+
+</script>
+</body>
+</html>

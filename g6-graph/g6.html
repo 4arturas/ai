@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial Demo</title>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/g6.js"></script>
+
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/minimap.js"></script>
+
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.2.3/build/grid.js"></script>
+</head>
+<body>
+<!--http://g6-v3-2.antv.vision/en/docs/manual/tutorial/example-->
+
+
+<div id="container"></div>
+<script>
+    const data = {
+        // The array of nodes
+        nodes: [
+            {
+                id: 'node1', // String, unique and required
+                x: 100, // Number, the x coordinate
+                y: 200, // Number, the y coordinate
+            },
+            {
+                id: 'node2', // String, unique and required
+                x: 300, // Number, the x coordinate
+                y: 200, // Number, the y coordinate
+            },
+        ],
+        // The array of edges
+        edges: [
+            {
+                source: 'node1', // String, required, the id of the source node
+                target: 'node2', // String, required, the id of the target node
+            },
+        ],
+    };
+</script>
+<script>
+    const graph2 = new G6.Graph({
+        container: document.getElementById('container'),
+        width: 800,
+        height: 600,
+        background: {
+            color: '#F2F7FA',
+        },
+        modes: {
+            default: [{
+                type: 'drag-canvas',
+                enableOptimize: true,
+                // ... other configurations
+            }, {
+                type: 'zoom-canvas',
+                enableOptimize: true,
+                // ... other configurations
+            }]
+        }
+    })
+    graph2.data(data);
+    graph2.render();
+    // graph2.toJSON()
+</script>
+
+<div id="mountNode"></div>
+<script>
+    const graphRemote = new G6.Graph({
+        container: 'mountNode',
+        width: 1000,
+        height: 600,
+        renderer: 'svg',
+        fitView: true,
+        fitViewPadding: [ 20, 40, 50, 20 ]
+    });
+
+    const main = async () => {
+        const response = await fetch('https://gw.alipayobjects.com/os/basement_prod/6cae02ab-4c29-44b2-b1fd-4005688febcb.json');
+        const remoteData = await response.json();
+        graphRemote.data(remoteData);
+        graphRemote.render();
+    };
+    main();
+</script>
+</body>
+</html>

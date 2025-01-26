@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial Demo</title>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-4.2.3/dist/g6.min.js"></script>
+</head>
+<body>
+
+<!--http://g6-v3-2.antv.vision/en/examples/net/forceDirected#forceDirectedFunctionalParams-->
+<div id="container" style="border: 1px solid black"></div>
+<script>
+    const width = document.getElementById('container').scrollWidth;
+    const height = document.getElementById('container').scrollHeight || 800;
+    const graph = new G6.Graph({
+        container: 'container',
+        width,
+        height,
+        layout: {
+            type: 'force',
+            preventOverlap: true,
+            linkDistance: d => {
+                /*if (d.source.id === 'node0') {
+                    return 100;
+                }*/
+                return 300;
+            },
+            nodeStrength: d => {
+                /*if (d.isLeaf) {
+                    return -50;
+                }*/
+                return -150;
+            },
+            edgeStrength: d => {
+                if (d.source.id === 'node1' || d.source.id === 'node2' || d.source.id === 'node3') {
+                    return 0.7;
+                }
+                return 0.00000001;
+            }
+        },
+        defaultNode: {
+            color: '#5B8FF9',
+            style: {
+                lineWidth: 2,
+                fill: '#C6E5FF'
+            }
+        },
+        defaultEdge: {
+            size: 1,
+            color: '#e2e2e2'
+        }
+    });
+</script>
+
+<script>
+    const MAX_CITIES =	15;
+
+    const MAX_DISTANCE	= 100
+
+    const MAX_TOUR	= (MAX_CITIES * MAX_DISTANCE)
+
+    function cityType( x = 0, y = 0 )
+    {
+        return { x, y };
+    }
+
+
+    const MAX_ANTS	= 20;
+
+
+    function antType( curCity = 0, nextCity = 0, pathIndex = 0, tourLength = 0.0 )
+    {
+        return { curCity, nextCity, tabu: new Array(MAX_CITIES), pathIndex, path: new Array(MAX_CITIES), tourLength };
+    }
+
+    // Function to get a random float between 0 and 1
+    function getSRand() {
+        return Math.random(); // Math.random() returns a float between 0 (inclusive) and 1 (exclusive)
+    }
+
+    // Function to get a random integer between 0 and x (exclusive)
+    function getRand(x) {
+        return Math.floor(x * getSRand()); // Multiply by x and use Math.floor to get an integer
+    }
+
+    const ALPHA		= 1.0;
+    const BETA		= 5.0;
+    const RHO		= 0.5;	/* Intensity / Evaporation */
+    const QVAL		= 100;
+
+    const MAX_TOURS	= 500
+
+    const MAX_TIME	= (MAX_TOURS * MAX_CITIES);
+
+    const INIT_PHEROMONE	= (1.0 / MAX_CITIES);
+</script>
+
+<script>
+    const cities = Array.from(Array(MAX_CITIES).keys()).map( key => { return cityType(); })
+    const ants = Array.from(Array(MAX_ANTS).keys()).map( key => { return antType(); })
+    const distance = Array.from({ length: MAX_CITIES }, () => Array(MAX_CITIES).fill(0));
+    const pheromone = Array.from({ length: MAX_CITIES }, () => Array(MAX_CITIES).fill(0));
+    let best = MAX_TOUR;
+    let bestIndex = -1;
+</script>
+
+<script>
+    function assert( b )
+    {
+        if ( !b )
+            console.log( "assert failed" );
+    }
+    function init()
+    {
+        let from, to, ant;
+
+        /* Create the cities and their locations */
+        for (from = 0; from < MAX_CITIES; from++) {
+
+            /* Randomly place cities around the grid */
+            cities[from].x = getRand(MAX_DISTANCE);
+            cities[from].y = getRand(MAX_DISTANCE);
+
+            for (to = 0; to < MAX_CITIES; to++) {
+                distance[from][to] = 0.0;
+                pheromone[from][to] = INIT_PHEROMONE;
+            }
+
+        }
+        /* Compute the distances for each of the cities on the map */
+        for ( from = 0 ; from < MAX_CITIES ; from++) {
+
+            for ( to = 0 ; to < MAX_CITIES ; to++) {
+
+                if ((to !== from) && (distance[from][to] === 0.0)) {
+                    const xd = Math.abs(cities[from].x - cities[to].x);
+                    const yd = Math.abs(cities[from].y - cities[to].y);
+
+                    distance[from][to] = Math.sqrt( (xd * xd) + (yd * yd) );
+                    distance[to][from] = distance[from][to];
+                }
+
+            }
+
+        }
+        /* Initialize the ants */
+        to = 0;
+        for ( ant = 0 ; ant < MAX_ANTS ; ant++ ) {
+
+            /* Distribute the ants to each of the cities uniformly */
+            if (to === MAX_CITIES) to = 0;
+            ants[ant].curCity = to++;
+
+            for ( from = 0 ; from < MAX_CITIES ; from++ ) {
+                ants[ant].tabu[from] = 0;
+                ants[ant].path[from] = -1;
+            }
+
+            ants[ant].pathIndex = 1;
+            ants[ant].path[0] = ants[ant].curCity;
+            ants[ant].nextCity = -1;
+            ants[ant].tourLength = 0.0;
+
+            /* Load the ant's current city into taboo */
+            ants[ant].tabu[ants[ant].curCity] = 1;
+
+        }
+    }
+
+    function restartAnts()
+    {
+        let ant, i, to=0;
+
+        for ( ant = 0 ; ant < MAX_ANTS ; ant++ ) {
+
+            if (ants[ant].tourLength < best) {
+                best = ants[ant].tourLength;
+                bestIndex = ant;
+            }
+
+            ants[ant].nextCity = -1;
+            ants[ant].tourLength = 0.0;
+
+            for (i = 0 ; i < MAX_CITIES ; i++) {
+                ants[ant].tabu[i] = 0;
+                ants[ant].path[i] = -1;
+            }
+
+            if (to === MAX_CITIES) to = 0;
+            ants[ant].curCity = to++;
+
+            ants[ant].pathIndex = 1;
+            ants[ant].path[0] = ants[ant].curCity;
+
+            ants[ant].tabu[ants[ant].curCity] = 1;
+
+        }
+    }
+
+    /*
+ *  antProduct()
+ *
+ *  Compute the denominator for the path probability equation (concentration
+ *  of pheromone of the current path over the sum of all concentrations of
+ *  available paths).
+ *
+ */
+
+    function antProduct( from, to )
+    {
+        return (( Math.pow( pheromone[from][to], ALPHA ) *
+            Math.pow( (1.0 / distance[from][to]), BETA ) ));
+    }
+
+    /*
+ *  selectNextCity()
+ *
+ *  Using the path probability selection algorithm and the current pheromone
+ *  levels of the graph, select the next city the ant will travel to.
+ *
+ */
+
+    function selectNextCity( ant = -1 )
+    {
+        let from, to;
+        let denom=0.0;
+
+        /* Choose the next city to visit */
+        from = ants[ant].curCity;
+
+        /* Compute denom */
+        for (to = 0 ; to < MAX_CITIES ; to++) {
+            if (ants[ant].tabu[to] === 0) {
+                denom += antProduct( from, to );
+            }
+        }
+
+        assert(denom !== 0.0);
+
+        do {
+
+            let p;
+
+            to++;
+            if (to >= MAX_CITIES) to = 0;
+
+            if ( ants[ant].tabu[to] === 0 ) {
+
+                p = antProduct(from, to)/denom;
+
+                if (getSRand() < p ) break;
+
+            }
+
+        } while (1);
+
+        return to;
+    }
+
+    /*
+ *  simulateAnts()
+ *
+ *  Simulate a single step for each ant in the population.  This function
+ *  will return zero once all ants have completed their tours.
+ *
+ */
+
+    function simulateAnts()
+    {
+        let k;
+        let moving = 0;
+
+        for (k = 0 ; k < MAX_ANTS ; k++) {
+
+            /* Ensure this ant still has cities to visit */
+            if (ants[k].pathIndex < MAX_CITIES) {
+
+                ants[k].nextCity = selectNextCity( k );
+
+                ants[k].tabu[ants[k].nextCity] = 1;
+
+                ants[k].path[ants[k].pathIndex++] = ants[k].nextCity;
+
+                ants[k].tourLength += distance[ants[k].curCity][ants[k].nextCity];
+
+                /* Handle the final case (last city to first) */
+                if (ants[k].pathIndex === MAX_CITIES) {
+                    ants[k].tourLength +=
+                        distance[ants[k].path[MAX_CITIES-1]][ants[k].path[0]];
+                }
+
+                ants[k].curCity = ants[k].nextCity;
+
+                moving++;
+
+            }
+
+        }
+
+        return moving;
+    }
+
+    /*
+ *  updateTrails()
+ *
+ *  Update the pheromone levels on each arc based upon the number of ants
+ *  that have travelled over it, including evaporation of existing pheromone.
+ *
+ */
+
+    function updateTrails()
+    {
+        let from, to, i, ant;
+
+        /* Pheromone Evaporation */
+        for (from = 0 ; from < MAX_CITIES ; from++) {
+
+            for (to = 0 ; to < MAX_CITIES ; to++) {
+
+                if (from !== to) {
+
+                    pheromone[from][to] *= (1.0 - RHO);
+
+                    if (pheromone[from][to] < 0.0) pheromone[from][to] = INIT_PHEROMONE;
+
+                }
+
+            }
+
+        }
+
+        /* Add new pheromone to the trails */
+
+        /* Look at the tours of each ant */
+        for (ant = 0 ; ant < MAX_ANTS ; ant++) {
+
+            /* Update each leg of the tour given the tour length */
+            for (i = 0 ; i < MAX_CITIES ; i++) {
+
+                if (i < MAX_CITIES-1) {
+                    from = ants[ant].path[i];
+                    to = ants[ant].path[i+1];
+                } else {
+                    from = ants[ant].path[i];
+                    to = ants[ant].path[0];
+                }
+
+                pheromone[from][to] += (QVAL / ants[ant].tourLength);
+                pheromone[to][from] = pheromone[from][to];
+
+            }
+
+        }
+
+        for (from = 0 ; from < MAX_CITIES ; from++) {
+            for (to = 0 ; to < MAX_CITIES ; to++) {
+                pheromone[from][to] *= RHO;
+            }
+        }
+
+    }
+</script>
+
+<script>
+    /*
+ *  emitDataFile()
+ *
+ *  For the ant with the best tour (shortest tour through the graph), emit
+ *  the path in two data files (plotted together).
+ *
+ */
+
+    function emitDataFile( ant = -1 )
+    {
+        let city;
+
+        console.log("cities.dat");
+        for (city = 0 ; city < MAX_CITIES ; city++) {
+            console.log(cities[city].x, cities[city].y);
+        }
+
+        console.log("solution.dat", "w");
+        for (city = 0 ; city < MAX_CITIES ; city++) {
+            console.log(
+                cities[ ants[ant].path[city] ].x,
+                cities[ ants[ant].path[city] ].y );
+        }
+        console.log(
+            cities[ ants[ant].path[0] ].x,
+            cities[ ants[ant].path[0] ].y );
+    }
+
+    function emitTable()
+    {
+        let from, to;
+
+        for (from = 0 ; from < MAX_CITIES ; from++) {
+            for (to = 0 ; to < MAX_CITIES ; to++) {
+                console.log( from, to, pheromone[from][to] );
+            }
+        }
+    }
+
+</script>
+
+<script>
+    function graph_CitiesCreate( cities = [] )
+    {
+        const nodes = [];
+        const edges = [];
+        let from, to, ant;
+
+        for (from = 0; from < MAX_CITIES; from++)
+        {
+            const source = `node-${from}`;
+            nodes.push( {
+                id: source,
+                x: cities[from].x,
+                y: cities[from].y,
+                size: 30
+            } )
+
+            for (to = 0; to < MAX_CITIES; to++)
+            {
+                const target = `node-${to}`;
+                edges.push( {
+                    source: source,
+                    target: target,
+                    // label: `${source} -> ${target}`
+                } );
+            }
+        }
+
+        return { nodes, edges };
+    }
+    function graph_UpdateEdges()
+    {
+        let i = 0;
+        for ( let from = 0; from < MAX_CITIES; from++ )
+        {
+            for ( let to = 0; to < MAX_CITIES; to++ )
+            {
+                data.edges[i++].weight = pheromone[from][to];
+            } // end for to
+        } // end for from
+    }
+</script>
+
+<script>
+    function ant_Main()
+    {
+        let curTime = 0;
+
+        while ( curTime++ < MAX_TIME )
+        {
+            if ( simulateAnts() === 0 )
+            {
+                updateTrails();
+                graph_UpdateEdges();
+                if ( curTime !== MAX_TIME )
+                    restartAnts();
+                console.log("Time is: ", curTime, " Best time: ", best );
+            }
+        }
+
+        console.log("best tour ", best );
+        emitDataFile( bestIndex );
+    }
+</script>
+
+<script>
+
+    init();
+
+    const data = graph_CitiesCreate( cities );
+    const nodes = data.nodes;
+    graph.data({
+        nodes,
+        edges: data.edges.map(function(edge, i) {
+            edge.id = 'edge' + i;
+            return Object.assign({}, edge);
+        })
+    });
+    graph.render();
+
+    graph.on('node:dragstart', function(e) {
+        graph.layout();
+        refreshDragedNodePosition(e);
+    });
+    graph.on('node:drag', function(e) {
+        refreshDragedNodePosition(e);
+    });
+    graph.on('node:dragend', function(e) {
+        e.item.get('model').fx = null;
+        e.item.get('model').fy = null;
+    });
+
+    function refreshDragedNodePosition(e) {
+        const model = e.item.get('model');
+        model.fx = e.x;
+        model.fy = e.y;
+    }
+
+    ant_Main();
+</script>
+</body>
+</html>

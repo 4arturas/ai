@@ -30,7 +30,7 @@
         createCanvas(myWidth, myHeight);
     }
 
-    function setData()
+    function setDataCircle()
     {
         const radius = 150;
         for ( let i = 0; i < Math.PI*2; i += 0.1 )
@@ -48,7 +48,31 @@
         // fourierX.sort((a,b) => b.amp - a.amp);
         // fourierY.sort((a,b) => b.amp - a.amp);
     }
-    setData();
+    function setDataStar() {
+        const outerRadius = 150;
+        const innerRadius = 75;
+        const numPoints = 5;
+        const angleStep = TWO_PI / (numPoints * 2);
+
+        for (let i = 0; i < TWO_PI; i += angleStep) {
+            const radius = i % (angleStep * 2) === 0 ? outerRadius : innerRadius;
+            const x = Math.cos(i) * radius;
+            const y = Math.sin(i) * radius;
+
+            signalX.push(x);
+            signalY.push(y);
+        }
+
+        fourierX = dft(signalX);
+        fourierY = dft(signalY);
+
+        // Sort Fourier coefficients by amplitude (optional)
+        fourierX.sort((a, b) => b.amp - a.amp);
+        fourierY.sort((a, b) => b.amp - a.amp);
+    }
+
+    setDataCircle();
+    // setDataStar();
 
     function dft( x = [] )
     {

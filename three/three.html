@@ -1,10 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Scene with Box and Lighting</title>
+    <script src="../three.min.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #canvas-container { width: 640px; height: 480px; }
+    </style>
 </head>
 <body>
-$END$
+<div id="canvas-container"></div>
+<script>
+    let scene, camera, renderer, sphere, grid, light, box;
+    let sphereSpeed = 0.05;
+    let direction = 1;
+
+    function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, 640 / 480, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(640, 480);
+        renderer.shadowMap.enabled = true; // Enable shadow mapping
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Sphere creation
+        const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 16);
+        const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.z = -5;
+        sphere.castShadow = true; // Sphere will cast shadows
+        scene.add(sphere);
+
+        // Box creation
+        const boxGeometry = new THREE.BoxGeometry(50, 50, 50);
+        const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.BackSide });
+        box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.receiveShadow = true; // Box will receive shadows
+        scene.add(box);
+
+        // Light creation
+        light = new THREE.PointLight(0xffffff, 1, 500);
+        light.position.set(0, 20, 0);
+        light.castShadow = true; // Enable shadows for this light
+        scene.add(light);
+
+        // Adjust camera
+        camera.position.z = 20;
+        camera.position.y = 5;
+        camera.lookAt(scene.position);
+
+        animate();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Move the sphere left and right
+        sphere.position.x += sphereSpeed * direction;
+        if (sphere.position.x >= 25 || sphere.position.x <= -25) {
+            direction *= -1; // Change direction
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    init();
+</script>
 </body>
 </html>

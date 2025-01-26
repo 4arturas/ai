@@ -1,10 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
 </head>
 <body>
-$END$
+<script>
+    class EarleyParser {
+        constructor(grammar) {
+            this.grammar = grammar;
+            this.chart = [];
+        }
+
+        // Initializes the chart with empty sets
+        init(words) {
+            this.chart = Array.from({ length: words.length + 1 }, () => new Set());
+        }
+
+        // Adds a state to a set, ensuring no duplicates
+        addToSet(state, setIndex) {
+            const set = this.chart[setIndex];
+            if (!Array.from(set).some(s => JSON.stringify(s) === JSON.stringify(state))) {
+                set.add(state);
+            }
+        }
+
+        // Checks if a state is completed
+        isFinished(state) {
+            return state.rule[1].length === state.dot;
+        }
+
+        // Returns the next element to be processed in a state
+        nextElementOf(state) {
+            return state.rule[1][state.dot];
+        }
+
+        // Predictor operation for non-terminals
+        predictor(state, k) {
+            const nonTerminal = this.nextElementOf(state);
+            const rules = this.grammar[nonTerminal];
+            if (rules) {
+                for (const rule of rules) {
+                    this.addToSet({ rule: [nonTerminal, rule], dot: 0, start: k }, k);
+                }
+            }
+        }
+
+        // Scanner operation for terminals
+        scanner(state, k, words) {
+            const terminal = this.nextElementOf(state);
+            if (terminal === words[k]) {
+                this.addToSet({ rule: state.rule, dot: state.dot + 1, start: state.start }, k + 1);
+            }
+        }
+
+        // Completer operation for finished states
+        completer(state, k) {
+            for (const prevState of this.chart[state.start]) {
+                if (!this.isFinished(prevState) && this.nextElementOf(prevState) === state.rule[0]) {
+                    this.addToSet({ rule: prevState.rule, dot: prevState.dot + 1, start: prevState.start }, k);
+                }
+            }
+        }
+
+        // Main Earley Parse algorithm
+        parse(words) {
+            this.init(words);
+            this.addToSet({ rule: ["γ", ["S"]], dot: 0, start: 0 }, 0);
+
+            for (let k = 0; k <= words.length; k++) {
+                const currentSet = Array.from(this.chart[k]);
+                for (const state of currentSet) {
+                    if (!this.isFinished(state)) {
+                        const nextElement = this.nextElementOf(state);
+                        if (this.grammar[nextElement]) {
+                            this.predictor(state, k); // Non-terminal
+                        } else {
+                            this.scanner(state, k, words); // Terminal
+                        }
+                    } else {
+                        this.completer(state, k); // Completed state
+                    }
+                }
+            }
+
+            return this.chart;
+        }
+    }
+
+    // Define the grammar
+    const grammar = {
+        "S": [["S", "+", "M"], ["M"]],
+        "M": [["M", "*", "T"], ["T"]],
+        "T": [["1"], ["2"], ["3"], ["4"]],
+    };
+
+    // Parse the input
+    const input = "2 + 3 * 4".split(" ");
+    const parser = new EarleyParser(grammar);
+    const chart = parser.parse(input);
+
+    console.log(chart);
+
+</script>
 </body>
 </html>
