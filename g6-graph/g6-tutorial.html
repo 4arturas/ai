@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial Demo</title>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g6/4.3.11/dist/g6.min.js"></script>
+    <style>
+        /* The style of the tooltip */
+        .g6-tooltip {
+            border: 1px solid #e2e2e2;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #545454;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 8px;
+            box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container" style="border: 1px solid black"></div>
+<script>
+    const data = {
+
+        nodes: [
+            {
+                id: 'node1',
+                x: 100,
+                y: 200,
+                label: "p",
+                size: 50,
+                visible: true,
+                type: "rect",
+                labelCfg: {           // The configurations for the label
+                    positions: 'right',// The relative position of the label
+                    style: {            // The style properties of the label
+                        fontSize: 20,     // The font size of the label
+                        // ...            // Other style properties of the label
+                    }
+                },
+                style: {              // The object of style properties of the node
+                    // fill: '#000',       // The filling color
+                    stroke: '#888',     // The stroke color
+                }
+            },
+            {
+                id: 'node2',
+                x: 300,
+                y: 200,
+                label: "q"
+            },
+        ],
+
+        edges: [
+            {
+                source: 'node1',
+                target: 'node2',
+                label: 'My Label',
+                weight: 20,
+                style: {
+                    lineWidth: 3,
+                    opacity: 1,
+                    stroke: "red"
+                }
+            },
+        ],
+    };
+    setTimeout( () => {
+        // data.edges[0].label = "Hey";
+    }, 2000);
+</script>
+<script>
+    const minimap = new G6.Minimap({
+        size: [100, 100],
+        className: 'minimap',
+        type: 'delegate',
+    });
+    const grid = new G6.Grid();
+    const graph = new G6.Graph({
+        container: document.getElementById('container'),
+        animate: true, // Boolean, whether to activate the animation when global changes happen
+
+        width: "100vh",
+        height: 800,
+        renderer: 'svg',
+        fitView: false,
+        fitViewPadding: [ 20, 40, 50, 20 ],
+        layout: {                // Object, layout configuration. random by default
+            type: 'force',         // Force layout
+            preventOverlap: true,  // Prevent node overlappings
+            nodeSize: 30,        // The size of nodes for collide detection. Since we have assigned sizes for each node to their data in last chapter, the nodeSize here is not required any more.
+            linkDistance: 10, // The link distance is 100
+        },
+        background: {
+            color: '#F2F7FA',
+        },
+        modes: {
+            default: [
+                {
+                    type: 'drag-canvas',
+                    enableOptimize: true,
+                    // ... other configurations
+                },
+                {
+                    type: 'zoom-canvas',
+                    enableOptimize: true,
+                    // ... other configurations
+                },
+                {
+                    type: 'tooltip', // Tooltip
+                    formatText(model) {
+                        // The content of tooltip
+                        const text = 'label: ' + model.label + '<br/> class: ' + model.class;
+                        return text;
+                    },
+                },
+                {
+                    type: 'edge-tooltip', // Edge tooltip
+                    formatText(model) {
+                        // The content of the edge tooltip
+                        const text =
+                            'source: ' +
+                            model.source +
+                            '<br/> target: ' +
+                            model.target +
+                            '<br/> weight: ' +
+                            model.weight;
+                        return text;
+                    },
+                },
+            ]
+        },
+        plugins: [minimap, grid],
+    })
+    graph.data(data);
+    graph.render();
+    // graph2.toJSON()
+</script>
+
+</body>
+</html>
