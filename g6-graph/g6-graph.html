@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graph Traversal Visualization</title>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g6/4.3.11/dist/g6.min.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .controls {
+            margin-bottom: 10px;
+        }
+        .matrix-container {
+            margin-top: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        td {
+            background-color: #fff;
+        }
+        .vertex-label {
+            font-weight: bold;
+        }
+        .highlight-row-orange {
+            background-color: #FFA940 !important;
+        }
+        .highlight-col-orange {
+            background-color: #FFA940 !important;
+        }
+        .highlight-cell-orange {
+            background-color: #FFA940 !important;
+        }
+        .highlight-row-green {
+            background-color: #73D13D !important;
+        }
+        .highlight-col-green {
+            background-color: #73D13D !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="controls">
+        <button onclick="startDFS()">Start DFS</button>
+        <button onclick="nextStepDFS()">Next Step DFS</button>
+        <button onclick="startBFS()">Start BFS</button>
+        <button onclick="nextStepBFS()">Next Step BFS</button>
+        <button onclick="reset()">Reset</button>
+    </div>
+    <div id="container"></div>
+    <div class="matrix-container" id="matrix-container"></div>
+</div>
+
+<script>
+    function data(val1, x, y) {
+        return {val1, x, y};
+    }
+
+    function testGraph_Create() {
+        const vertexLabels = [
+            data("1", 100, 50),  // Vertex 1 (top-left)
+            data("2", 300, 50),  // Vertex 2 (top-right)
+            data("3", 200, 150), // Vertex 3 (center)
+            data("4", 100, 250), // Vertex 4 (bottom-left)
+            data("5", 300, 250)  // Vertex 5 (bottom-right)
+        ];
+
+        const matrix = [
+            [0, 0, 1, 0, 0], // 1 → 3
+            [0, 0, 1, 0, 0], // 2 → 3
+            [0, 0, 0, 1, 1], // 3 → 4, 5
+            [1, 0, 0, 0, 0], // 4 → 1
+            [0, 1, 0, 0, 0]  // 5 → 2
+        ];
+
+        return {matrix, vertexLabels};
+    }
+
+    const graphData = testGraph_Create();
+
+    // Convert adjacency matrix to G6 graph data
+    const g6Data = {
+        nodes: graphData.vertexLabels.map((vertex, index) => ({
+            id: String(index),
+            label: vertex.val1,
+            x: vertex.x,
+            y: vertex.y
+        })),
+        edges: []
+    };
+
+    // Populate edges from the adjacency matrix
+    for (let i = 0; i < graphData.matrix.length; i++) {
+        for (let j = 0; j < graphData.matrix[i].length; j++) {
+            if (graphData.matrix[i][j] === 1) {
+                g6Data.edges.push({
+                    source: String(i),
+                    target: String(j),
+                    style: { endArrow: true }
+                });
+            }
+        }
+    }
+
+    const graph = new G6.Graph({
+        container: 'container',
+        width: 600,
+        height: 400,
+        modes: {
+            default: ['drag-canvas', 'zoom-canvas', 'drag-node']
+        },
+        defaultNode: {
+            size: 40,
+            style: {
+                fill: '#DEE9FF',
+                stroke: '#5B8FF9',
+                lineWidth: 2,
+            },
+        },
+        defaultEdge: {
+            style: {
+                stroke: '#aaa',
+                lineWidth: 2,
+                endArrow: true
+            },
+        },
+    });
+
+    graph.data(g6Data);
+    graph.render();
+
+    // Render the adjacency matrix as a table
+    function renderMatrix() {
+        const container = document.getElementById('matrix-container');
+        const table = document.createElement('table');
+
+        // Header row (column labels)
+        const headerRow = document.createElement('tr');
+        headerRow.appendChild(document.createElement('th')); // Empty top-left cell
+        graphData.vertexLabels.forEach((vertex, j) => {
+            const th = document.createElement('th');
+            th.id = `col-${j}`;
+            th.textContent = vertex.val1;
+            headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        // Data rows
+        graphData.matrix.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            tr.id = `row-${i}`;
+
+            // Row label (vertex name)
+            const th = document.createElement('th');
+            th.id = `row-label-${i}`;
+            th.className = 'vertex-label';
+            th.textContent = graphData.vertexLabels[i].val1;
+            tr.appendChild(th);
+
+            // Matrix cells
+            row.forEach((cell, j) => {
+                const td = document.createElement('td');
+                td.id = `cell-${i}-${j}`;
+                td.textContent = cell;
+                tr.appendChild(td);
+            });
+
+            table.appendChild(tr);
+        });
+
+        container.appendChild(table);
+    }
+
+    renderMatrix();
+
+    // Traversal state
+    let dfsStack = [];
+    let bfsQueue = [];
+    let visitedDFS = new Set();
+    let visitedBFS = new Set();
+    let currentDFSIndex = null;
+    let currentBFSIndex = null;
+
+    function highlightMatrixRow(index, colorClass) {
+        const row = document.getElementById(`row-${index}`);
+        const rowLabel = document.getElementById(`row-label-${index}`);
+        if (row) row.className = colorClass;
+        if (rowLabel) rowLabel.className = `vertex-label ${colorClass}`;
+    }
+
+    function highlightMatrixColumn(index, colorClass) {
+        const col = document.getElementById(`col-${index}`);
+        if (col) col.className = colorClass;
+    }
+
+    function highlightMatrixCell(source, target, colorClass) {
+        const cell = document.getElementById(`cell-${source}-${target}`);
+        if (cell) cell.className = colorClass;
+    }
+
+    function clearMatrixHighlights() {
+        graphData.matrix.forEach((_, i) => {
+            const row = document.getElementById(`row-${i}`);
+            const rowLabel = document.getElementById(`row-label-${i}`);
+            const col = document.getElementById(`col-${i}`);
+            if (row) row.className = '';
+            if (rowLabel) rowLabel.className = 'vertex-label';
+            if (col) col.className = '';
+
+            graphData.matrix[i].forEach((_, j) => {
+                const cell = document.getElementById(`cell-${i}-${j}`);
+                if (cell) cell.className = '';
+            });
+        });
+    }
+
+    function startDFS() {
+        reset();
+        currentDFSIndex = 0;
+        dfsStack.push(currentDFSIndex);
+        highlightNode(currentDFSIndex, '#FFA940');
+        highlightMatrixRow(currentDFSIndex, 'highlight-row-orange');
+        highlightMatrixColumn(currentDFSIndex, 'highlight-col-orange');
+    }
+
+    function nextStepDFS() {
+        if (dfsStack.length === 0) {
+            alert('DFS completed!');
+            return;
+        }
+
+        currentDFSIndex = dfsStack.pop();
+        if (!visitedDFS.has(currentDFSIndex)) {
+            visitedDFS.add(currentDFSIndex);
+            highlightNode(currentDFSIndex, '#73D13D');
+            highlightMatrixRow(currentDFSIndex, 'highlight-row-green');
+            highlightMatrixColumn(currentDFSIndex, 'highlight-col-green');
+
+            for (let j = 0; j < graphData.matrix.length; j++) {
+                if (graphData.matrix[currentDFSIndex][j] === 1 && !visitedDFS.has(j)) {
+                    dfsStack.push(j);
+                    highlightNode(j, '#FFA940');
+                    highlightEdge(currentDFSIndex, j, '#73D13D');
+                    highlightMatrixCell(currentDFSIndex, j, 'highlight-cell-orange');
+                }
+            }
+        }
+    }
+
+    function startBFS() {
+        reset();
+        currentBFSIndex = 0;
+        bfsQueue.push(currentBFSIndex);
+        highlightNode(currentBFSIndex, '#FFA940');
+        highlightMatrixRow(currentBFSIndex, 'highlight-row-orange');
+        highlightMatrixColumn(currentBFSIndex, 'highlight-col-orange');
+    }
+
+    function nextStepBFS() {
+        if (bfsQueue.length === 0) {
+            alert('BFS completed!');
+            return;
+        }
+
+        currentBFSIndex = bfsQueue.shift();
+        if (!visitedBFS.has(currentBFSIndex)) {
+            visitedBFS.add(currentBFSIndex);
+            highlightNode(currentBFSIndex, '#73D13D');
+            highlightMatrixRow(currentBFSIndex, 'highlight-row-green');
+            highlightMatrixColumn(currentBFSIndex, 'highlight-col-green');
+
+            for (let j = 0; j < graphData.matrix.length; j++) {
+                if (graphData.matrix[currentBFSIndex][j] === 1 && !visitedBFS.has(j) && !bfsQueue.includes(j)) {
+                    bfsQueue.push(j);
+                    highlightNode(j, '#FFA940');
+                    highlightEdge(currentBFSIndex, j, '#73D13D');
+                    highlightMatrixCell(currentBFSIndex, j, 'highlight-cell-orange');
+                }
+            }
+        }
+    }
+
+    function reset() {
+        visitedDFS.clear();
+        visitedBFS.clear();
+        dfsStack = [];
+        bfsQueue = [];
+        currentDFSIndex = null;
+        currentBFSIndex = null;
+
+        graph.getNodes().forEach(node => {
+            graph.updateItem(node, {
+                style: {
+                    fill: '#DEE9FF',
+                    stroke: '#5B8FF9',
+                }
+            });
+        });
+
+        graph.getEdges().forEach(edge => {
+            graph.updateItem(edge, {
+                style: {
+                    stroke: '#aaa',
+                }
+            });
+        });
+
+        clearMatrixHighlights();
+    }
+
+    function highlightNode(index, color) {
+        graph.updateItem(String(index), {
+            style: {
+                fill: color,
+                stroke: '#873bf4',
+            }
+        });
+    }
+
+    function highlightEdge(source, target, color) {
+        const edge = graph.findById(`${source}:${target}`);
+        if (edge) {
+            graph.updateItem(edge, {
+                style: {
+                    stroke: color,
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>

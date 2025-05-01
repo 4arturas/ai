@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graph Traversal Visualization</title>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g6/4.3.11/dist/g6.min.js"></script>
+    <style>
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+
+<script>
+    function createNode(id, x = 0, y = 0, label = "label", processValue = function() { alert("Not implemented node function!" ); } )
+    {
+        return { id, x, y, label, processValue };
+    }
+    function createEdge(source, target, condition = function() { return null; } )
+    {
+        return {
+            source: source.id, target: target.id, condition,
+            // type: 'line',
+            /*shape: 'cubic',
+            style: {
+                fill: 'red',
+            },*/
+        };
+    }
+</script>
+<script>
+    const node1 = createNode( "node1", 100, 200 );
+    node1.processValue = function(v) {
+        return v;
+    }
+    const node2 = createNode( "node2", 200, 200 );
+    node2.processValue = function(v) {
+        return v+1;
+    }
+    const node3 = createNode( "node3", 300, 200 );
+    node3.processValue = function(v) {
+        return v+2;
+    }
+    const node4 = createNode( "node4", 300, 300 );
+    node4.processValue = function(v) {
+        return v+3;
+    }
+</script>
+<script>
+    const edge1 = createEdge( node1, node2 );
+    const edge2 = createEdge( node2, node3 );
+    const edge3 = createEdge( node2, node4 );
+    const edge4 = createEdge( node4, node2 );
+</script>
+<script>
+    const g6Data = {
+        nodes: [
+            node1, node2, node3, node4,
+        ],
+        edges: [
+            edge1, edge2, edge3,
+            edge4,
+        ],
+    };
+
+    const graph = new G6.Graph({
+        container: 'container',
+        width: 600,
+        height: 400,
+        modes: {
+            default: ['drag-canvas', 'zoom-canvas', 'drag-node']
+        },
+        defaultNode: {
+            size: 40,
+            type: 'circle',
+            // type: 'star',
+            // type: 'triangle',
+            // type: 'diamond',
+            // type: 'rect',
+            style: {
+                fill: '#DEE9FF',
+                stroke: '#5B8FF9',
+                lineWidth: 2,
+            },
+        },
+        defaultEdge: {
+            // type: 'cubic',
+            // type: 'arc',
+            type: 'quadratic',
+            // type: 'cubic-vertical',
+            // type: 'cubic-horizontal',
+            style: {
+                stroke: '#aaa',
+                lineWidth: 2,
+                endArrow: true
+            },
+        },
+    });
+
+    graph.data(g6Data);
+    graph.render();
+</script>
+
+<script>
+    let result = 1;
+    for (let i = 0; i < g6Data.edges.length; i++) {
+        const edge = g6Data.edges[i];
+        const sourceNode = g6Data.nodes.find(node => node.id === edge.source);
+        const targetNode = g6Data.nodes.find(node => node.id === edge.target);
+
+        const sourceResult = sourceNode.processValue(result);
+        result = targetNode.processValue(sourceResult);
+
+        sourceNode.label = `${sourceResult}`;
+        targetNode.label = `${result}`;
+
+        console.log(`Edge ${i}:`, sourceNode, targetNode, result);
+    }
+
+    graph.changeData(g6Data);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOM with Animal Class Colors</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        #container { display: flex; flex-direction: column; align-items: center; }
+        #somCanvas { border: 1px solid #333; margin: 10px 0; }
+        #controls { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        button { padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .progress-container { width: 100%; height: 20px; background: #ddd; margin: 10px 0; }
+        #progress { height: 100%; background: #4CAF50; width: 0%; transition: width 0.3s; }
+        #info { background: #f0f0f0; padding: 15px; border-radius: 5px; width: 100%; }
+        .method-info { margin-top: 15px; padding: 10px; background: #e9f7ef; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        .color-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .color-item { display: flex; align-items: center; gap: 5px; }
+        .color-box { width: 20px; height: 20px; border: 1px solid #333; }
+        #classInfo { margin-top: 20px; width: 100%; }
+        .class-mapping { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .class-entry { display: flex; align-items: center; padding: 5px; border-radius: 4px; background: #f8f8f8; }
+    </style>
+</head>
+<body>
+<div id="container">
+    <h1>Animal Feature Self-Organizing Map</h1>
+
+    <div id="controls">
+        <button id="startBtn">Start Training</button>
+        <button id="resetBtn">Reset</button>
+        <select id="methodSelect">
+            <option value="pca">PCA-Based Reduction</option>
+            <option value="weighted">Weighted Sum</option>
+            <option value="buckets">Dimension Buckets</option>
+            <option value="maxvar">Max Variance</option>
+            <option value="first3">First Three Dimensions</option>
+        </select>
+    </div>
+
+    <div class="progress-container">
+        <div id="progress"></div>
+    </div>
+
+    <canvas id="somCanvas" width="500" height="500"></canvas>
+
+    <div id="info">
+        <div>Epoch: <span id="epochDisplay">0</span>/<span id="totalEpochs">0</span></div>
+        <div>Method: <span id="methodDisplay">PCA-Based Reduction</span></div>
+        <div>Error: <span id="errorDisplay">0.0000</span></div>
+        <div>Dimensions: <span id="dimDisplay">0</span>D → 3D (RGB)</div>
+    </div>
+
+    <div id="classInfo">
+        <h3>Class-Color Mapping:</h3>
+        <div id="classMapping" class="class-mapping"></div>
+    </div>
+
+    <div class="method-info">
+        <h3>Dimensionality Reduction Methods:</h3>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Description</th>
+                <th>Color Mapping</th>
+            </tr>
+            <tr>
+                <td>PCA-Based</td>
+                <td>Projects data onto first 3 principal components</td>
+                <td>Red: Size/Speed, Green: Legs/Aggression, Blue: Wings</td>
+            </tr>
+            <tr>
+                <td>Weighted Sum</td>
+                <td>Distributes information across RGB with decreasing weights</td>
+                <td>All features contribute to all colors</td>
+            </tr>
+            <tr>
+                <td>Dimension Buckets</td>
+                <td>Averages dimensions into 3 buckets</td>
+                <td>Red: Physical traits, Green: Covering/Habitat, Blue: Behavior</td>
+            </tr>
+            <tr>
+                <td>Max Variance</td>
+                <td>Uses 3 dimensions with highest variance</td>
+                <td>Red: Size, Green: Speed, Blue: Legs</td>
+            </tr>
+            <tr>
+                <td>First Three</td>
+                <td>Simply uses first three dimensions</td>
+                <td>Red: Size, Green: Legs, Blue: Wings</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Animal feature data with names
+    const ANIMALS = [
+        { name: "Eagle",    features: [0.8, 2, 1, 1, 0.7, 0, 0.9, 0.6, 0.8] },
+        { name: "Lion",     features: [0.9, 4, 0, 1, 1,   0, 0.8, 0.9, 0.7] },
+        { name: "Dolphin",  features: [0.9, 0, 0, 1, 0,   1, 0.9, 0.3, 0.9] },
+        { name: "Spider",   features: [0.1, 8, 0, 0, 0,   0, 0.3, 0.1, 0.2] },
+        { name: "Chicken",  features: [0.4, 2, 1, 1, 0.8, 0, 0.4, 0.2, 0.3] },
+        { name: "Octopus",  features: [0.6, 8, 0, 0, 0,   1, 0.5, 0.4, 0.8] },
+        { name: "Elephant", features: [1,   4, 0, 1, 0.3, 0, 0.6, 0.5, 0.8] },
+        { name: "Butterfly",features: [0.2, 6, 1, 0, 0,   0, 0.3, 0,   0.1] },
+        { name: "Shark",    features: [0.9, 0, 0, 1, 0,   1, 0.9, 0.8, 0.5] },
+        { name: "Giraffe",  features: [0.9, 4, 0, 1, 0.5, 0, 0.6, 0.3, 0.6] },
+        { name: "Ant",      features: [0.1, 6, 0, 0, 0,   0, 0.2, 0.1, 0.2] },
+        { name: "Penguin",  features: [0.5, 2, 1, 1, 0.7, 0.5, 0.5, 0.2, 0.6] }
+    ];
+
+    // Normalized training data
+    const TRAINING_DATA = ANIMALS.map(animal => {
+        const maxLegs = 8, maxWings = 1, maxTail = 1;
+        return [
+            animal.features[0],                     // size (0-1)
+            animal.features[1] / maxLegs,           // legs
+            animal.features[2] / maxWings,          // wings
+            animal.features[3] / maxTail,           // tail
+            animal.features[4],                     // fur (0-1)
+            animal.features[5],                     // aquatic (0-1)
+            animal.features[6],                     // speed (0-1)
+            animal.features[7],                     // aggression (0-1)
+            animal.features[8]                      // intelligence (0-1)
+        ];
+    });
+
+    // Configuration
+    const GRID_SIZE = 20;
+    const INITIAL_RADIUS = GRID_SIZE / 2;
+    const INITIAL_LEARNING_RATE = 0.1;
+    const FEATURE_NAMES = ["Size", "Legs", "Wings", "Tail", "Fur", "Aquatic", "Speed", "Aggression", "Intelligence"];
+
+    // DOM elements
+    const canvas = document.getElementById('somCanvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const methodSelect = document.getElementById('methodSelect');
+    const progress = document.getElementById('progress');
+    const infoDiv = document.getElementById('info');
+    const epochDisplay = document.getElementById('epochDisplay');
+    const totalEpochsDisplay = document.getElementById('totalEpochs');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const dimDisplay = document.getElementById('dimDisplay');
+    const methodDisplay = document.getElementById('methodDisplay');
+    const classMapping = document.getElementById('classMapping');
+
+    // SOM variables
+    let nodes = [];
+    let currentEpoch = 0;
+    let totalEpochs = 0;
+    let inputDim = TRAINING_DATA[0].length;
+    let isTraining = false;
+    let trainingInterval = null;
+    let currentMethod = 'pca';
+    let classColors = new Map();
+
+    // Pre-computed PCA components for animal features
+    const PCA_COMPONENTS = [
+        [0.3, 0.2, 0.1, 0.1, 0.1, 0.1, 0.3, 0.2, 0.2],  // PC1 (size/speed dominated)
+        [0.1, 0.4, 0.1, 0.1, 0.2, 0.0, 0.1, 0.3, 0.1],  // PC2 (legs/aggression)
+        [0.1, 0.1, 0.5, 0.1, 0.1, 0.0, 0.1, 0.0, 0.1]   // PC3 (wings dominated)
+    ];
+
+    // Highest variance dimensions in animal data
+    const HIGH_VAR_DIMS = [0, 6, 1]; // Size, Speed, Legs
+
+    // Initialize SOM
+    function initSOM() {
+        nodes = [];
+        inputDim = TRAINING_DATA[0].length;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            nodes[y] = [];
+            for (let x = 0; x < GRID_SIZE; x++) {
+                nodes[y][x] = {
+                    x, y,
+                    weights: Array.from({length: inputDim}, () => Math.random())
+                };
+            }
+        }
+
+        currentEpoch = 0;
+        totalEpochs = calculateEpochs();
+        updateInfo();
+        drawSOM();
+        updateClassColors();
+        progress.style.width = "0%";
+    }
+
+    // Calculate epochs based on complexity
+    function calculateEpochs() {
+        return 500 + (GRID_SIZE * GRID_SIZE) + (inputDim * 20);
+    }
+
+    // Find BMU for given input
+    function findBMU(input) {
+        let minDist = Infinity;
+        let bmu = null;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                let dist = 0;
+                for (let i = 0; i < inputDim; i++) {
+                    dist += (node.weights[i] - input[i]) ** 2;
+                }
+                if (dist < minDist) {
+                    minDist = dist;
+                    bmu = node;
+                }
+            }
+        }
+        return bmu;
+    }
+
+    // Dimensionality reduction methods
+    function reduceTo3D(weights, method) {
+        switch(method) {
+            case 'pca':
+                // PCA projection
+                const project = (vec, component) => {
+                    return vec.reduce((sum, val, i) => sum + (val * (component[i] || 0)), 0);
+                };
+                return [
+                    project(weights, PCA_COMPONENTS[0]),
+                    project(weights, PCA_COMPONENTS[1]),
+                    project(weights, PCA_COMPONENTS[2])
+                ];
+
+            case 'weighted':
+                // Weighted sum
+                let r = 0, g = 0, b = 0;
+                weights.forEach((val, i) => {
+                    const channel = i % 3;
+                    const weight = 1 / (Math.floor(i / 3) + 1);
+                    if (channel === 0) r += val * weight;
+                    else if (channel === 1) g += val * weight;
+                    else b += val * weight;
+                });
+                const max = Math.max(r, g, b, 1);
+                return [r/max, g/max, b/max];
+
+            case 'buckets':
+                // Bucket averaging
+                const bucketSize = Math.ceil(weights.length / 3);
+                const avgBucket = (start) => {
+                    let sum = 0, count = 0;
+                    for (let i = start; i < Math.min(start + bucketSize, weights.length); i++) {
+                        sum += weights[i];
+                        count++;
+                    }
+                    return count > 0 ? sum / count : 0;
+                };
+                return [
+                    avgBucket(0),
+                    avgBucket(bucketSize),
+                    avgBucket(bucketSize * 2)
+                ];
+
+            case 'maxvar':
+                // Max variance dimensions
+                return [
+                    weights[HIGH_VAR_DIMS[0]] || 0,
+                    weights[HIGH_VAR_DIMS[1]] || 0,
+                    weights[HIGH_VAR_DIMS[2]] || 0
+                ];
+
+            default: // 'first3'
+                // First three dimensions
+                return [
+                    weights[0] || 0,
+                    weights[1] || 0,
+                    weights[2] || 0
+                ];
+        }
+    }
+
+    // Convert weights to RGB using current method
+    function weightsToColor(weights) {
+        const [r, g, b] = reduceTo3D(weights, currentMethod);
+        return [
+            Math.floor(Math.max(0, Math.min(1, r)) * 255),
+            Math.floor(Math.max(0, Math.min(1, g)) * 255),
+            Math.floor(Math.max(0, Math.min(1, b)) * 255)
+        ];
+    }
+
+    // Update class-color mappings
+    function updateClassColors() {
+        classColors = new Map();
+
+        ANIMALS.forEach((animal, idx) => {
+            const bmu = findBMU(TRAINING_DATA[idx]);
+            const [r, g, b] = weightsToColor(bmu.weights);
+            const color = `rgb(${r},${g},${b})`;
+
+            if (!classColors.has(color)) {
+                classColors.set(color, []);
+            }
+            classColors.get(color).push(animal.name);
+        });
+
+        renderClassColorMap();
+    }
+
+    // Render the class-color mapping display
+    function renderClassColorMap() {
+        classMapping.innerHTML = '';
+
+        // Convert map to array and sort by color
+        const sortedColors = Array.from(classColors.entries()).sort((a, b) => {
+            // Sort by hue then by lightness
+            const colA = hexToRgb(a[0]);
+            const colB = hexToRgb(b[0]);
+            const hueA = rgbToHsl(colA.r, colA.g, colA.b).h;
+            const hueB = rgbToHsl(colB.r, colB.g, colB.b).h;
+            return hueA - hueB;
+        });
+
+        sortedColors.forEach(([color, classes]) => {
+            const entry = document.createElement('div');
+            entry.className = 'class-entry';
+            entry.innerHTML = `
+                <div class="color-box" style="background: ${color}"></div>
+                <div>
+                    <strong>${color}</strong><br>
+                    ${classes.join(', ')}
+                </div>
+            `;
+            classMapping.appendChild(entry);
+        });
+    }
+
+    // Helper functions for color sorting
+    function hexToRgb(hex) {
+        const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(hex);
+        return result ? {
+            r: parseInt(result[1]),
+            g: parseInt(result[2]),
+            b: parseInt(result[3])
+        } : {r: 0, g: 0, b: 0};
+    }
+
+    function rgbToHsl(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h, s, l };
+    }
+
+    // Train one epoch
+    function trainEpoch() {
+        if (currentEpoch >= totalEpochs) {
+            stopTraining();
+            return;
+        }
+
+        const progressRatio = currentEpoch / totalEpochs;
+        const radius = Math.max(1, INITIAL_RADIUS * (1 - progressRatio));
+        const lr = INITIAL_LEARNING_RATE * (1 - progressRatio);
+        const input = TRAINING_DATA[Math.floor(Math.random() * TRAINING_DATA.length)];
+        const bmu = findBMU(input);
+
+        // Update nodes
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                const dist = Math.sqrt((node.x - bmu.x) ** 2 + (node.y - bmu.y) ** 2);
+
+                if (dist < radius) {
+                    const influence = Math.exp(-(dist ** 2) / (2 * radius ** 2));
+                    for (let i = 0; i < inputDim; i++) {
+                        node.weights[i] += lr * influence * (input[i] - node.weights[i]);
+                        node.weights[i] = Math.max(0, Math.min(1, node.weights[i]));
+                    }
+                }
+            }
+        }
+
+        currentEpoch++;
+        drawSOM();
+        updateInfo(radius, lr);
+        updateClassColors();
+        progress.style.width = `${(currentEpoch / totalEpochs) * 100}%`;
+    }
+
+    // Draw SOM
+    function drawSOM() {
+        const cellSize = canvas.width / GRID_SIZE;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                const [r, g, b] = weightsToColor(node.weights);
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    // Update info display
+    function updateInfo(radius, lr) {
+        let error = 0;
+        for (const sample of TRAINING_DATA) {
+            const bmu = findBMU(sample);
+            for (let i = 0; i < inputDim; i++) {
+                error += (bmu.weights[i] - sample[i]) ** 2;
+            }
+        }
+        error = Math.sqrt(error / (TRAINING_DATA.length * inputDim));
+
+        epochDisplay.textContent = currentEpoch;
+        totalEpochsDisplay.textContent = totalEpochs;
+        errorDisplay.textContent = error.toFixed(4);
+        dimDisplay.textContent = inputDim;
+        methodDisplay.textContent = methodSelect.options[methodSelect.selectedIndex].text;
+    }
+
+    // Training control
+    function startTraining() {
+        if (isTraining) {
+            stopTraining();
+            return;
+        }
+
+        currentMethod = methodSelect.value;
+        isTraining = true;
+        startBtn.textContent = "Pause";
+        trainingInterval = setInterval(trainEpoch, 16);
+    }
+
+    function stopTraining() {
+        isTraining = false;
+        startBtn.textContent = "Start Training";
+        clearInterval(trainingInterval);
+    }
+
+    // Event listeners
+    startBtn.addEventListener('click', startTraining);
+    resetBtn.addEventListener('click', () => {
+        stopTraining();
+        initSOM();
+    });
+    methodSelect.addEventListener('change', () => {
+        currentMethod = methodSelect.value;
+        if (!isTraining) {
+            drawSOM();
+            updateClassColors();
+        }
+    });
+
+    // Initialize
+    initSOM();
+</script>
+</body>
+</html>
