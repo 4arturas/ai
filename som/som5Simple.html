@@ -22,36 +22,31 @@
         #classInfo { margin-top: 20px; width: 100%; }
         .class-mapping { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
         .class-entry { display: flex; align-items: center; padding: 5px; border-radius: 4px; background: #f8f8f8; }
+        #hoverInfo { margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div id="container">
     <h1>Animal Feature Self-Organizing Map</h1>
-
     <div id="controls">
         <button id="startBtn">Start Training</button>
         <button id="resetBtn">Reset</button>
     </div>
-
     <div class="progress-container">
         <div id="progress"></div>
     </div>
-
     <canvas id="somCanvas" width="500" height="500"></canvas>
-
     <div id="info">
         <div>Epoch: <span id="epochDisplay">0</span>/<span id="totalEpochs">0</span></div>
         <div>Error: <span id="errorDisplay">0.0000</span></div>
         <div>Dimensions: <span id="dimDisplay">0</span>D => 3D (RGB)</div>
     </div>
-
+    <div id="hoverInfo">Hover over the canvas to see class information.</div>
     <div id="classInfo">
         <h3>Class-Color Mapping:</h3>
         <div id="classMapping" class="class-mapping"></div>
     </div>
-
 </div>
-
 <script>
     const ANIMALS = [
         { name: "Eagle",    features: [0.8, 2, 1, 1, 0.7, 0, 0.9, 0.6, 0.8] },
@@ -67,7 +62,6 @@
         { name: "Ant",      features: [0.1, 6, 0, 0, 0,   0, 0.2, 0.1, 0.2] },
         { name: "Penguin",  features: [0.5, 2, 1, 1, 0.7, 0.5, 0.5, 0.2, 0.6] }
     ];
-
     // Normalized training data
     const TRAINING_DATA = ANIMALS.map(animal => {
         const maxLegs = 8, maxWings = 1, maxTail = 1;
@@ -83,13 +77,11 @@
             animal.features[8]                      // intelligence (0-1)
         ];
     });
-
     // Configuration
     const GRID_SIZE = 20;
     const INITIAL_RADIUS = GRID_SIZE / 2;
     const INITIAL_LEARNING_RATE = 0.1;
     const FEATURE_NAMES = ["Size", "Legs", "Wings", "Tail", "Fur", "Aquatic", "Speed", "Aggression", "Intelligence"];
-
     // DOM elements
     const canvas = document.getElementById('somCanvas');
     const ctx = canvas.getContext('2d');
@@ -101,7 +93,7 @@
     const errorDisplay = document.getElementById('errorDisplay');
     const dimDisplay = document.getElementById('dimDisplay');
     const classMapping = document.getElementById('classMapping');
-
+    const hoverInfo = document.getElementById('hoverInfo');
     // SOM variables
     let nodes = [];
     let currentEpoch = 0;
@@ -110,11 +102,9 @@
     let isTraining = false;
     let trainingInterval = null;
     let classColors = new Map();
-
     function initSOM() {
         nodes = [];
         inputDim = TRAINING_DATA[0].length;
-
         for (let y = 0; y < GRID_SIZE; y++) {
             nodes[y] = [];
             for (let x = 0; x < GRID_SIZE; x++) {
@@ -124,7 +114,6 @@
                 };
             }
         }
-
         currentEpoch = 0;
         totalEpochs = calculateEpochs();
         updateInfo();
@@ -132,15 +121,12 @@
         updateClassColors();
         progress.style.width = "0%";
     }
-
     function calculateEpochs() {
         return 500 + (GRID_SIZE * GRID_SIZE) + (inputDim * 20);
     }
-
     function findBMU(input) {
         let minDist = Infinity;
         let bmu = null;
-
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const node = nodes[y][x];
@@ -156,7 +142,6 @@
         }
         return bmu;
     }
-
     function reduceTo3D(weights) {
         let r = 0, g = 0, b = 0;
         weights.forEach((val, i) => {
@@ -169,8 +154,6 @@
         const max = Math.max(r, g, b, 1);
         return [r/max, g/max, b/max];
     }
-
-    // Convert weights to RGB using current method
     function weightsToColor(weights) {
         const [r, g, b] = reduceTo3D(weights);
         return [
@@ -179,39 +162,22 @@
             Math.floor(Math.max(0, Math.min(1, b)) * 255)
         ];
     }
-
     function updateClassColors() {
         classColors = new Map();
-
         ANIMALS.forEach((animal, idx) => {
             const bmu = findBMU(TRAINING_DATA[idx]);
             const [r, g, b] = weightsToColor(bmu.weights);
             const color = `rgb(${r},${g},${b})`;
-
             if (!classColors.has(color)) {
                 classColors.set(color, []);
             }
             classColors.get(color).push(animal.name);
         });
-
         renderClassColorMap();
     }
-
-    // Render the class-color mapping display
     function renderClassColorMap() {
         classMapping.innerHTML = '';
-
-        // Convert map to array and sort by color
-        const sortedColors = Array.from(classColors.entries()).sort((a, b) => {
-            // Sort by hue then by lightness
-            const colA = hexToRgb(a[0]);
-            const colB = hexToRgb(b[0]);
-            const hueA = rgbToHsl(colA.r, colA.g, colA.b).h;
-            const hueB = rgbToHsl(colB.r, colB.g, colB.b).h;
-            return hueA - hueB;
-        });
-
-        sortedColors.forEach(([color, classes]) => {
+        classColors.forEach((classes, color) => {
             const entry = document.createElement('div');
             entry.className = 'class-entry';
             entry.innerHTML = `
@@ -224,55 +190,20 @@
             classMapping.appendChild(entry);
         });
     }
-
-    // Helper functions for color sorting
-    function hexToRgb(hex) {
-        const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(hex);
-        return result ? {
-            r: parseInt(result[1]),
-            g: parseInt(result[2]),
-            b: parseInt(result[3])
-        } : {r: 0, g: 0, b: 0};
-    }
-
-    function rgbToHsl(r, g, b) {
-        r /= 255, g /= 255, b /= 255;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-
-        if (max === min) {
-            h = s = 0; // achromatic
-        } else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-        return { h, s, l };
-    }
-
     function trainEpoch() {
         if (currentEpoch >= totalEpochs) {
             stopTraining();
             return;
         }
-
         const progressRatio = currentEpoch / totalEpochs;
         const radius = Math.max(1, INITIAL_RADIUS * (1 - progressRatio));
         const lr = INITIAL_LEARNING_RATE * (1 - progressRatio);
         const input = TRAINING_DATA[Math.floor(Math.random() * TRAINING_DATA.length)];
         const bmu = findBMU(input);
-
-        // Update nodes
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const node = nodes[y][x];
                 const dist = Math.sqrt((node.x - bmu.x) ** 2 + (node.y - bmu.y) ** 2);
-
                 if (dist < radius) {
                     const influence = Math.exp(-(dist ** 2) / (2 * radius ** 2));
                     for (let i = 0; i < inputDim; i++) {
@@ -282,19 +213,15 @@
                 }
             }
         }
-
         currentEpoch++;
         drawSOM();
         updateInfo(radius, lr);
         updateClassColors();
         progress.style.width = `${(currentEpoch / totalEpochs) * 100}%`;
     }
-
-    // Draw SOM
     function drawSOM() {
         const cellSize = canvas.width / GRID_SIZE;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const node = nodes[y][x];
@@ -304,8 +231,6 @@
             }
         }
     }
-
-    // Update info display
     function updateInfo(radius, lr) {
         let error = 0;
         for (const sample of TRAINING_DATA) {
@@ -315,39 +240,64 @@
             }
         }
         error = Math.sqrt(error / (TRAINING_DATA.length * inputDim));
-
         epochDisplay.textContent = currentEpoch;
         totalEpochsDisplay.textContent = totalEpochs;
         errorDisplay.textContent = error.toFixed(4);
         dimDisplay.textContent = inputDim;
     }
-
-    // Training control
     function startTraining() {
         if (isTraining) {
             stopTraining();
             return;
         }
-
         isTraining = true;
         startBtn.textContent = "Pause";
         trainingInterval = setInterval(trainEpoch, 16);
     }
-
     function stopTraining() {
         isTraining = false;
         startBtn.textContent = "Start Training";
         clearInterval(trainingInterval);
     }
+    function findClosestClass(nodeWeights) {
+        let minDist = Infinity;
+        let closestClass = null;
+        ANIMALS.forEach((animal, idx) => {
+            const bmu = findBMU(TRAINING_DATA[idx]);
+            const dist = bmu.weights.reduce((acc, w, i) => acc + (w - nodeWeights[i]) ** 2, 0);
+            if (dist < minDist) {
+                minDist = dist;
+                closestClass = animal.name;
+            }
+        });
+        return closestClass || "No class";
+    }
+    function handleMouseOver(event) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        const cellSize = canvas.width / GRID_SIZE;
 
-    // Event listeners
+        const gridX = Math.floor(mouseX / cellSize);
+        const gridY = Math.floor(mouseY / cellSize);
+
+        if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+            const hoveredNode = nodes[gridY][gridX];
+            const closestClass = findClosestClass(hoveredNode.weights);
+            hoverInfo.textContent = `Hovered Cell (${gridX}, ${gridY}): ${closestClass}`;
+        } else {
+            hoverInfo.textContent = "Hover over the canvas to see class information.";
+        }
+    }
+
+    canvas.addEventListener('mousemove', handleMouseOver);
+
     startBtn.addEventListener('click', startTraining);
     resetBtn.addEventListener('click', () => {
         stopTraining();
         initSOM();
     });
 
-    // Initialize
     initSOM();
 </script>
 </body>
