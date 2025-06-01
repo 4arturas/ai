@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force-Directed Graph with SOM</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="forceGraph.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #button-container {
+            margin: 10px;
+        }
+        #button-container button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #button-container button:hover {
+            background-color: #e0e0e0;
+        }
+        #chart-container {
+            width: 100%;
+            height: 95vh;
+            border: 1px solid gray;
+        }
+        .node-label-content {
+            font-size: 10px;
+            white-space: nowrap;
+            text-align: center;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px 8px;
+            line-height: 1.2;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            pointer-events: none;
+        }
+        .node-circle {
+            fill: #69b3a2;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        .node-circle.stationary {
+            fill: #ff7f0e;
+        }
+    </style>
+</head>
+<body>
+<div id="button-container">
+    <button id="animate-specific">Animate SOMInit→SOMCanvas</button>
+    <button id="animate-random">Animate Random</button>
+    <button id="toggle-stationary">Toggle Stationary Mode</button>
+</div>
+<div id="chart-container"></div>
+
+<script>
+    // Sample graph data
+    const sampleData = {
+        nodes: [
+            {
+                id: "SOMInit",
+                x: -300,
+                y: 0,
+                html: `<div style="padding: 5px"><button id="startBtn" style="padding: 5px 15px 5px 15px">Start</button></div>`
+            },
+            {
+                id: "SOMCanvas",
+                x: 200,
+                y: 0,
+                group: 3,
+                html: `<canvas id="somCanvas" width="500" height="500" style="border: 1px solid lightgrey; background-color: lightgrey"></canvas>`
+            },
+            {
+                id: "somInfo",
+                x: 200,
+                y: -200,
+                group: 3,
+                html: '<div id="somInfo" style="background-color: lightgrey; border-radius: 5px; padding: 10px; width: 200px; height: 100px;">Info</div>'
+            },
+        ],
+        links: [
+            {
+                source: "SOMInit",
+                target: "SOMCanvas",
+                value: 2,
+                style: {
+                    stroke: "#ff0000",
+                    strokeWidth: 3,
+                    strokeDasharray: "5,5",
+                    opacity: 0.8
+                },
+                animate: {
+                    enabled: true,
+                    direction: "source-to-target",
+                    color: "#00ff00",
+                    duration: 20000
+                }
+            },
+            {
+                source: "SOMCanvas",
+                target: "somInfo",
+                value: 2,
+                style: {
+                    stroke: "#0000ff",
+                    strokeWidth: 2
+                },
+                animate: {
+                    enabled: true,
+                    direction: "both",
+                    color: "#ffff00",
+                    duration: 1500
+                }
+            }
+        ]
+    };
+
+    // Initialize the graph
+    const graph = forceGraph.createForceGraph('#chart-container', sampleData);
+
+    // Start the animation loop immediately
+    graph.startAnimationLoop();
+
+    // Set up button event listeners
+    document.getElementById('animate-specific').addEventListener('click', () => {
+        graph.animateLink('SOMInit', 'SOMCanvas');
+    });
+
+    document.getElementById('animate-random').addEventListener('click', () => {
+        graph.animateRandomLink();
+    });
+
+    document.getElementById('toggle-stationary').addEventListener('click', () => {
+        graph.toggleStationaryMode();
+    });
+
+    // SOM Implementation
+    const GRID_SIZE = 20;
+    const INITIAL_RADIUS = GRID_SIZE / 2;
+    const INITIAL_LEARNING_RATE = 0.1;
+    const FEATURE_NAMES = ["Size", "Legs", "Wings", "Tail", "Fur", "Aquatic", "Speed", "Aggression", "Intelligence"];
+
+    const ANIMALS = [
+        { name: "Eagle", features: [0.8, 2, 1, 1, 0.7, 0, 0.9, 0.6, 0.8] },
+        { name: "Lion", features: [0.9, 4, 0, 1, 1, 0, 0.8, 0.9, 0.7] },
+        { name: "Dolphin", features: [0.9, 0, 0, 1, 0, 1, 0.9, 0.3, 0.9] },
+        { name: "Spider", features: [0.1, 8, 0, 0, 0, 0, 0.3, 0.1, 0.2] },
+        { name: "Chicken", features: [0.4, 2, 1, 1, 0.8, 0, 0.4, 0.2, 0.3] },
+        { name: "Octopus", features: [0.6, 8, 0, 0, 0, 1, 0.5, 0.4, 0.8] },
+        { name: "Elephant", features: [1, 4, 0, 1, 0.3, 0, 0.6, 0.5, 0.8] },
+        { name: "Butterfly", features: [0.2, 6, 1, 0, 0, 0, 0.3, 0, 0.1] },
+        { name: "Shark", features: [0.9, 0, 0, 1, 0, 1, 0.9, 0.8, 0.5] },
+        { name: "Giraffe", features: [0.9, 4, 0, 1, 0.5, 0, 0.6, 0.3, 0.6] },
+        { name: "Ant", features: [0.1, 6, 0, 0, 0, 0, 0.2, 0.1, 0.2] },
+        { name: "Penguin", features: [0.5, 2, 1, 1, 0.7, 0.5, 0.5, 0.2, 0.6] }
+    ];
+
+    // Normalized training data
+    const TRAINING_DATA = ANIMALS.map(animal => {
+        const maxLegs = 8, maxWings = 1, maxTail = 1;
+        return [
+            animal.features[0],
+            animal.features[1] / maxLegs,
+            animal.features[2] / maxWings,
+            animal.features[3] / maxTail,
+            animal.features[4],
+            animal.features[5],
+            animal.features[6],
+            animal.features[7],
+            animal.features[8]
+        ];
+    });
+
+    // SOM variables
+    let nodes = [];
+    let currentEpoch = 0;
+    let totalEpochs = 0;
+    let inputDim = TRAINING_DATA[0].length;
+    let currentRadius = 0;
+    let cellSize = 0;
+
+    // DOM elements
+    const canvas = document.getElementById('somCanvas');
+    const ctx = canvas.getContext('2d');
+    const somInfo = document.getElementById('somInfo');
+
+    function reduceTo3D(weights = []) {
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < weights.length; i++) {
+            const val = weights[i];
+            const channel = i % 3;
+            const weight = 1 / (Math.floor(i / 3) + 1);
+            if (channel === 0)
+                r += val * weight;
+            else if (channel === 1)
+                g += val * weight;
+            else
+                b += val * weight;
+        }
+        const max = Math.max(r, g, b, 1);
+        return [r / max, g / max, b / max];
+    }
+
+    function weightsToColor(weights = []) {
+        const [r, g, b] = reduceTo3D(weights);
+        return [
+            Math.floor(Math.max(0, Math.min(1, r)) * 255),
+            Math.floor(Math.max(0, Math.min(1, g)) * 255),
+            Math.floor(Math.max(0, Math.min(1, b)) * 255)
+        ];
+    }
+
+    function drawSOM() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                const [r, g, b] = weightsToColor(node.weights);
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(cellSize * x, cellSize * y, cellSize, cellSize);
+
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.strokeRect(cellSize * x, cellSize * y, cellSize, cellSize);
+            }
+        }
+    }
+
+    function initSOM() {
+        cellSize = Math.min(canvas.width, canvas.height) / GRID_SIZE;
+
+        nodes = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            nodes[y] = [];
+            for (let x = 0; x < GRID_SIZE; x++) {
+                nodes[y][x] = {
+                    x, y,
+                    weights: Array.from({ length: inputDim }, () => Math.random())
+                };
+            }
+        }
+        currentEpoch = 0;
+        totalEpochs = 500 + (GRID_SIZE * GRID_SIZE) + (inputDim * 20);
+    }
+
+    function findBMU(inputs = []) {
+        let minDist = Infinity;
+        let bmu = null;
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                let dist = 0;
+                for (let i = 0; i < inputs.length; i++) {
+                    dist += (inputs[i] - node.weights[i]) ** 2;
+                }
+                if (dist < minDist) {
+                    minDist = dist;
+                    bmu = node;
+                }
+            }
+        }
+        return bmu;
+    }
+
+    function trainEpoch() {
+        const progress = currentEpoch / totalEpochs;
+        currentRadius = INITIAL_RADIUS * (1 - progress);
+        const learningRate = INITIAL_LEARNING_RATE * (1 - progress);
+        const inputs = TRAINING_DATA[Math.floor(Math.random() * TRAINING_DATA.length)];
+        const bmu = findBMU(inputs);
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const node = nodes[y][x];
+                let dist = Math.sqrt((bmu.x - x) ** 2 + (bmu.y - y) ** 2);
+                if (dist < currentRadius) {
+                    const influence = Math.exp(-(dist ** 2) / (2 * currentRadius ** 2));
+                    for (let i = 0; i < inputDim; i++) {
+                        node.weights[i] += learningRate * influence * (inputs[i] - node.weights[i]);
+                        node.weights[i] = Math.max(0, Math.min(1, node.weights[i]));
+                    }
+                }
+            }
+        }
+        currentEpoch++;
+        return bmu;
+    }
+
+    function paintCircle( x, y, radius )
+    {
+        const centerX = x * cellSize + cellSize / 2;
+        const centerY = y * cellSize + cellSize / 2;
+        ctx.beginPath();
+        ctx.arc( centerX, centerY, radius*cellSize, 0, Math.PI * 2 );
+        ctx.strokeStyle = `rgba(255,255,255,0.5)`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc( centerX, centerY, 2, 0, Math.PI * 2  );
+        ctx.strokeStyle = `rgba(0,0,0,0.5)`;
+        ctx.stroke();
+    }
+    let interval = null;
+    function simulate() {
+        if (currentEpoch >= totalEpochs) {
+            clearTimeout(interval);
+            return;
+        }
+        const bmu = trainEpoch();
+        informUser();
+        drawSOM();
+        ANIMALS.forEach( (animal, idx) => {
+           const bmu = findBMU( TRAINING_DATA[idx] );
+           paintCircle( bmu.x, bmu.y, currentRadius );
+        });
+        interval = setTimeout(simulate, 16);
+    }
+
+    function informUser() {
+        let error = 0;
+        for (const sample of TRAINING_DATA) {
+            const bmu = findBMU(sample);
+            for (let i = 0; i < inputDim; i++) {
+                error += (bmu.weights[i] - sample[i]) ** 2;
+            }
+        }
+        error = Math.sqrt(error / (TRAINING_DATA.length * TRAINING_DATA[0].length));
+        somInfo.innerHTML = `
+            <div style="width: 200px; height: 200px">
+                <div>Epoch: ${currentEpoch}</div>
+                <div>Error: ${error.toFixed(6)}</div>
+            </div>
+        `;
+    }
+
+    document.getElementById('startBtn').onclick = function() {
+        graph.animateLink( "SOMInit", "SOMCanvas", 1000 );
+        initSOM();
+        simulate();
+
+        const somCanvasNode = findNode(graph.getState().nodes, "SOMCanvas");
+        if (somCanvasNode) {
+            somCanvasNode.fx = somCanvasNode.x;
+            somCanvasNode.fy = somCanvasNode.y;
+            graph.getState().simulation.alpha(1).restart();
+        }
+    };
+</script>
+</body>
+</html>

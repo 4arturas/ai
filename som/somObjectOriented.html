@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOM with Animal Class Colors</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        #container { display: flex; flex-direction: column; align-items: center; }
+        #somCanvas { border: 1px solid #333; margin: 10px 0; }
+        #controls { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        button { padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .progress-container { width: 100%; height: 20px; background: #ddd; margin: 10px 0; }
+        #progress { height: 100%; background: #4CAF50; width: 0%; transition: width 0.3s; }
+        #info { background: #f0f0f0; padding: 15px; border-radius: 5px; width: 100%; }
+        .method-info { margin-top: 15px; padding: 10px; background: #e9f7ef; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        .color-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .color-item { display: flex; align-items: center; gap: 5px; }
+        .color-box { width: 20px; height: 20px; border: 1px solid #333; }
+        #classInfo { margin-top: 20px; width: 100%; }
+        .class-mapping { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .class-entry { display: flex; align-items: center; padding: 5px; border-radius: 4px; background: #f8f8f8; }
+        #hoverInfo { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="container">
+    <h1>Animal Feature Self-Organizing Map</h1>
+    <div id="controls">
+        <button id="startBtn">Start Training</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <div class="progress-container">
+        <div id="progress"></div>
+    </div>
+    <canvas id="somCanvas" width="500" height="500"></canvas>
+    <div id="info">
+        <div>Epoch: <span id="epochDisplay">0</span>/<span id="totalEpochs">0</span></div>
+        <div>Error: <span id="errorDisplay">0.0000</span></div>
+        <div>Dimensions: <span id="dimDisplay">0</span>D => 3D (RGB)</div>
+    </div>
+    <div id="hoverInfo">Hover over the canvas to see class information.</div>
+    <div id="classInfo">
+        <h3>Class-Color Mapping:</h3>
+        <div id="classMapping" class="class-mapping"></div>
+    </div>
+</div>
+<script>
+    const ANIMALS = [
+        { name: "Eagle",    features: [0.8, 2, 1, 1, 0.7, 0, 0.9, 0.6, 0.8] },
+        { name: "Lion",     features: [0.9, 4, 0, 1, 1,   0, 0.8, 0.9, 0.7] },
+        { name: "Dolphin",  features: [0.9, 0, 0, 1, 0,   1, 0.9, 0.3, 0.9] },
+        { name: "Spider",   features: [0.1, 8, 0, 0, 0,   0, 0.3, 0.1, 0.2] },
+        { name: "Chicken",  features: [0.4, 2, 1, 1, 0.8, 0, 0.4, 0.2, 0.3] },
+        { name: "Octopus",  features: [0.6, 8, 0, 0, 0,   1, 0.5, 0.4, 0.8] },
+        { name: "Elephant", features: [1,   4, 0, 1, 0.3, 0, 0.6, 0.5, 0.8] },
+        { name: "Butterfly",features: [0.2, 6, 1, 0, 0,   0, 0.3, 0,   0.1] },
+        { name: "Shark",    features: [0.9, 0, 0, 1, 0,   1, 0.9, 0.8, 0.5] },
+        { name: "Giraffe",  features: [0.9, 4, 0, 1, 0.5, 0, 0.6, 0.3, 0.6] },
+        { name: "Ant",      features: [0.1, 6, 0, 0, 0,   0, 0.2, 0.1, 0.2] },
+        { name: "Penguin",  features: [0.5, 2, 1, 1, 0.7, 0.5, 0.5, 0.2, 0.6] }
+    ];
+
+    // Normalized training data
+    const TRAINING_DATA = ANIMALS.map(animal => {
+        const maxLegs = 8, maxWings = 1, maxTail = 1;
+        return [
+            animal.features[0],                     // size (0-1)
+            animal.features[1] / maxLegs,           // legs
+            animal.features[2] / maxWings,          // wings
+            animal.features[3] / maxTail,           // tail
+            animal.features[4],                     // fur (0-1)
+            animal.features[5],                     // aquatic (0-1)
+            animal.features[6],                     // speed (0-1)
+            animal.features[7],                     // aggression (0-1)
+            animal.features[8]                      // intelligence (0-1)
+        ];
+    });
+
+    // Configuration
+    const GRID_SIZE = 20;
+    const INITIAL_RADIUS = GRID_SIZE / 2;
+    const INITIAL_LEARNING_RATE = 0.1;
+    const FEATURE_NAMES = ["Size", "Legs", "Wings", "Tail", "Fur", "Aquatic", "Speed", "Aggression", "Intelligence"];
+
+    class SOM {
+        constructor(canvas, trainingData, animals, gridSize = 20) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.trainingData = trainingData;
+            this.animals = animals;
+            this.gridSize = gridSize;
+            this.inputDim = trainingData[0].length;
+            this.nodes = [];
+            this.currentEpoch = 0;
+            this.totalEpochs = this.calculateEpochs();
+            this.isTraining = false;
+            this.trainingInterval = null;
+            this.classColors = new Map();
+
+            this.initSOM();
+        }
+
+        initSOM() {
+            this.nodes = [];
+            for (let y = 0; y < this.gridSize; y++) {
+                this.nodes[y] = [];
+                for (let x = 0; x < this.gridSize; x++) {
+                    this.nodes[y][x] = {
+                        x, y,
+                        weights: Array.from({length: this.inputDim}, () => Math.random())
+                    };
+                }
+            }
+            this.currentEpoch = 0;
+            this.totalEpochs = this.calculateEpochs();
+            this.updateInfo();
+            this.drawSOM();
+            this.updateClassColors();
+            document.getElementById('progress').style.width = "0%";
+        }
+
+        calculateEpochs() {
+            return 500 + (this.gridSize * this.gridSize) + (this.inputDim * 20);
+        }
+
+        findBMU(input) {
+            let minDist = Infinity;
+            let bmu = null;
+            for (let y = 0; y < this.gridSize; y++) {
+                for (let x = 0; x < this.gridSize; x++) {
+                    const node = this.nodes[y][x];
+                    let dist = 0;
+                    for (let i = 0; i < this.inputDim; i++) {
+                        dist += (node.weights[i] - input[i]) ** 2;
+                    }
+                    if (dist < minDist) {
+                        minDist = dist;
+                        bmu = node;
+                    }
+                }
+            }
+            return bmu;
+        }
+
+        reduceTo3D(weights) {
+            let r = 0, g = 0, b = 0;
+            weights.forEach((val, i) => {
+                const channel = i % 3;
+                const weight = 1 / (Math.floor(i / 3) + 1);
+                if (channel === 0) r += val * weight;
+                else if (channel === 1) g += val * weight;
+                else b += val * weight;
+            });
+            const max = Math.max(r, g, b, 1);
+            return [r/max, g/max, b/max];
+        }
+
+        weightsToColor(weights) {
+            const [r, g, b] = this.reduceTo3D(weights);
+            return [
+                Math.floor(Math.max(0, Math.min(1, r)) * 255),
+                Math.floor(Math.max(0, Math.min(1, g)) * 255),
+                Math.floor(Math.max(0, Math.min(1, b)) * 255)
+            ];
+        }
+
+        updateClassColors() {
+            this.classColors = new Map();
+            this.animals.forEach((animal, idx) => {
+                const bmu = this.findBMU(this.trainingData[idx]);
+                const [r, g, b] = this.weightsToColor(bmu.weights);
+                const color = `rgb(${r},${g},${b})`;
+                if (!this.classColors.has(color)) {
+                    this.classColors.set(color, []);
+                }
+                this.classColors.get(color).push(animal.name);
+            });
+            this.renderClassColorMap();
+        }
+
+        renderClassColorMap() {
+            const classMapping = document.getElementById('classMapping');
+            classMapping.innerHTML = '';
+            this.classColors.forEach((classes, color) => {
+                const entry = document.createElement('div');
+                entry.className = 'class-entry';
+                entry.innerHTML = `
+                    <div class="color-box" style="background: ${color}"></div>
+                    <div>
+                        <strong>${color}</strong><br>
+                        ${classes.join(', ')}
+                    </div>
+                `;
+                classMapping.appendChild(entry);
+            });
+        }
+
+        trainEpoch() {
+            if (this.currentEpoch >= this.totalEpochs) {
+                this.stopTraining();
+                return;
+            }
+
+            const progressRatio = this.currentEpoch / this.totalEpochs;
+            const radius = Math.max(1, INITIAL_RADIUS * (1 - progressRatio));
+            const lr = INITIAL_LEARNING_RATE * (1 - progressRatio);
+            const input = this.trainingData[Math.floor(Math.random() * this.trainingData.length)];
+            const bmu = this.findBMU(input);
+
+            for (let y = 0; y < this.gridSize; y++) {
+                for (let x = 0; x < this.gridSize; x++) {
+                    const node = this.nodes[y][x];
+                    const dist = Math.sqrt((node.x - bmu.x) ** 2 + (node.y - bmu.y) ** 2);
+                    if (dist < radius) {
+                        const influence = Math.exp(-(dist ** 2) / (2 * radius ** 2));
+                        for (let i = 0; i < this.inputDim; i++) {
+                            node.weights[i] += lr * influence * (input[i] - node.weights[i]);
+                            node.weights[i] = Math.max(0, Math.min(1, node.weights[i]));
+                        }
+                    }
+                }
+            }
+
+            this.currentEpoch++;
+            this.drawSOM();
+            this.updateInfo(radius, lr);
+            this.updateClassColors();
+            document.getElementById('progress').style.width = `${(this.currentEpoch / this.totalEpochs) * 100}%`;
+        }
+
+        drawSOM() {
+            const cellSize = this.canvas.width / this.gridSize;
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            for (let y = 0; y < this.gridSize; y++) {
+                for (let x = 0; x < this.gridSize; x++) {
+                    const node = this.nodes[y][x];
+                    const [r, g, b] = this.weightsToColor(node.weights);
+                    this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    this.ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        updateInfo(radius, lr) {
+            let error = 0;
+            for (const sample of this.trainingData) {
+                const bmu = this.findBMU(sample);
+                for (let i = 0; i < this.inputDim; i++) {
+                    error += (bmu.weights[i] - sample[i]) ** 2;
+                }
+            }
+            error = Math.sqrt(error / (this.trainingData.length * this.inputDim));
+
+            document.getElementById('epochDisplay').textContent = this.currentEpoch;
+            document.getElementById('totalEpochs').textContent = this.totalEpochs;
+            document.getElementById('errorDisplay').textContent = error.toFixed(4);
+            document.getElementById('dimDisplay').textContent = this.inputDim;
+        }
+
+        startTraining() {
+            if (this.isTraining) {
+                this.stopTraining();
+                return;
+            }
+
+            this.isTraining = true;
+            document.getElementById('startBtn').textContent = "Pause";
+            this.trainingInterval = setInterval(() => this.trainEpoch(), 16);
+        }
+
+        stopTraining() {
+            this.isTraining = false;
+            document.getElementById('startBtn').textContent = "Start Training";
+            clearInterval(this.trainingInterval);
+        }
+
+        findClosestClass(nodeWeights) {
+            let minDist = Infinity;
+            let closestClass = null;
+            this.animals.forEach((animal, idx) => {
+                const bmu = this.findBMU(this.trainingData[idx]);
+                const dist = bmu.weights.reduce((acc, w, i) => acc + (w - nodeWeights[i]) ** 2, 0);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestClass = animal.name;
+                }
+            });
+            return closestClass || "No class";
+        }
+
+        handleMouseOver(event) {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            const cellSize = this.canvas.width / this.gridSize;
+
+            const gridX = Math.floor(mouseX / cellSize);
+            const gridY = Math.floor(mouseY / cellSize);
+
+            if (gridX >= 0 && gridX < this.gridSize && gridY >= 0 && gridY < this.gridSize) {
+                const hoveredNode = this.nodes[gridY][gridX];
+                const closestClass = this.findClosestClass(hoveredNode.weights);
+                document.getElementById('hoverInfo').textContent = `Hovered Cell (${gridX}, ${gridY}): ${closestClass}`;
+            } else {
+                document.getElementById('hoverInfo').textContent = "Hover over the canvas to see class information.";
+            }
+        }
+    }
+
+    // DOM elements
+    const canvas = document.getElementById('somCanvas');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Create SOM instance
+    const som = new SOM(canvas, TRAINING_DATA, ANIMALS, GRID_SIZE);
+
+    // Event listeners
+    canvas.addEventListener('mousemove', (e) => som.handleMouseOver(e));
+    startBtn.addEventListener('click', () => som.startTraining());
+    resetBtn.addEventListener('click', () => {
+        som.stopTraining();
+        som.initSOM();
+    });
+</script>
+</body>
+</html>

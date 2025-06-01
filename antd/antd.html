@@ -17,6 +17,7 @@
     <script type="text/babel" src="components/Counter.js"></script>
     <script type="text/babel" src="components/D3Chart.js"></script>
     <script type="text/babel" src="components/ForceDirectedGraph.js"></script>
+    <script type="text/babel" src="components/SOM.js"></script>
 
     <style>
         body { padding: 30px }
@@ -34,7 +35,7 @@
     function App()
     {
         const [appContext, setAppContext] = React.useState(
-            {activeTabKey: "4"}
+            {activeTabKey: "5"}
         );
         return (
             <div>
@@ -56,6 +57,9 @@
                         </Tabs.TabPane>
                         <Tabs.TabPane tab="ForceDirectedGraph" key="4">
                             <ForceDirectedGraph/>
+                        </Tabs.TabPane>
+                        <Tabs.TabPane tab="SOM" key="5">
+                            <SOM/>
                         </Tabs.TabPane>
                     </Tabs>
                 </AppContext.Provider>

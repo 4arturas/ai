@@ -40,6 +40,7 @@
         <div>Epoch: <span id="epochDisplay">0</span>/<span id="totalEpochs">0</span></div>
         <div>Error: <span id="errorDisplay">0.0000</span></div>
         <div>Dimensions: <span id="dimDisplay">0</span>D => 3D (RGB)</div>
+        <div>Neighborhood Radius: <span id="radiusDisplay">0</span></div>
     </div>
     <div id="hoverInfo">Hover over the canvas to see class information.</div>
     <div id="classInfo">
@@ -92,6 +93,7 @@
     const totalEpochsDisplay = document.getElementById('totalEpochs');
     const errorDisplay = document.getElementById('errorDisplay');
     const dimDisplay = document.getElementById('dimDisplay');
+    const radiusDisplay = document.getElementById('radiusDisplay');
     const classMapping = document.getElementById('classMapping');
     const hoverInfo = document.getElementById('hoverInfo');
     // SOM variables
@@ -102,6 +104,9 @@
     let isTraining = false;
     let trainingInterval = null;
     let classColors = new Map();
+    let currentRadius = 0;
+    let cellSize = 0;
+
     function initSOM() {
         nodes = [];
         inputDim = TRAINING_DATA[0].length;
@@ -116,14 +121,17 @@
         }
         currentEpoch = 0;
         totalEpochs = calculateEpochs();
+        cellSize = canvas.width / GRID_SIZE;
         updateInfo();
         drawSOM();
         updateClassColors();
         progress.style.width = "0%";
     }
+
     function calculateEpochs() {
         return 500 + (GRID_SIZE * GRID_SIZE) + (inputDim * 20);
     }
+
     function findBMU(input) {
         let minDist = Infinity;
         let bmu = null;
@@ -142,6 +150,7 @@
         }
         return bmu;
     }
+
     function reduceTo3D(weights) {
         let r = 0, g = 0, b = 0;
         weights.forEach((val, i) => {
@@ -154,6 +163,7 @@
         const max = Math.max(r, g, b, 1);
         return [r/max, g/max, b/max];
     }
+
     function weightsToColor(weights) {
         const [r, g, b] = reduceTo3D(weights);
         return [
@@ -162,6 +172,7 @@
             Math.floor(Math.max(0, Math.min(1, b)) * 255)
         ];
     }
+
     function updateClassColors() {
         classColors = new Map();
         ANIMALS.forEach((animal, idx) => {
@@ -175,6 +186,7 @@
         });
         renderClassColorMap();
     }
+
     function renderClassColorMap() {
         classMapping.innerHTML = '';
         classColors.forEach((classes, color) => {
@@ -190,22 +202,35 @@
             classMapping.appendChild(entry);
         });
     }
+
+    function paintCircle(node, radius) {
+        const centerX = node.x * cellSize + cellSize/2;
+        const centerY = node.y * cellSize + cellSize/2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * cellSize, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
     function trainEpoch() {
         if (currentEpoch >= totalEpochs) {
             stopTraining();
             return;
         }
         const progressRatio = currentEpoch / totalEpochs;
-        const radius = Math.max(1, INITIAL_RADIUS * (1 - progressRatio));
+        currentRadius = Math.max(1, INITIAL_RADIUS * (1 - progressRatio));
         const lr = INITIAL_LEARNING_RATE * (1 - progressRatio);
         const input = TRAINING_DATA[Math.floor(Math.random() * TRAINING_DATA.length)];
         const bmu = findBMU(input);
+
+        // Update weights
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const node = nodes[y][x];
                 const dist = Math.sqrt((node.x - bmu.x) ** 2 + (node.y - bmu.y) ** 2);
-                if (dist < radius) {
-                    const influence = Math.exp(-(dist ** 2) / (2 * radius ** 2));
+                if (dist < currentRadius) {
+                    const influence = Math.exp(-(dist ** 2) / (2 * currentRadius ** 2));
                     for (let i = 0; i < inputDim; i++) {
                         node.weights[i] += lr * influence * (input[i] - node.weights[i]);
                         node.weights[i] = Math.max(0, Math.min(1, node.weights[i]));
@@ -214,13 +239,22 @@
             }
         }
         currentEpoch++;
+
+        // Draw the SOM
         drawSOM();
-        updateInfo(radius, lr);
+
+        // Draw circles around BMUs for each class
+        ANIMALS.forEach((animal, idx) => {
+            const bmu = findBMU(TRAINING_DATA[idx]);
+            paintCircle(bmu, currentRadius);
+        });
+
+        updateInfo(currentRadius, lr);
         updateClassColors();
         progress.style.width = `${(currentEpoch / totalEpochs) * 100}%`;
     }
+
     function drawSOM() {
-        const cellSize = canvas.width / GRID_SIZE;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
@@ -228,9 +262,12 @@
                 const [r, g, b] = weightsToColor(node.weights);
                 ctx.fillStyle = `rgb(${r},${g},${b})`;
                 ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
             }
         }
     }
+
     function updateInfo(radius, lr) {
         let error = 0;
         for (const sample of TRAINING_DATA) {
@@ -244,7 +281,9 @@
         totalEpochsDisplay.textContent = totalEpochs;
         errorDisplay.textContent = error.toFixed(4);
         dimDisplay.textContent = inputDim;
+        radiusDisplay.textContent = radius.toFixed(2);
     }
+
     function startTraining() {
         if (isTraining) {
             stopTraining();
@@ -254,11 +293,13 @@
         startBtn.textContent = "Pause";
         trainingInterval = setInterval(trainEpoch, 16);
     }
+
     function stopTraining() {
         isTraining = false;
         startBtn.textContent = "Start Training";
         clearInterval(trainingInterval);
     }
+
     function findClosestClass(nodeWeights) {
         let minDist = Infinity;
         let closestClass = null;
@@ -272,6 +313,7 @@
         });
         return closestClass || "No class";
     }
+
     function handleMouseOver(event) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
