@@ -1,17 +1,72 @@
-// forceGraph.js - Functional force-directed graph with enhanced links and pan functionality
+// forceGraph.js - Complete implementation with path-following animations
 
 // Utility functions
 const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
 const clone = obj => JSON.parse(JSON.stringify(obj));
 const findNode = (nodes, id) => nodes.find(n => n.id === id);
+const findLink = (links, sourceId, targetId) =>
+    links.find(l => (l.source === sourceId || l.source.id === sourceId) &&
+        (l.target === targetId || l.target.id === targetId));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
+// Path calculation functions
+const getPointOnLine = (progress, x1, y1, x2, y2) => ({
+    x: x1 + progress * (x2 - x1),
+    y: y1 + progress * (y2 - y1)
+});
+
+const getPointOnCubic = (progress, x1, y1, x2, y2) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dr = Math.sqrt(dx * dx + dy * dy);
+    const angle = progress * Math.PI;
+    return {
+        x: x1 + dr * Math.cos(angle),
+        y: y1 + dr * Math.sin(angle)
+    };
+};
+
+const getPointOnArc = (progress, x1, y1, x2, y2) => {
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const normal = [-dy, dx];
+    const normalLength = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1]);
+    const offset = 30;
+
+    const controlX = midX + offset * normal[0] / normalLength;
+    const controlY = midY + offset * normal[1] / normalLength;
+
+    // Quadratic Bézier curve calculation
+    return {
+        x: Math.pow(1-progress, 2) * x1 + 2 * (1-progress) * progress * controlX + Math.pow(progress, 2) * x2,
+        y: Math.pow(1-progress, 2) * y1 + 2 * (1-progress) * progress * controlY + Math.pow(progress, 2) * y2
+    };
+};
+
+const getPointOnStep = (progress, x1, y1, x2, y2) => {
+    const midX = (x1 + x2) / 2;
+    if (progress < 0.5) {
+        return {
+            x: x1 + (progress * 2) * (midX - x1),
+            y: y1
+        };
+    } else {
+        return {
+            x: midX,
+            y: y1 + ((progress - 0.5) * 2) * (y2 - y1)
+        };
+    }
+};
+
 // Animation circle factory
-const createCircle = (id, sourceNode, targetNode, duration, color = "rgb(0,255,0)", startTime = Date.now(), svgElement = null, active = true) => ({
+const createCircle = (id, sourceNode, targetNode, duration, linkType, color = "rgb(0,255,0)", startTime = Date.now(), svgElement = null, active = true) => ({
     id,
     sourceNode,
     targetNode,
     duration,
+    linkType,
     color,
     startTime,
     svgElement,
@@ -38,6 +93,60 @@ const createForceGraph = (containerSelector, data, options = {}) => {
             radius: 10,
             stroke: "black",
             strokeWidth: 2
+        },
+        linkTypes: {
+            line: {
+                draw: (link, selection) => {
+                    selection.attr("x1", d => d.source.x)
+                        .attr("y1", d => d.source.y)
+                        .attr("x2", d => d.target.x)
+                        .attr("y2", d => d.target.y);
+                },
+                create: (selection) => selection.append("line"),
+                getPoint: getPointOnLine
+            },
+            cubic: {
+                draw: (link, selection) => {
+                    selection.attr("d", d => {
+                        const dx = d.target.x - d.source.x;
+                        const dy = d.target.y - d.source.y;
+                        const dr = Math.sqrt(dx * dx + dy * dy);
+                        return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                    });
+                },
+                create: (selection) => selection.append("path"),
+                getPoint: getPointOnCubic
+            },
+            arc: {
+                draw: (link, selection) => {
+                    selection.attr("d", d => {
+                        const midX = (d.source.x + d.target.x) / 2;
+                        const midY = (d.source.y + d.target.y) / 2;
+                        const dx = d.target.x - d.source.x;
+                        const dy = d.target.y - d.source.y;
+                        const normal = [-dy, dx];
+                        const normalLength = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1]);
+                        const offset = 30;
+
+                        const controlX = midX + offset * normal[0] / normalLength;
+                        const controlY = midY + offset * normal[1] / normalLength;
+
+                        return `M${d.source.x},${d.source.y} Q${controlX},${controlY} ${d.target.x},${d.target.y}`;
+                    });
+                },
+                create: (selection) => selection.append("path"),
+                getPoint: getPointOnArc
+            },
+            step: {
+                draw: (link, selection) => {
+                    selection.attr("d", d => {
+                        const midX = (d.source.x + d.target.x) / 2;
+                        return `M${d.source.x},${d.source.y} L${midX},${d.source.y} L${midX},${d.target.y} L${d.target.x},${d.target.y}`;
+                    });
+                },
+                create: (selection) => selection.append("path"),
+                getPoint: getPointOnStep
+            }
         }
     };
 
@@ -53,7 +162,8 @@ const createForceGraph = (containerSelector, data, options = {}) => {
             source: typeof d.source === 'object' ? d.source.id : d.source,
             target: typeof d.target === 'object' ? d.target.id : d.target,
             style: { ...config.defaultLinkStyle, ...(d.style || {}) },
-            animate: d.animate ? { ...config.defaultAnimation, ...d.animate } : null
+            animate: d.animate ? { ...config.defaultAnimation, ...d.animate } : null,
+            type: d.type || 'line'
         })),
         nextCircleId: 0,
         simulation: null,
@@ -65,7 +175,7 @@ const createForceGraph = (containerSelector, data, options = {}) => {
         svg: null,
         link: null,
         node: null,
-        zoom: null // Added for zoom/pan functionality
+        zoom: null
     };
 
     // Private functions
@@ -92,7 +202,6 @@ const createForceGraph = (containerSelector, data, options = {}) => {
         const height = state.container.clientHeight;
         const xExtent = d3.extent(state.nodes, d => d.x || 0);
         const yExtent = d3.extent(state.nodes, d => d.y || 0);
-        const PADDING = 100;
 
         state.svg = d3.create("svg")
             .attr("width", width)
@@ -105,14 +214,12 @@ const createForceGraph = (containerSelector, data, options = {}) => {
             ])
             .attr("style", "max-width: 100%; height: auto;");
 
-        // Add a background rectangle to capture zoom/pan events
         state.svg.append("rect")
             .attr("width", width)
             .attr("height", height)
             .attr("fill", "none")
             .attr("pointer-events", "all");
 
-        // Create a group to hold all graph elements
         state.svg.append("g")
             .attr("class", "graph-container");
     };
@@ -140,17 +247,27 @@ const createForceGraph = (containerSelector, data, options = {}) => {
     };
 
     const setupLinks = () => {
-        state.link = state.svg.select(".graph-container")
+        const linkGroups = state.svg.select(".graph-container")
             .append("g")
-            .selectAll("line")
+            .selectAll("g.link-group")
             .data(state.links)
-            .join("line")
-            .attr("stroke", d => d.style.stroke)
-            .attr("stroke-width", d => typeof d.style.strokeWidth === 'function'
-                ? d.style.strokeWidth(d)
-                : d.style.strokeWidth)
-            .attr("stroke-dasharray", d => d.style.strokeDasharray)
-            .attr("stroke-opacity", d => d.style.opacity);
+            .join("g")
+            .attr("class", "link-group");
+
+        state.link = linkGroups.each(function(d) {
+            const linkType = state.config.linkTypes[d.type] || state.config.linkTypes.line;
+            const selection = d3.select(this);
+            linkType.create(selection);
+
+            selection.select("*")
+                .attr("stroke", d => d.style.stroke)
+                .attr("stroke-width", d => typeof d.style.strokeWidth === 'function'
+                    ? d.style.strokeWidth(d)
+                    : d.style.strokeWidth)
+                .attr("stroke-dasharray", d => d.style.strokeDasharray)
+                .attr("stroke-opacity", d => d.style.opacity)
+                .attr("fill", "none");
+        });
     };
 
     const setupNodes = () => {
@@ -227,11 +344,10 @@ const createForceGraph = (containerSelector, data, options = {}) => {
 
     const updatePositions = () => {
         state.simulation.on("tick", () => {
-            state.link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+            state.svg.selectAll(".link-group").each(function(d) {
+                const linkType = state.config.linkTypes[d.type] || state.config.linkTypes.line;
+                linkType.draw(d, d3.select(this).select("*"));
+            });
 
             state.node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
@@ -264,6 +380,7 @@ const createForceGraph = (containerSelector, data, options = {}) => {
                     fromNode,
                     toNode,
                     link.animate.duration,
+                    link.type,
                     link.animate.color
                 );
             })
@@ -294,11 +411,17 @@ const createForceGraph = (containerSelector, data, options = {}) => {
                     .attr("stroke-width", state.config.defaultAnimation.strokeWidth);
             }
 
-            const { sourceNode: source, targetNode: target } = circle;
+            const { sourceNode: source, targetNode: target, linkType } = circle;
             if (source && target && source.x && source.y && target.x && target.y) {
-                const x = source.x + progress * (target.x - source.x);
-                const y = source.y + progress * (target.y - source.y);
-                circle.svgElement.attr("cx", x).attr("cy", y);
+                const linkTypeConfig = state.config.linkTypes[linkType] || state.config.linkTypes.line;
+                const point = linkTypeConfig.getPoint(
+                    progress,
+                    source.x,
+                    source.y,
+                    target.x,
+                    target.y
+                );
+                circle.svgElement.attr("cx", point.x).attr("cy", point.y);
             }
 
             return circle;
@@ -315,14 +438,13 @@ const createForceGraph = (containerSelector, data, options = {}) => {
 
     const setupZoom = () => {
         state.zoom = d3.zoom()
-            .scaleExtent([0.1, 4]) // Allow zooming from 10% to 400%
+            .scaleExtent([0.1, 4])
             .on("zoom", (event) => {
                 state.svg.select(".graph-container")
                     .attr("transform", event.transform);
             });
 
         state.svg.call(state.zoom);
-        // Prevent zoom on double-click to avoid interference with node clicks
         state.svg.on("dblclick.zoom", null);
     };
 
@@ -332,7 +454,7 @@ const createForceGraph = (containerSelector, data, options = {}) => {
     setupSimulation();
     setupLinks();
     setupNodes();
-    setupZoom(); // Add zoom/pan functionality
+    setupZoom();
     updatePositions();
     state.container.appendChild(state.svg.node());
 
@@ -341,10 +463,7 @@ const createForceGraph = (containerSelector, data, options = {}) => {
         animateLink: (sourceId, targetId, duration = null, color = null) => {
             const sourceNode = findNode(state.nodes, sourceId);
             const targetNode = findNode(state.nodes, targetId);
-            const link = state.links.find(l =>
-                (l.source === sourceId || l.source.id === sourceId) &&
-                (l.target === targetId || l.target.id === targetId)
-            );
+            const link = findLink(state.links, sourceId, targetId);
 
             if (!sourceNode || !targetNode || !link?.animate?.enabled) {
                 console.warn(`Cannot animate link: source=${sourceId}, target=${targetId}, link=${link ? 'found' : 'not found'}`);
@@ -359,6 +478,7 @@ const createForceGraph = (containerSelector, data, options = {}) => {
                 sourceNode,
                 targetNode,
                 actualDuration,
+                link.type,
                 actualColor
             );
 
@@ -380,7 +500,6 @@ const createForceGraph = (containerSelector, data, options = {}) => {
             const sourceId = typeof randomLink.source === 'object' ? randomLink.source.id : randomLink.source;
             const targetId = typeof randomLink.target === 'object' ? randomLink.target.id : randomLink.target;
 
-            // Handle direction
             let fromId, toId;
             if (randomLink.animate.direction === "target-to-source") {
                 fromId = targetId;
@@ -390,10 +509,8 @@ const createForceGraph = (containerSelector, data, options = {}) => {
                 toId = targetId;
             }
 
-            // Call animateLink on the graph object
             this.animateLink(fromId, toId);
 
-            // If direction is "both", animate in reverse too
             if (randomLink.animate.direction === "both") {
                 setTimeout(() => {
                     this.animateLink(toId, fromId);
@@ -428,7 +545,8 @@ const createForceGraph = (containerSelector, data, options = {}) => {
                 source: typeof d.source === 'object' ? d.source.id : d.source,
                 target: typeof d.target === 'object' ? d.target.id : d.target,
                 style: { ...config.defaultLinkStyle, ...(d.style || {}) },
-                animate: d.animate ? { ...config.defaultAnimation, ...d.animate } : null
+                animate: d.animate ? { ...config.defaultAnimation, ...d.animate } : null,
+                type: d.type || 'line'
             }));
             setupSvg();
             setupSimulation();

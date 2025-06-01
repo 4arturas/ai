@@ -71,8 +71,8 @@
         nodes: [
             {
                 id: "SOMInit",
-                x: -300,
-                y: 0,
+                x: -600,
+                y: -50,
                 html: `<div style="padding: 5px"><button id="startBtn" style="padding: 5px 15px 5px 15px">Start</button></div>`
             },
             {
@@ -94,6 +94,7 @@
             {
                 source: "SOMInit",
                 target: "SOMCanvas",
+                type: 'step',
                 value: 2,
                 style: {
                     stroke: "#ff0000",
@@ -105,7 +106,7 @@
                     enabled: true,
                     direction: "source-to-target",
                     color: "#00ff00",
-                    duration: 20000
+                    duration: 2000
                 }
             },
             {
