@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rete.js with React in Vanilla JS</title>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-is/18.2.0/umd/react-is.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/styled-components@5.3.6/dist/styled-components.min.js"></script>
+    <script src="https://unpkg.com/elkjs@0.8.2/lib/elk.bundled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete@2.0.3/rete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-area-plugin@2.0.3/rete-area-plugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-connection-plugin@2.0.2/rete-connection-plugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-render-utils@2.0.2/rete-render-utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-react-plugin@2.0.5/rete-react-plugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-auto-arrange-plugin@2.0.1/rete-auto-arrange-plugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rete-minimap-plugin@2.0.1/rete-minimap-plugin.min.js"></script>
+    <style>
+        .App {
+            font-family: sans-serif;
+            background: rgb(200, 190, 190);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .rete {
+            position: relative;
+            font-size: 1rem;
+            margin: 1em;
+            border-radius: 1em;
+            text-align: left;
+            flex-grow: 1; /* Allow it to take available height */
+        }
+        #fullscreen-btn {
+            margin-left: 10px;
+        }
+        body {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useRef, useEffect, forwardRef, useImperativeHandle } = React;
+
+    const ReteFlow = forwardRef(({ workgraphData }, ref) => {
+        const { NodeEditor, ClassicPreset } = Rete;
+        const { AreaPlugin, AreaExtensions } = ReteAreaPlugin;
+        const { ConnectionPlugin, Presets: ConnectionPresets } = ReteConnectionPlugin;
+        const { ReactPlugin, Presets } = ReteReactPlugin;
+        const { AutoArrangePlugin, Presets: ArrangePresets, ArrangeAppliers } = ReteAutoArrangePlugin;
+        const { MinimapPlugin } = ReteMinimapPlugin;
+
+        const Schemes = {
+            Node: ClassicPreset.Node,
+            Connection: ClassicPreset.Connection
+        };
+
+        class Node extends ClassicPreset.Node {
+            width = 180;
+            height = 100;
+        }
+        class Connection extends ClassicPreset.Connection {}
+
+        const createDynamicNode = (nodeData) => {
+            const node = new Node(nodeData.label);
+            let maxSocketNameLength = 0;
+            nodeData.inputs.forEach((input) => {
+                let socket = new ClassicPreset.Socket(input.name);
+                if (!node.inputs.hasOwnProperty(input.name)) {
+                    node.addInput(input.name, new ClassicPreset.Input(socket, input.name));
+                    maxSocketNameLength = Math.max(maxSocketNameLength, input.name.length);
+                }
+            });
+
+            nodeData.outputs.forEach((output) => {
+                let socket = new ClassicPreset.Socket(output.name);
+                if (!node.outputs.hasOwnProperty(output.name)) {
+                    node.addOutput(output.name, new ClassicPreset.Output(socket, output.name));
+                    maxSocketNameLength = Math.max(maxSocketNameLength, output.name.length);
+                }
+            });
+            node.height = Math.max(140, node.height + (nodeData.inputs.length + nodeData.outputs.length) * 35)
+            node.width += maxSocketNameLength * 5;
+
+            return node;
+        };
+
+        const addNode = async (editor, area, nodeData) => {
+            const node = createDynamicNode(nodeData);
+            await editor.addNode(node);
+            editor.nodeMap[nodeData.label] = node;
+            await area.translate(node.id, { x: nodeData.position[0], y: nodeData.position[1] });
+        };
+
+        const addLink = async (editor, area, linkData) => {
+            const fromNode = editor.nodeMap[linkData.from_node];
+            const toNode = editor.nodeMap[linkData.to_node];
+            let socket;
+            if (fromNode && toNode) {
+                socket = new ClassicPreset.Socket(linkData.from_socket);
+                if (!fromNode.outputs.hasOwnProperty(linkData.from_socket)) {
+                    fromNode.addOutput(linkData.from_socket, new ClassicPreset.Output(socket, linkData.from_socket));
+                    fromNode.height += 25;
+                    area.update('node', fromNode.id);
+                }
+                socket = new ClassicPreset.Socket(linkData.to_socket);
+                if (!toNode.inputs.hasOwnProperty(linkData.to_socket)) {
+                    toNode.addInput(linkData.to_socket, new ClassicPreset.Input(socket, linkData.to_socket));
+                    toNode.height += 25;
+                    area.update('node', toNode.id);
+                }
+                await editor.addConnection(new Connection(fromNode, linkData.from_socket, toNode, linkData.to_socket));
+            }
+        };
+
+        const loadJSON = async (editor, area, layout, workgraphData) => {
+            for (const nodeId in workgraphData.nodes) {
+                const nodeData = workgraphData.nodes[nodeId];
+                await addNode(editor, area, nodeData);
+            }
+
+            workgraphData.links.forEach(async (link) => {
+                await addLink(editor, area, link);
+            });
+        };
+
+        const [editorInstance, setEditorInstance] = useState(null);
+        const containerRef = useRef(null);
+        const layout = useRef(null);
+
+        useEffect(() => {
+            const initEditor = async () => {
+                if (containerRef.current) {
+                    const editor = new NodeEditor(Schemes);
+                    const area = new AreaPlugin(containerRef.current);
+                    const connection = new ConnectionPlugin();
+                    const render = new ReactPlugin({ createRoot: ReactDOM.createRoot });
+
+                    const arrange = new AutoArrangePlugin();
+                    const minimap = new MinimapPlugin({
+                        boundViewport: true
+                    });
+
+                    AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+                        accumulating: AreaExtensions.accumulateOnCtrl(),
+                    });
+
+                    render.addPreset(Presets.classic.setup());
+                    render.addPreset(Presets.minimap.setup({ size: 200 }));
+                    connection.addPreset(ConnectionPresets.classic.setup());
+
+                    const applier = new ArrangeAppliers.TransitionApplier({
+                        duration: 500,
+                        timingFunction: (t) => t,
+                        async onTick() {
+                            await AreaExtensions.zoomAt(area, editor.getNodes());
+                        }
+                    });
+
+                    arrange.addPreset(ArrangePresets.classic.setup());
+
+                    editor.use(area);
+                    area.use(render);
+                    area.use(arrange);
+                    area.use(minimap);
+
+                    AreaExtensions.simpleNodesOrder(area);
+
+                    const currentLayout = async (animate) => {
+                        await arrange.layout({ applier: animate ? applier : undefined });
+                        AreaExtensions.zoomAt(area, editor.getNodes());
+                    };
+                    layout.current = currentLayout;
+
+                    const nodeMap = {};
+                    editor.nodeMap = nodeMap;
+
+                    setEditorInstance({
+                        editor: editor,
+                        area: area,
+                        layout: currentLayout,
+                        destroy: () => area.destroy()
+                    });
+
+                    await loadJSON(editor, area, currentLayout, workgraphData);
+                    await currentLayout(false);
+                    await currentLayout(true);
+                }
+            };
+
+            initEditor();
+
+            return () => {
+                if (editorInstance) {
+                    editorInstance.destroy();
+                }
+            };
+        }, [workgraphData]);
+
+        useImperativeHandle(ref, () => ({
+            triggerLayout: (animate) => {
+                if (layout.current) {
+                    layout.current(animate);
+                }
+            }
+        }));
+
+        return (
+            <div ref={containerRef} className="rete" style={{ height: "100%", width: "100%" }}></div>
+        );
+    });
+
+    function App() {
+        const reteFlowRef = useRef(null);
+        const initialWorkgraphData = {"name": "WorkGraph", "uuid": "19b2f26e-23d7-11ef-834f-906584de3e5b", "state": "CREATED", "nodes": {"get_marked_structures": {"label": "get_marked_structures", "inputs": [], "outputs": [{"name": "structures"}], "position": [30, 30]}, "run_scf": {"label": "run_scf", "inputs": [{"name": "structures"}], "outputs": [{"name": "result"}], "position": [60, 60]}, "binding_energy": {"label": "binding_energy", "inputs": [{"name": "scf_outputs"}], "outputs": [], "position": [90, 90]}}, "links": [{"from_socket": "structures", "from_node": "get_marked_structures", "from_socket_uuid": "19b640cc-23d7-11ef-834f-906584de3e5b", "to_socket": "structures", "to_node": "run_scf", "state": false}, {"from_socket": "result", "from_node": "run_scf", "from_socket_uuid": "19e1aac8-23d7-11ef-834f-906584de3e5b", "to_socket": "scf_outputs", "to_node": "binding_energy", "state": false}]};
+
+        return (
+            <div className="App">
+                <div>
+                    <button onClick={() => reteFlowRef.current?.triggerLayout(true)}>Arrange</button>
+                </div>
+                <ReteFlow ref={reteFlowRef} workgraphData={initialWorkgraphData} />
+            </div>
+        );
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
