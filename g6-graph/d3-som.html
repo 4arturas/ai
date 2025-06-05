@@ -84,17 +84,24 @@
             },
             {
                 id: "somInfo",
-                x: 200,
-                y: -200,
+                x: 260,
+                y: -400,
                 group: 3,
                 html: '<div id="somInfo" style="background-color: lightgrey; border-radius: 5px; padding: 10px; width: 200px; height: 100px;">Info</div>'
+            },
+            {
+                id: "TrainingData",
+                x: -100,
+                y: -650,
+                group: 3,
+                html: '<div id="trainingData" style="background-color: lightgrey; border-radius: 5px; padding: 10px; width: 100px; height: 300px;"></div>'
             },
         ],
         links: [
             {
                 source: "SOMInit",
                 target: "SOMCanvas",
-                type: 'step',
+                // type: 'step',
                 value: 2,
                 style: {
                     stroke: "#ff0000",
@@ -112,6 +119,21 @@
             {
                 source: "SOMCanvas",
                 target: "somInfo",
+                value: 2,
+                style: {
+                    stroke: "#0000ff",
+                    strokeWidth: 2
+                },
+                animate: {
+                    enabled: true,
+                    direction: "both",
+                    color: "#ffff00",
+                    duration: 1500
+                }
+            },
+            {
+                source: "SOMCanvas",
+                target: "TrainingData",
                 value: 2,
                 style: {
                     stroke: "#0000ff",
@@ -195,6 +217,7 @@
     const canvas = document.getElementById('somCanvas');
     const ctx = canvas.getContext('2d');
     const somInfo = document.getElementById('somInfo');
+    const trainingData = document.getElementById('trainingData');
 
     function reduceTo3D(weights = []) {
         let r = 0, g = 0, b = 0;
@@ -357,6 +380,20 @@
             graph.getState().simulation.alpha(1).restart();
         }
     };
+
+    ANIMALS.forEach( (animal, idx) => {
+        const input = TRAINING_DATA[idx];
+        const [r,g,b] = weightsToColor( input );
+        trainingData.innerHTML += `
+            <div>
+
+                <span style="border: 1px solid black; background-color: rgb(${r},${g},${b});margin-right: 5px">&nbsp;&nbsp;</span>
+                <button>${animal.name}</button>
+            </div>
+        `
+        console.log( idx, animal, input );
+
+    });
 </script>
 </body>
 </html>
