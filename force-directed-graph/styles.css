@@ -1,0 +1,95 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.diagram-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+#flow-diagram-svg {
+    width: 100%;
+    height: 100%;
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.node-rect {
+    fill: #e0e0e0;
+    stroke: #a0a0a0;
+    stroke-width: 1;
+    rx: 8;
+    ry: 8;
+    transition: fill 0.3s ease;
+    cursor: grab;
+    filter: url(#node-shadow);
+}
+
+.node-rect:hover {
+    fill: #d0d0d0;
+}
+
+.node-text {
+    fill: #333333;
+    font-size: 14px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+.node-coordinates {
+    fill: #000000;
+    font-size: 10px;
+    text-anchor: middle;
+    dominant-baseline: hanging;
+    pointer-events: none;
+}
+
+.edge-line {
+    stroke: #929292;
+    stroke-width: 2;
+    fill: none;
+}
+
+.arrowhead {
+    fill: #929292;
+}
+
+.circle-marker {
+    fill: #a8d87b; /* Green fill from image */
+    stroke: #8cc63f; /* Darker green border from image */
+    stroke-width: 1.5;
+    filter: url(#circle-shadow);
+}
+
+.edge-label-text {
+    fill: #4a5568;
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+    background-color: #f7fafc;
+    padding: 2px 5px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+#grid-pattern line {
+    stroke: #e2e8f0;
+    stroke-width: 0.5;
+}

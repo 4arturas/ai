@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.22.7/antd.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script src="trainingData.js"></script>
+    <script src="lib/const.js"></script>
+    <script src="lib/utils.js"></script>
+    <script type="text/babel" src="Context.js"></script>
+    <script type="text/babel" src="lib/data.js"></script>
+    <script src="lib/edges.js"></script>
+    <script src="lib/events.js"></script>
+    <script type="text/babel" src="MyReactComponent.js"></script>
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const data = {
+        nodes: [
+            { id: 'start', html: '<div style="background-color: #ffcc00; padding: 10px; border-radius: 5px;"><strong>Start</strong><br/>Process</div>', width: 120, height: 50, x: 889, y: 444 },
+            { id: 'end', text: 'End Process', width: 120, height: 50, x: 1144, y: 610 },
+        ],
+        edges: [
+            { source: 'start', target: 'end', type: edgeTypes.straight, markerType: 'arrow' },
+        ],
+        render: function(gNode, d) {
+            if (d.text) {
+                gNode.append('text')
+                    .text(d.text)
+                    .attr('x', d.width / 2)
+                    .attr('y', d.height / 2)
+                    .attr('class', 'node-text');
+            } else if (d.html) {
+                const foreignObject = gNode.append('foreignObject')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', d.width)
+                    .attr('height', d.height);
+
+                const div = foreignObject.append('xhtml:div')
+                    .style('width', `${d.width}px`)
+                    .style('height', `${d.height}px`)
+                    .style('display', 'flex')
+                    .style('align-items', 'center')
+                    .style('justify-content', 'center')
+                    .style('padding', '5px')
+                    .style('box-sizing', 'border-box')
+                    .html(d.html);
+
+            }
+            gNode.append('text')
+                .attr('class', 'node-coordinates')
+                .attr('x', d.width / 2)
+                .attr('y', d.height + 5)
+                .text(d => `(${d.x ? d.x.toFixed(0) : 'N/A'}, ${d.y ? d.y.toFixed(0) : 'N/A'})`);
+        }
+    };
+</script>
+<script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+    const { Select, Space, Button, Modal, Table, message } = antd;
+
+    const ForceDirectedGraph = ({ initialNodes, initialLinks, backgroundType, onSaveNodes }) => {
+        const svgRef = useRef();
+        const [nodes, setNodes] = useState(initialNodes);
+        const [links, setLinks] = useState(initialLinks);
+        const gRef = useRef();
+        const zoomRef = useRef();
+
+        const animateCircle = (source, target, duration, color = null ) => {
+            const pathElement = d3.select(svgRef.current).select('g.links').selectAll('path')
+                .filter(d => d.source.id === source.id && d.target.id === target.id)
+                .node();
+
+            if ( color === null )
+            {
+                color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            }
+
+            if (pathElement) {
+                const totalLength = pathElement.getTotalLength();
+                const circle = gRef.current.append('circle')
+                    .attr('r', 5)
+                    .attr('fill', color)
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 1);
+
+                circle.transition()
+                    .duration(duration)
+                    .ease(d3.easeLinear)
+                    .attrTween("transform", function() {
+                        return function(t) {
+                            const p = pathElement.getPointAtLength(t * totalLength);
+                            return `translate(${p.x},${p.y})`;
+                        };
+                    })
+                    .remove();
+            }
+        };
+
+        window.animateCircle = animateCircle;
+
+        const animateRandomCircle = () => {
+            if (!nodes || nodes.length === 0 || !links || links.length === 0) return;
+
+            const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
+            const outgoingLinks = links.filter(link => link.source.id === randomNode.id);
+
+            if (outgoingLinks.length === 0) return;
+
+            const randomLink = outgoingLinks[Math.floor(Math.random() * outgoingLinks.length)];
+            const randomDuration = Math.random() * (3000 - 1000) + 1000;
+            animateCircle(randomLink.source, randomLink.target, randomDuration);
+        };
+
+        React.useEffect(() => {
+            const svg = d3.select(svgRef.current);
+            const svgWidth = svgRef.current.clientWidth;
+            const svgHeight = svgRef.current.clientHeight;
+
+            svg.selectAll('*').remove();
+
+            const defs = svg.append('defs');
+            defs.append('marker')
+                .attr('id', 'arrowhead')
+                .attr('viewBox', '0 0 10 10')
+                .attr('refX', '9')
+                .attr('refY', '5')
+                .attr('markerUnits', 'strokeWidth')
+                .attr('markerWidth', '6')
+                .attr('markerHeight', '6')
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+                .attr('class', 'arrowhead');
+
+            defs.append('filter')
+                .attr('id', 'circle-shadow')
+                .append('feDropShadow')
+                .attr('dx', '1')
+                .attr('dy', '1')
+                .attr('stdDeviation', '1')
+                .attr('flood-color', '#000000')
+                .attr('flood-opacity', '0.3');
+
+            defs.append('filter')
+                .attr('id', 'node-shadow')
+                .append('feDropShadow')
+                .attr('dx', '1')
+                .attr('dy', '1')
+                .attr('stdDeviation', '1')
+                .attr('flood-color', '#000000')
+                .attr('flood-opacity', '0.2');
+
+            defs.append('marker')
+                .attr('id', 'circle-marker')
+                .attr('viewBox', '0 0 10 10')
+                .attr('refX', '5')
+                .attr('refY', '5')
+                .attr('markerUnits', 'strokeWidth')
+                .attr('markerWidth', '10')
+                .attr('markerHeight', '10')
+                .attr('orient', 'auto')
+                .append('circle')
+                .attr('cx', '5')
+                .attr('cy', '5')
+                .attr('r', '4')
+                .attr('class', 'circle-marker')
+                .attr('filter', 'url(#circle-shadow)');
+
+
+            if (backgroundType === 'grid') {
+                const gridSize = 20;
+                defs.append('pattern')
+                    .attr('id', 'grid-pattern')
+                    .attr('width', gridSize)
+                    .attr('height', gridSize)
+                    .attr('patternUnits', 'userSpaceOnUse')
+                    .append('path')
+                    .attr('d', `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#e2e8f0')
+                    .attr('stroke-width', '0.5');
+
+                svg.append('rect')
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .attr('fill', 'url(#grid-pattern)');
+            } else if (backgroundType === 'no-background') {
+                svg.append('rect')
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .attr('fill', 'none');
+            }
+            else {
+                svg.append('rect')
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .attr('fill', '#f7fafc');
+            }
+
+            const g = svg.append('g');
+            gRef.current = g;
+
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .filter(event => event.type === 'wheel' || (event.type === 'mousedown' && event.button === 0))
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+            zoomRef.current = zoom;
+
+            svg.call(zoom);
+
+            const linkElements = g.append('g')
+                .attr('class', 'links')
+                .selectAll('path')
+                .data(links)
+                .enter().append('path')
+                .attr('class', 'edge-line')
+                .attr('marker-end', d => {
+                    if (d.markerType === 'circle') {
+                        return 'url(#circle-marker)';
+                    } else {
+                        return 'url(#arrowhead)';
+                    }
+                });
+            const linkLabelElements = g.append('g')
+                .attr('class', 'link-labels')
+                .selectAll('text')
+                .data(links.filter(d => d.label))
+                .enter().append('text')
+                .attr('class', 'edge-label-text')
+                .text(d => d.label);
+
+            const nodeElements = g.append('g')
+                .attr('class', 'nodes')
+                .selectAll('g')
+                .data(nodes)
+                .enter().append('g')
+                .each(function(d) {
+                    if (d.x === undefined || d.y === undefined) {
+                        d.x = svgWidth / 2;
+                        d.y = svgHeight / 2;
+                    }
+                })
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended))
+                .on('click', function(event, d) {
+                    event.stopPropagation();
+                });
+
+            nodeElements.append('rect')
+                .attr('width', d => d.width)
+                .attr('height', d => d.height)
+                .attr('class', 'node-rect');
+
+            nodeElements.each(function(d_node) {
+                const gNode = d3.select(this);
+                data.render( gNode, d_node );
+            });
+
+            const updatePositions = () => {
+                linkElements
+                    .attr('d', d => {
+                        const sourceNode = d.source;
+                        const targetNode = d.target;
+
+                        const sourceX = sourceNode.x;
+                        const sourceY = sourceNode.y;
+                        const targetX = targetNode.x;
+                        const targetY = targetNode.y;
+
+                        const sourceRectX = sourceX - sourceNode.width / 2;
+                        const sourceRectY = sourceY - sourceNode.height / 2;
+                        const targetRectX = targetX - targetNode.width / 2;
+                        const targetRectY = targetY - targetNode.height / 2;
+
+                        const startPoint = getRectIntersection(
+                            sourceRectX, sourceRectY, sourceNode.width, sourceNode.height,
+                            sourceX, sourceY, targetX, targetY
+                        );
+
+                        const endPoint = getRectIntersection(
+                            targetRectX, targetRectY, targetNode.width, targetNode.height,
+                            targetX, targetY, sourceX, sourceY
+                        );
+
+                        const finalX1 = startPoint ? startPoint.x : sourceX;
+                        const finalY1 = startPoint ? startPoint.y : sourceY;
+                        const finalX2 = endPoint ? endPoint.x : targetX;
+                        const finalY2 = endPoint ? endPoint.y : targetY;
+
+                        const type = d.type || 'straight';
+
+                        switch (type) {
+                            case 'straight':
+                                return generateStraightPath(finalX1, finalY1, finalX2, finalY2);
+                            case 'step':
+                                return generateStepPath(finalX1, finalY1, finalX2, finalY2);
+                            case 'smoothstep':
+                                return generateSmoothStepPath(finalX1, finalY1, finalX2, finalY2);
+                            case 'bezier':
+                                return generateCubicPath(finalX1, finalY1, finalX2, finalY2);
+                            default:
+                                return generateStraightPath(finalX1, finalY1, finalX2, finalY2);
+                        }
+                    });
+
+                nodeElements
+                    .attr('transform', d => `translate(${d.x - d.width / 2},${d.y - d.height / 2})`);
+
+                nodeElements.select('.node-coordinates')
+                    .text(d => `(${d.x ? d.x.toFixed(0) : 'N/A'}, ${d.y ? d.y.toFixed(0) : 'N/A'})`);
+
+                linkLabelElements
+                    .attr('x', d => (d.source.x + d.target.x) / 2)
+                    .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+            };
+
+            updatePositions();
+
+            function dragstarted(event, d) {
+                event.sourceEvent.stopPropagation();
+                d3.select(this).raise().classed('active', true);
+            }
+
+            function dragged(event, d) {
+                d.x = event.x;
+                d.y = event.y;
+                updatePositions();
+            }
+
+            function dragended(event, d) {
+                d3.select(this).classed('active', false);
+                if (onSaveNodes) {
+                    onSaveNodes(nodes.map(node => ({ ...node, x: node.x, y: node.y })));
+                }
+            }
+
+        }, [nodes, links, backgroundType]);
+
+        return (
+            <div className="diagram-container">
+                <div id="flow-diagram-container" className="w-full h-full flex justify-center items-center">
+                    <svg ref={svgRef} id="flow-diagram-svg"></svg>
+                </div>
+                <div style={{ position: 'absolute', bottom: 20, right: 20 }}>
+                    <Button onClick={animateRandomCircle}>Animate Random Circle</Button>
+                </div>
+
+            </div>
+        );
+    };
+
+    function App() {
+        const [nodesData, setNodesData] = useState(data.nodes);
+
+        const initialLinksData = data.edges.map(link => ({
+            ...link,
+            source: data.nodes.find(node => node.id === link.source),
+            target: data.nodes.find(node => node.id === link.target)
+        }));
+
+        const [selectedBackground, setSelectedBackground] = useState('default');
+
+        const handleBackgroundChange = (value) => {
+            setSelectedBackground(value);
+        };
+
+        const handleSaveNodes = (updatedNodes) => {
+            setNodesData(updatedNodes);
+        };
+
+
+        return (
+            <div className="App w-full h-full">
+                <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
+                    <Space>
+                        <Select
+                            defaultValue="grid"
+                            style={{ width: 150 }}
+                            onChange={handleBackgroundChange}
+                            options={[
+                                { value: 'default', label: 'Default Background' },
+                                { value: 'grid', label: 'Grid Background' },
+                                { value: 'no-background', label: 'No Background' },
+                            ]}
+                        />
+                        <Button onClick={() => copyNodesToClipboard(nodesData)}>Save Nodes to Clipboard</Button>
+                    </Space>
+                </div>
+                <ForceDirectedGraph initialNodes={nodesData} initialLinks={initialLinksData} backgroundType={selectedBackground} onSaveNodes={handleSaveNodes} />
+            </div>
+        );
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

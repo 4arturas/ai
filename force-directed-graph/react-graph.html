@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Force-Directed Graph</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.16/antd.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.16/antd.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        #root {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+        .graph-container {
+            flex-grow: 1;
+            width: 100%;
+        }
+        svg {
+            display: block;
+            background-color: #eef1f4;
+            border-radius: 8px;
+            cursor: grab;
+            width: 100%;
+            height: 100%;
+        }
+        svg.dragging {
+            cursor: grabbing;
+        }
+        rect {
+            fill: #ffffff;
+            stroke: #666;
+            stroke-width: 2px;
+            rx: 8;
+            ry: 8;
+            transition: all 0.05s ease-in-out;
+            pointer-events: all;
+        }
+        text {
+            fill: #333;
+            font-size: 16px;
+            font-weight: 500;
+            user-select: none;
+            pointer-events: none;
+        }
+        .node-coordinate-text {
+            fill: #666;
+            font-size: 12px;
+            text-anchor: middle;
+            user-select: none;
+            pointer-events: none;
+        }
+        line {
+            stroke-width: 2px;
+        }
+        .node-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            min-width: 100%;
+            min-height: 100%;
+            overflow: visible;
+            box-sizing: border-box;
+            padding: 5px;
+            color: #333;
+            text-align: center;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .edge-label {
+            fill: #555;
+            font-size: 12px;
+            text-anchor: middle;
+            user-select: none;
+            pointer-events: none;
+        }
+        .button-container {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+    const { Button } = antd;
+
+    const markerWidth = 10;
+    const markerHeight = 7;
+    const refX = 10;
+    const refY = 3.5;
+
+    function Node(props) {
+        const { x, y, width, height, children, onMouseDown, text } = props;
+        const isComplexContent = typeof children !== 'string';
+        const displayX = Math.round(x);
+        const displayY = Math.round(y);
+
+        return (
+            <g transform={`translate(${x}, ${y})`} onMouseDown={onMouseDown}>
+                <rect width={width} height={height} fill="#fff" stroke="#000" rx="8" ry="8" />
+                {isComplexContent ? (
+                    <foreignObject x="0" y="0" width={width} height={height}>
+                        <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+                            {text}
+                        </div>
+                    </foreignObject>
+                ) : (
+                    <text x={width / 2} y={height / 2} textAnchor="middle" dominantBaseline="middle">{text}</text>
+                )}
+                <text x={width / 2} y={height + 20} className="node-coordinate-text">
+                    ({displayX}, {displayY})
+                </text>
+            </g>
+        );
+    }
+
+    function getLineRectIntersection(x1, y1, x2, y2, rect_cx, rect_cy, rect_width, rect_height) {
+        const rect_half_width = rect_width / 2;
+        const rect_half_height = rect_height / 2;
+
+        const rect_left = rect_cx - rect_half_width;
+        const rect_right = rect_cx + rect_half_width;
+        const rect_top = rect_cy - rect_half_height;
+        const rect_bottom = rect_cy + rect_half_height;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        let t = Infinity;
+
+        if (dx !== 0) {
+            const t_intersect = (rect_left - x1) / dx;
+            const y_at_intersect = y1 + t_intersect * dy;
+            if (t_intersect > 0 && t_intersect <= 1 && y_at_intersect >= rect_top && y_at_intersect <= rect_bottom) {
+                t = Math.min(t, t_intersect);
+            }
+        }
+        if (dx !== 0) {
+            const t_intersect = (rect_right - x1) / dx;
+            const y_at_intersect = y1 + t_intersect * dy;
+            if (t_intersect > 0 && t_intersect <= 1 && y_at_intersect >= rect_top && y_at_intersect <= rect_bottom) {
+                t = Math.min(t, t_intersect);
+            }
+        }
+        if (dy !== 0) {
+            const t_intersect = (rect_top - y1) / dy;
+            const x_at_intersect = x1 + t_intersect * dx;
+            if (t_intersect > 0 && t_intersect <= 1 && x_at_intersect >= rect_left && x_at_intersect <= rect_right) {
+                t = Math.min(t, t_intersect);
+            }
+        }
+        if (dy !== 0) {
+            const t_intersect = (rect_bottom - y1) / dy;
+            const x_at_intersect = x1 + t_intersect * dx;
+            if (t_intersect > 0 && t_intersect <= 1 && x_at_intersect >= rect_left && x_at_intersect <= rect_right) {
+                t = Math.min(t, t_intersect);
+            }
+        }
+
+        if (t === Infinity) {
+            return { x: x2, y: y2 };
+        }
+
+        const isSourceInsideRect = (x1 >= rect_left && x1 <= rect_right && y1 >= rect_top && y1 <= rect_bottom);
+
+        if (isSourceInsideRect) {
+            let t_max_valid = 0;
+            if (dx !== 0) {
+                const tx1 = (rect_left - x1) / dx;
+                const tx2 = (rect_right - x1) / dx;
+                if (y1 + tx1 * dy >= rect_top && y1 + tx1 * dy <= rect_bottom) t_max_valid = Math.max(t_max_valid, tx1);
+                if (y1 + tx2 * dy >= rect_top && y1 + tx2 * dy <= rect_bottom) t_max_valid = Math.max(t_max_valid, tx2);
+            }
+            if (dy !== 0) {
+                const ty1 = (rect_top - y1) / dy;
+                const ty2 = (rect_bottom - y1) / dy;
+                if (x1 + ty1 * dx >= rect_left && x1 + ty1 * dx <= rect_right) t_max_valid = Math.max(t_max_valid, ty1);
+                if (x1 + ty2 * dx >= rect_left && x1 + ty2 * dx <= rect_right) t_max_valid = Math.max(t_max_valid, ty2);
+            }
+            if (t_max_valid > 0 && t_max_valid <= 1) {
+                return { x: x1 + t_max_valid * dx, y: y1 + t_max_valid * dy };
+            } else if (t_max_valid > 1) {
+                return { x: x2, y: y2 };
+            }
+            return { x: x2, y: y2 };
+
+        } else {
+            if (t !== Infinity) {
+                return { x: x1 + t * dx, y: y1 + t * dy };
+            }
+        }
+
+        return { x: x2, y: y2 };
+    }
+
+    function Edge(props) {
+        const { x1, y1, x2, y2, label, color, targetNodeWidth, targetNodeHeight, connectorType = "arrow", animateCircle, animationDuration, animationColor } = props;
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const strokeColor = color || "#999";
+
+        const markerId = color ? `arrowhead-${color}` : "arrowhead";
+
+        const circleRadius = 8;
+        const animatedCircleRadius = 6;
+        const animatedCircleStrokeWidth = 2;
+
+        const intersectionPoint = getLineRectIntersection(
+            x1, y1, x2, y2,
+            x2, y2, targetNodeWidth, targetNodeHeight
+        );
+
+        const dx_to_intersect = intersectionPoint.x - x1;
+        const dy_to_intersect = intersectionPoint.y - y1;
+        const distance_to_intersect = Math.sqrt(dx_to_intersect * dx_to_intersect + dy_to_intersect * dy_to_intersect);
+
+        let lineX2 = intersectionPoint.x;
+        let lineY2 = intersectionPoint.y;
+
+        let offset = 0;
+        if (connectorType.includes("circle")) {
+            offset = circleRadius;
+        }
+
+        if (distance_to_intersect > offset) {
+            const dx_norm = dx_to_intersect / distance_to_intersect;
+            const dy_norm = dy_to_intersect / distance_to_intersect;
+
+            lineX2 = intersectionPoint.x - dx_norm * offset;
+            lineY2 = intersectionPoint.y - dy_norm * offset;
+        } else if (distance_to_intersect > 0) {
+            const dx_norm = dx_to_intersect / distance_to_intersect;
+            const dy_norm = dy_to_intersect / distance_to_intersect;
+            lineX2 = intersectionPoint.x - dx_norm * (distance_to_intersect / 2);
+            lineY2 = intersectionPoint.y - dy_norm * (distance_to_intersect / 2);
+        }
+
+        const svgRef = useRef(null);
+
+        useEffect(() => {
+            if (animateCircle && svgRef.current) {
+                const svgElement = d3.select(svgRef.current);
+                const animatedCircle = svgElement.append("circle")
+                    .attr("r", animatedCircleRadius)
+                    .attr("fill", animationColor)
+                    .attr("stroke", "white")
+                    .attr("stroke-width", animatedCircleStrokeWidth)
+                    .attr("opacity", 1);
+
+                // Create a temporary SVG path element to get its length
+                const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                // Set the path data for the line segment
+                const pathData = `M${x1},${y1}L${lineX2},${lineY2}`;
+                tempPath.setAttribute("d", pathData);
+                const totalLength = tempPath.getTotalLength();
+
+                animatedCircle.transition()
+                    .duration(animationDuration)
+                    .ease(d3.easeLinear)
+                    .attrTween("transform", function() {
+                        return function(t) {
+                            const point = tempPath.getPointAtLength(totalLength * t);
+                            return `translate(${point.x},${point.y})`;
+                        };
+                    })
+                    .remove();
+            }
+        }, [animateCircle, animationDuration, animationColor, x1, y1, lineX2, lineY2]);
+
+        return (
+            <g ref={svgRef}>
+                <line
+                    x1={x1} y1={y1}
+                    x2={lineX2} y2={lineY2}
+                    stroke={strokeColor}
+                    markerEnd={connectorType.includes("arrow") ? `url(#${markerId})` : ""}
+                />
+                {label && (
+                    <text x={midX} y={midY} className="edge-label">{label}</text>
+                )}
+                {connectorType.includes("circle") && (
+                    <circle
+                        cx={intersectionPoint.x} cy={intersectionPoint.y}
+                        r={circleRadius}
+                        fill={color === "red" ? "darkred" : "steelblue"}
+                        stroke="white"
+                        strokeWidth="3"
+                    />
+                )}
+            </g>
+        );
+    }
+
+    function GraphMap(props = {}) {
+        const { children, width = "100%", height = "600", onAnimateEdge } = props;
+        const [nodes, setNodes] = useState([]);
+        const [draggingNodeId, setDraggingNodeId] = useState(null);
+        const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+        const [animatingEdge, setAnimatingEdge] = useState(null);
+
+        useEffect(() => {
+            const initialNodes = [];
+            React.Children.toArray(children)
+                .filter(React.isValidElement)
+                .forEach((child) => {
+                    if (child.type === Node) {
+                        const currentProps = child.props || {};
+                        initialNodes.push({
+                            id: currentProps.id,
+                            x: currentProps.x || 0,
+                            y: currentProps.y || 0,
+                            width: currentProps.width || 100,
+                            height: currentProps.height || 60,
+                            text: currentProps.children,
+                        });
+                    }
+                });
+            setNodes(initialNodes);
+        }, [children]);
+
+        const edges = useMemo(() => {
+            const derivedEdges = [];
+            const validChildren = React.Children.toArray(children).filter(React.isValidElement);
+
+            validChildren.forEach((child, index) => {
+                if (child.type === Edge) {
+                    const currentProps = child.props || {};
+                    const sourceNode = nodes.find((node) => node.id === currentProps.source);
+                    const targetNode = nodes.find((node) => node.id === currentProps.target);
+
+                    if (sourceNode && targetNode) {
+                        derivedEdges.push({
+                            id: `edge-${index}`,
+                            x1: sourceNode.x + sourceNode.width / 2,
+                            y1: sourceNode.y + sourceNode.height / 2,
+                            x2: targetNode.x + targetNode.width / 2,
+                            y2: targetNode.y + targetNode.height / 2,
+                            label: currentProps.children,
+                            color: currentProps.color,
+                            targetNodeWidth: targetNode.width,
+                            targetNodeHeight: targetNode.height,
+                            connectorType: currentProps.connectorType,
+                            sourceId: sourceNode.id,
+                            targetId: targetNode.id,
+                        });
+                    }
+                }
+            });
+            return derivedEdges;
+        }, [nodes, children]);
+
+        useEffect(() => {
+            if (onAnimateEdge) {
+                onAnimateEdge.current = ({ sourceId, targetId, duration, circleColor }) => {
+                    const edgeToAnimate = edges.find(edge => edge.sourceId === sourceId && edge.targetId === targetId);
+                    if (edgeToAnimate) {
+                        setAnimatingEdge({
+                            id: edgeToAnimate.id,
+                            duration: duration,
+                            color: circleColor
+                        });
+                        setTimeout(() => setAnimatingEdge(null), duration + 50);
+                    }
+                };
+            }
+        }, [edges, onAnimateEdge]);
+
+
+        const handleNodeMouseDown = (e, id) => {
+            e.preventDefault();
+            const nodeToDrag = nodes.find(node => node.id === id);
+            if (nodeToDrag) {
+                setDraggingNodeId(id);
+                setOffset({
+                    x: e.clientX - nodeToDrag.x,
+                    y: e.clientY - nodeToDrag.y
+                });
+            }
+        };
+
+        const handleMouseMove = (e) => {
+            if (draggingNodeId !== null) {
+                e.preventDefault();
+                setNodes(prevNodes => {
+                    return prevNodes.map(node => {
+                        if (node.id === draggingNodeId) {
+                            return {
+                                ...node,
+                                x: e.clientX - offset.x,
+                                y: e.clientY - offset.y
+                            };
+                        }
+                        return node;
+                    });
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setDraggingNodeId(null);
+        };
+
+        return (
+            <svg
+                width={width}
+                height={height}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                className={draggingNodeId ? 'dragging' : ''}
+            >
+                <defs>
+                    <marker id="arrowhead" markerWidth={markerWidth} markerHeight={markerHeight} refX={refX} refY={refY} orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+                    </marker>
+                    <marker id="arrowhead-red" markerWidth={markerWidth} markerHeight={markerHeight} refX={refX} refY={refY} orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="red" />
+                    </marker>
+                </defs>
+                {edges.map((edge) => (
+                    <Edge
+                        key={edge.id}
+                        {...edge}
+                        animateCircle={animatingEdge && animatingEdge.id === edge.id}
+                        animationDuration={animatingEdge ? animatingEdge.duration : 0}
+                        animationColor={animatingEdge ? animatingEdge.color : ''}
+                    />
+                ))}
+                {nodes.map((node) => (
+                    <Node
+                        key={node.id}
+                        {...node}
+                        onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                    />
+                ))}
+            </svg>
+        );
+    }
+
+    const connectorType = {
+        both: "both",
+        arrow: "arrow",
+        circle: "circle",
+    };
+
+    const getRandomColor = () => {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    };
+
+    const App = () => {
+        const graphMapRef = useRef(null);
+        const graphEdges = useRef([]);
+
+        const initialNodesData = [
+            { id: "node1", x: 100, y: 100, width: 120, height: 80, text: "Start" },
+            { id: "node2", x: 350, y: 200, width: 150, height: 60, text: "Process Step" },
+            { id: "node3", x: 150, y: 400, width: 200, height: 200, text: <canvas width="200" height="200" style={{display: 'block', margin: 'auto'}}></canvas> },
+            { id: "node4", x: 600, y: 150, width: 130, height: 90, text: "Decision Point" },
+            { id: "node5", x: 650, y: 400, width: 110, height: 70, text: "Final Result" },
+        ];
+
+        const initialEdgesData = useMemo(() => [
+            { source: initialNodesData[0].id, target: initialNodesData[1].id, color: "red", connectorType: connectorType.both, label: "Start to Process" },
+            { source: "node2", target: "node3", connectorType: connectorType.arrow, label: "Process to End" },
+            { source: "node1", target: "node4", connectorType: connectorType.circle, label: "Start to Decision" },
+            { source: "node4", target: "node2", connectorType: connectorType.both, label: "Decision to Process" },
+            { source: "node4", target: "node5", connectorType: connectorType.arrow, label: "Decision to Result" },
+            { source: "node3", target: "node5", connectorType: connectorType.both, label: "End to Result" },
+        ], []);
+
+        useEffect(() => {
+            const tempEdges = initialEdgesData.map((edge, index) => ({
+                id: `edge-${index}`,
+                sourceId: edge.source,
+                targetId: edge.target,
+            }));
+            graphEdges.current = tempEdges;
+        }, [initialEdgesData]);
+
+        const handleAnimateRandomEdge = () => {
+            if (graphEdges.current.length === 0) {
+                console.warn("No edges to animate.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * graphEdges.current.length);
+            const randomEdge = graphEdges.current[randomIndex];
+
+            const randomDuration = Math.floor(Math.random() * 2000) + 1000;
+            const randomColor = getRandomColor();
+
+            if (graphMapRef.current && typeof graphMapRef.current === 'function') {
+                graphMapRef.current({
+                    sourceId: randomEdge.sourceId,
+                    targetId: randomEdge.targetId,
+                    duration: randomDuration,
+                    circleColor: randomColor,
+                });
+            } else {
+                console.error("GraphMap animation function not available.");
+            }
+        };
+
+        return (
+            <>
+                <div className="button-container">
+                    <Button type="primary" onClick={handleAnimateRandomEdge}>
+                        Animate Random Edge
+                    </Button>
+                </div>
+                <div className="graph-container">
+                    <GraphMap width="100%" height="100%" onAnimateEdge={graphMapRef}>
+                        {initialNodesData.map(node => (
+                            <Node key={node.id} {...node}>
+                                {node.text}
+                            </Node>
+                        ))}
+                        {initialEdgesData.map((edge, index) => (
+                            <Edge key={index} {...edge} />
+                        ))}
+                    </GraphMap>
+                </div>
+            </>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
