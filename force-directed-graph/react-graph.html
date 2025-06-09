@@ -58,6 +58,7 @@
             ry: 8;
             transition: all 0.05s ease-in-out;
             pointer-events: all;
+            filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.3));
         }
         text {
             fill: #333;
@@ -99,6 +100,13 @@
             text-anchor: middle;
             user-select: none;
             pointer-events: none;
+        }
+        .foreign-object-edge-label {
+            overflow: visible;
+        }
+        .foreign-object-edge-label-content {
+            display: inline-block;
+            transform: translate(-50%, -50%);
         }
         .button-container {
             padding: 20px;
@@ -225,8 +233,12 @@
         return { x: x2, y: y2 };
     }
 
+    function EdgeLabel({ children }) {
+        return children;
+    }
+
     function Edge(props) {
-        const { x1, y1, x2, y2, label, color, targetNodeWidth, targetNodeHeight, connectorType = "arrow", animateCircle, animationDuration, animationColor } = props;
+        const { x1, y1, x2, y2, label, color, targetNodeWidth, targetNodeHeight, connectorType = "arrow", animateCircle, animationDuration, animationColor, children, edgeType = "line" } = props;
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const strokeColor = color || "#999";
@@ -268,9 +280,11 @@
         }
 
         const svgRef = useRef(null);
+        const [isAnimating, setIsAnimating] = useState(false);
 
         useEffect(() => {
             if (animateCircle && svgRef.current) {
+                setIsAnimating(true);
                 const svgElement = d3.select(svgRef.current);
                 const animatedCircle = svgElement.append("circle")
                     .attr("r", animatedCircleRadius)
@@ -279,9 +293,7 @@
                     .attr("stroke-width", animatedCircleStrokeWidth)
                     .attr("opacity", 1);
 
-                // Create a temporary SVG path element to get its length
                 const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                // Set the path data for the line segment
                 const pathData = `M${x1},${y1}L${lineX2},${lineY2}`;
                 tempPath.setAttribute("d", pathData);
                 const totalLength = tempPath.getTotalLength();
@@ -295,9 +307,21 @@
                             return `translate(${point.x},${point.y})`;
                         };
                     })
-                    .remove();
+                    .remove()
+                    .on("end", () => setIsAnimating(false));
             }
         }, [animateCircle, animationDuration, animationColor, x1, y1, lineX2, lineY2]);
+
+        const customLabel = React.Children.toArray(children).find(
+            (child) => React.isValidElement(child) && child.type === EdgeLabel
+        );
+
+        let strokeDasharray = null;
+        if (edgeType === "dashed") {
+            strokeDasharray = "5 5";
+        } else if (edgeType === "dotted") {
+            strokeDasharray = "1 5";
+        }
 
         return (
             <g ref={svgRef}>
@@ -305,10 +329,19 @@
                     x1={x1} y1={y1}
                     x2={lineX2} y2={lineY2}
                     stroke={strokeColor}
+                    strokeWidth="2"
                     markerEnd={connectorType.includes("arrow") ? `url(#${markerId})` : ""}
+                    strokeDasharray={strokeDasharray}
                 />
-                {label && (
+                {label && !customLabel && (
                     <text x={midX} y={midY} className="edge-label">{label}</text>
+                )}
+                {customLabel && (
+                    <foreignObject x={midX} y={midY} width="1" height="1" className="foreign-object-edge-label">
+                        <div xmlns="http://www.w3.org/1999/xhtml" className="foreign-object-edge-label-content" style={{ transform: 'translate(-50%, -50%)' }}>
+                            {customLabel.props.children}
+                        </div>
+                    </foreignObject>
                 )}
                 {connectorType.includes("circle") && (
                     <circle
@@ -375,6 +408,8 @@
                             connectorType: currentProps.connectorType,
                             sourceId: sourceNode.id,
                             targetId: targetNode.id,
+                            children: currentProps.children,
+                            edgeType: currentProps.edgeType,
                         });
                     }
                 }
@@ -392,12 +427,10 @@
                             duration: duration,
                             color: circleColor
                         });
-                        setTimeout(() => setAnimatingEdge(null), duration + 50);
                     }
                 };
             }
         }, [edges, onAnimateEdge]);
-
 
         const handleNodeMouseDown = (e, id) => {
             e.preventDefault();
@@ -446,7 +479,7 @@
                     <marker id="arrowhead" markerWidth={markerWidth} markerHeight={markerHeight} refX={refX} refY={refY} orient="auto">
                         <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
                     </marker>
-                    <marker id="arrowhead-red" markerWidth={markerWidth} markerHeight={markerHeight} refX={refX} refY={refY} orient="auto">
+                    <marker id="arrowhead-red" markerWidth={markerHeight} markerHeight={markerHeight} refX={refX} refY={refY} orient="auto">
                         <polygon points="0 0, 10 3.5, 0 7" fill="red" />
                     </marker>
                 </defs>
@@ -457,7 +490,9 @@
                         animateCircle={animatingEdge && animatingEdge.id === edge.id}
                         animationDuration={animatingEdge ? animatingEdge.duration : 0}
                         animationColor={animatingEdge ? animatingEdge.color : ''}
-                    />
+                    >
+                        {edge.children}
+                    </Edge>
                 ))}
                 {nodes.map((node) => (
                     <Node
@@ -474,6 +509,12 @@
         both: "both",
         arrow: "arrow",
         circle: "circle",
+    };
+
+    const edgeType = {
+        line: "line",
+        dashed: "dashed",
+        dotted: "dotted",
     };
 
     const getRandomColor = () => {
@@ -498,12 +539,16 @@
         ];
 
         const initialEdgesData = useMemo(() => [
-            { source: initialNodesData[0].id, target: initialNodesData[1].id, color: "red", connectorType: connectorType.both, label: "Start to Process" },
-            { source: "node2", target: "node3", connectorType: connectorType.arrow, label: "Process to End" },
-            { source: "node1", target: "node4", connectorType: connectorType.circle, label: "Start to Decision" },
-            { source: "node4", target: "node2", connectorType: connectorType.both, label: "Decision to Process" },
-            { source: "node4", target: "node5", connectorType: connectorType.arrow, label: "Decision to Result" },
-            { source: "node3", target: "node5", connectorType: connectorType.both, label: "End to Result" },
+            { source: initialNodesData[0].id, target: initialNodesData[1].id, color: "red", connectorType: connectorType.both, label: "Start to Process", edgeType: edgeType.line },
+            { source: "node2", target: "node3", color: "green", connectorType: connectorType.arrow, label: "Process to End", edgeType: edgeType.line },
+            { source: "node1", target: "node4", color: "orange", connectorType: connectorType.arrow, label: "Start to Decision", edgeType: edgeType.line },
+            { source: "node4", target: "node2", color: "blue", connectorType: connectorType.circle, label: "Decision to Process", edgeType: edgeType.line },
+            { source: "node4", target: "node5", color: "purple", connectorType: connectorType.arrow, label: "Decision to Result", edgeType: edgeType.line },
+            { source: "node3", target: "node5", color: "brown", connectorType: connectorType.both, label: "End to Result", edgeType: edgeType.line },
+            { source: "node1", target: "node5", color: "pink", connectorType: connectorType.arrow, label: "Start to Final", edgeType: edgeType.line },
+            { source: "node2", target: "node5", color: "cyan", connectorType: connectorType.arrow, label: "Process to Final", edgeType: edgeType.line },
+            { source: "node3", target: "node1", color: "magenta", connectorType: connectorType.arrow, label: "End to Start", edgeType: edgeType.line },
+            { source: "node5", target: "node1", color: "black", connectorType: connectorType.arrow, label: "Result to Start", edgeType: edgeType.line },
         ], []);
 
         useEffect(() => {
@@ -514,6 +559,19 @@
             }));
             graphEdges.current = tempEdges;
         }, [initialEdgesData]);
+
+        const animateEdge = (sourceId, targetId, duration, color) => {
+            if (graphMapRef.current && typeof graphMapRef.current === 'function') {
+                graphMapRef.current({
+                    sourceId: sourceId,
+                    targetId: targetId,
+                    duration: duration,
+                    circleColor: color,
+                });
+            } else {
+                console.error("GraphMap animation function not available.");
+            }
+        };
 
         const handleAnimateRandomEdge = () => {
             if (graphEdges.current.length === 0) {
@@ -527,35 +585,45 @@
             const randomDuration = Math.floor(Math.random() * 2000) + 1000;
             const randomColor = getRandomColor();
 
-            if (graphMapRef.current && typeof graphMapRef.current === 'function') {
-                graphMapRef.current({
-                    sourceId: randomEdge.sourceId,
-                    targetId: randomEdge.targetId,
-                    duration: randomDuration,
-                    circleColor: randomColor,
-                });
-            } else {
-                console.error("GraphMap animation function not available.");
-            }
+            animateEdge(randomEdge.sourceId, randomEdge.targetId, randomDuration, randomColor);
         };
 
         return (
             <>
                 <div className="button-container">
                     <Button type="primary" onClick={handleAnimateRandomEdge}>
-                        Animate Random Edge
+                        Animated Circle
                     </Button>
                 </div>
                 <div className="graph-container">
-                    <GraphMap width="100%" height="100%" onAnimateEdge={graphMapRef}>
+                    <GraphMap id={"graphMap"} width="100%" height="100%" onAnimateEdge={graphMapRef}>
                         {initialNodesData.map(node => (
-                            <Node key={node.id} {...node}>
+                            <Node key={node.id} id={node.id} x={node.x} y={node.y} width={node.width} height={node.height}>
                                 {node.text}
                             </Node>
                         ))}
-                        {initialEdgesData.map((edge, index) => (
-                            <Edge key={index} {...edge} />
+
+                        {initialEdgesData.filter(edge => edge.edgeType === edgeType.line).map(edge => (
+                            <Edge
+                                key={`${edge.source}-${edge.target}`}
+                                source={edge.source}
+                                target={edge.target}
+                                connectorType={edge.connectorType}
+                                color={edge.color}
+                                edgeType={edge.edgeType}
+                            >
+                                {edge.label && <EdgeLabel>{edge.label}</EdgeLabel>}
+                            </Edge>
                         ))}
+
+                        <Edge key="edge1" source="node1" target="node2" connectorType={connectorType.arrow}>
+                            <EdgeLabel>
+                                <div style={{background: "blue", padding: "5px", borderRadius: "3px", color: "white"}}>
+                                    Custom Label
+                                </div>
+                            </EdgeLabel>
+                        </Edge>
+
                     </GraphMap>
                 </div>
             </>
