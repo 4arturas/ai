@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>React Force-Directed Graph</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/d3@7"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.16/antd.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.16/antd.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -58,7 +58,7 @@
             ry: 8;
             transition: all 0.05s ease-in-out;
             pointer-events: all;
-            filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.3)); /* Added shadow */
         }
         text {
             fill: #333;
@@ -114,6 +114,13 @@
             justify-content: center;
             width: 100%;
             box-sizing: border-box;
+            gap: 15px; /* Added gap for spacing buttons */
+        }
+        .emoji-icon {
+            position: absolute;
+            font-size: 40px; /* Adjust emoji size */
+            top: 5px;
+            left: 5px;
         }
     </style>
 </head>
@@ -122,7 +129,9 @@
 
 <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
-    const { Button, Checkbox } = antd; // Added Checkbox
+    const { Button, Checkbox, Modal, Select, Spin } = antd; // Added Modal, Select, Spin
+
+    const { Option } = Select; // Destructure Option from Select
 
     const markerWidth = 10;
     const markerHeight = 7;
@@ -147,6 +156,7 @@
                 ) : (
                     <text x={width / 2} y={height / 2} textAnchor="middle" dominantBaseline="middle">{text}</text>
                 )}
+                {/* Conditionally render node coordinates */}
                 {showCoordinates && (
                     <text x={width / 2} y={height + 20} className="node-coordinate-text">
                         ({displayX}, {displayY})
@@ -374,7 +384,7 @@
                     if (child.type === Node) {
                         const currentProps = child.props || {};
                         initialNodes.push({
-                            id: currentProps.id,
+                            id: currentProps.id, // This is where the ID is extracted.
                             x: currentProps.x || 0,
                             y: currentProps.y || 0,
                             width: currentProps.width || 100,
@@ -433,6 +443,7 @@
                 };
             }
         }, [edges, onAnimateEdge]);
+
 
         const handleNodeMouseDown = (e, id) => {
             e.preventDefault();
@@ -501,7 +512,7 @@
                         key={node.id}
                         {...node}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
-                        showCoordinates={showNodeCoordinates}
+                        showCoordinates={showNodeCoordinates} // Passed showCoordinates prop
                     />
                 ))}
             </svg>
@@ -529,10 +540,96 @@
         return color;
     };
 
+    const Database = ({url}) => {
+        return (
+            <>
+                <span className="emoji-icon">💾</span>
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <span className="emoji-icon" style={{position:'relative', top: 'unset', left: 'unset'}}>🗄️</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {url}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>template_api(:5432)</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </>
+        );
+    }
+
+    const Openshift = () => {
+        return (
+            <>
+                <span className="emoji-icon">☁️</span>
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <span className="emoji-icon" style={{position:'relative', top: 'unset', left: 'unset'}}>🖥️</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>TemplateAPI(:8080)</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </>
+        );
+    }
+
+    const DatabaseOpenshift = ({clusterName, clusterUrl, databaseUrl}) =>
+    {
+        return (
+            <>
+                {/* Inner GraphMap to represent the cluster structure */}
+                <GraphMap width="100%" height="100%" showNodeCoordinates={false}> {/* Set to false to avoid double coordinates */}
+                    {/* Added a unique ID to this Node */}
+                    <Node id={`cluster-info-${clusterName.replace(/\s+/g, '-')}`} x={15} y={5} height="25" width="637"><strong>{clusterName}</strong>&nbsp;&nbsp;{clusterUrl}</Node>
+                    <Node id="database" x={20} y={40} width={250} height={200}>
+                        <Database url={databaseUrl}/>
+                    </Node>
+                    <Node id="openShift" x={400} y={40} width={250} height={200}>
+                        <Openshift/>
+                    </Node>
+                    <Edge source="openShift" target="database" connectorType={connectorType.both}></Edge>
+                </GraphMap>
+            </>
+        );
+    }
+
+
     const App = () => {
         const graphMapRef = useRef(null);
         const graphEdges = useRef([]);
         const [showCoordinates, setShowCoordinates] = useState(true); // State for toggling coordinates
+        const [isModalVisible, setIsModalVisible] = useState(false);
+        const [selectedNodeId, setSelectedNodeId] = useState(null);
+        const [nodeDescription, setNodeDescription] = useState("");
+        const [isLoadingLLM, setIsLoadingLLM] = useState(false);
+
+
+        // Define node details for LLM prompting
+        const nodeDetails = useMemo(() => ({
+            "SEBInfrastructure": "SEB Infrastructure refers to the core IT systems and networks of SEB Bank. Describe its general role in a modern financial institution's IT landscape.",
+            "jira": "Jira is a popular issue tracking and project management software. Explain its typical function in a software development lifecycle within an IT infrastructure diagram.",
+            "jenkins": "Jenkins is an open-source automation server for CI/CD. Describe its primary role in a software delivery pipeline.",
+            "clusterPurple": "This node represents a 'Red Cluster', a managed computing environment. Explain what a typical 'cluster' provides in an IT infrastructure and its benefits.",
+            "clusterOrangeTest": "This node represents an 'Orange Test Cluster', a managed computing environment for testing. Explain what a typical 'cluster' provides in an IT infrastructure and its benefits, specifically highlighting a 'test' environment context.",
+            "clusterOrangeDev": "This node represents an 'Orange Dev Cluster', a managed computing environment for development. Explain what a typical 'cluster' provides in an IT infrastructure and its benefits, specifically highlighting a 'development' environment context."
+        }), []);
+
 
         const initialNodesData = [
             { id: "node1", x: 100, y: 100, width: 120, height: 80, text: "Start" },
@@ -596,6 +693,20 @@
             setShowCoordinates(e.target.checked);
         };
 
+        const handleModalOk = () => {
+            setIsModalVisible(false);
+        };
+
+        const handleModalCancel = () => {
+            setIsModalVisible(false);
+        };
+
+        const handleNodeSelectChange = (value) => {
+            setSelectedNodeId(value);
+            setNodeDescription(""); // Clear description when a new node is selected
+        };
+
+
         return (
             <>
                 <div className="button-container">
@@ -611,33 +722,51 @@
                     </Checkbox>
                 </div>
                 <div className="graph-container">
+
                     <GraphMap id={"graphMap"} width="100%" height="100%" onAnimateEdge={graphMapRef} showNodeCoordinates={showCoordinates}>
-                        {initialNodesData.map(node => (
-                            <Node key={node.id} id={node.id} x={node.x} y={node.y} width={node.width} height={node.height}>
-                                {node.text}
-                            </Node>
-                        ))}
 
-                        {initialEdgesData.filter(edge => edge.edgeType === edgeType.line).map(edge => (
-                            <Edge
-                                key={`${edge.source}-${edge.target}`}
-                                source={edge.source}
-                                target={edge.target}
-                                connectorType={edge.connectorType}
-                                color={edge.color}
-                                edgeType={edge.edgeType}
-                            >
-                                {edge.label && <EdgeLabel>{edge.label}</EdgeLabel>}
-                            </Edge>
-                        ))}
+                        <Node id="SEBInfrastructure" x={350} y={10} width="250" height="50">
+                            <span className="emoji-icon" style={{top: '0px', left: '0px'}}>☁️</span>
+                            <strong style={{marginLeft: "30px", fontSize: "20px"}}>Infrastructure</strong>
+                        </Node>
 
-                        <Edge key="edge1" source="node1" target="node2" connectorType={connectorType.arrow}>
-                            <EdgeLabel>
-                                <div style={{background: "blue", padding: "5px", borderRadius: "3px", color: "white"}}>
-                                    Custom Label
-                                </div>
-                            </EdgeLabel>
-                        </Edge>
+                        <Node id="jira" x={60} y={400} width={200} height={200}>
+                            <span className="emoji-icon">📝</span>
+                            <strong style={{marginLeft: "5px"}}>Jira</strong>
+                        </Node>
+
+
+                        <Node id="jenkins" x={350} y={400} width={200} height={200}>
+                            <span className="emoji-icon">🤖</span>
+                            <strong style={{marginLeft: "5px"}}>Jenkins</strong>
+                        </Node>
+
+                        <Edge source="jira" target="jenkins" connectorType={connectorType.arrow}></Edge>
+
+                        <Node id="clusterPurple" x={700} y={50} width={700} height={260}>
+                            <DatabaseOpenshift
+                                clusterName="Red Cluster"
+                                clusterUrl="https://PROD.net:443"
+                                databaseUrl="database.prod.net"/>
+                        </Node>
+
+                        <Node id="clusterOrangeTest" x={700} y={350} width={700} height={260}>
+                            <DatabaseOpenshift
+                                clusterName="Orange Test Cluster"
+                                clusterUrl="https://TEST:443"
+                                databaseUrl="database.test.net"/>
+                        </Node>
+
+                        <Node id="clusterOrangeDev" x={700} y={650} width={700} height={260}>
+                            <DatabaseOpenshift
+                                clusterName="Orange Dev Cluster"
+                                clusterUrl="https://DEV:443"
+                                databaseUrl="database.dev.net"/>
+                        </Node>
+
+                        <Edge source="jenkins" target="clusterPurple" connectorType={connectorType.arrow}></Edge>
+                        <Edge source="jenkins" target="clusterOrangeTest" connectorType={connectorType.arrow}></Edge>
+                        <Edge source="jenkins" target="clusterOrangeDev" connectorType={connectorType.arrow}></Edge>
 
                     </GraphMap>
                 </div>

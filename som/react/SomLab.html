@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOM Lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="SomLab.css" rel="stylesheet">
+
+    <script src="training-data-animals.js"></script>
+    <script type="text/javascript" src="som-manager-template.js"></script>
+    <script type="text/javascript" src="som-drawing-template.js"></script>
+    <script type="text/babel" src="Component.SomInfo.js"></script>
+    <script type="text/babel" src="Component.PredictPanel.js"></script>
+    <script type="text/babel" src="Component.PredictResult.js"></script>
+    <script type="text/babel" src="Component.Som.js"></script>
+    <script type="text/babel" src="graph.js"></script>
+</head>
+<body>
+<div class="diagram-container">
+    <div id="root"></div>
+</div>
+<script type="text/babel">
+    const { useEffect, useRef, useState, useCallback, Children, isValidElement, useImperativeHandle, forwardRef } = React;
+    const { createRoot } = ReactDOM;
+    const { Modal, Button, Checkbox, Input } = antd;
+
+    const AppContext = React.createContext(
+        {
+            error: 0,
+            setError: () => {},
+            currentEpoch: 0,
+            setCurrentEpoch: () => {},
+            somManager: null,
+            setSomManager: () => {},
+            predictedResult: null,
+            setPredictedResult: () => {},
+            animateCircle: () => {},
+            animateRandomCircle: () => {}
+        }
+    );
+</script>
+<script type="text/babel">
+    const App = () => {
+        const graphMapRef = useRef(null);
+        const [error, setError] = useState(5);
+        const [currentEpoch, setCurrentEpoch] = useState(0);
+        const [somManager, setSomManager] = useState(null);
+        const [predictedResult, setPredictedResult] = useState(null);
+        const [showNodeCoordinates, setShowNodeCoordinates] = useState(false);
+
+        const handleToggleCoordinates = (e) => {
+            setShowNodeCoordinates(e.target.checked);
+        };
+
+        const txtInfoReality = "This represents the <strong>real-world input vectors</strong> used to train the Self-Organizing Map. Each animal's characteristics serve as a <strong>data point</strong> that the SOM will learn to <strong>categorize</strong> and <strong>represent</strong>.";
+
+        const animateCircleCallback = useCallback((sourceId, targetId, duration, color) => {
+            if (graphMapRef.current) {
+                graphMapRef.current.animateCircle(sourceId, targetId, duration, color);
+            }
+        }, []);
+
+        const animateRandomCircleCallback = useCallback(() => {
+            if (graphMapRef.current) {
+                graphMapRef.current.animateRandomCircle();
+            }
+        }, []);
+
+        const contextValue = {
+            error, setError,
+            currentEpoch, setCurrentEpoch,
+            somManager, setSomManager,
+            predictedResult, setPredictedResult,
+            animateCircle: animateCircleCallback,
+            animateRandomCircle: animateRandomCircleCallback,
+            graphMapRef: graphMapRef
+        };
+
+        return (
+            <>
+                <div className="controls-container">
+                    <Checkbox onChange={handleToggleCoordinates} checked={showNodeCoordinates}>
+                        Show Node Coordinates
+                    </Checkbox>
+                </div>
+                <AppContext.Provider value={contextValue}>
+                    <GraphMap ref={graphMapRef} width={900} height={850} showNodeCoordinates={showNodeCoordinates}>
+                        <Node id="somNode" x={450} y={450} width={220} height={290}>
+                            <SOM/>
+                        </Node>
+                        <Node id="infoNode" x={750} y={200} width={220} height={70}>
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th colSpan={3}>Info</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Epoch:</td>
+                                    <td>{currentEpoch}</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Error:</td>
+                                    <td>{error}</td>
+                                    <td><SomInfo modalTitle="What is Error?" modalContent='<p>In the context of Self-Organizing Maps (SOM), the "error" displayed typically refers to the **quantization error** or **reconstruction error**.</p><p>This error measures the average distance between each input data vector and its Best Matching Unit (BMU) on the SOM grid. A lower error value indicates that the SOM has learned to represent the input data more accurately, meaning input vectors are mapped closer to their corresponding weight vectors on the map.</p><p>During training, you would expect this error to decrease as the SOM self-organizes and adapts to the input data distribution.</p>' /></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </Node>
+                        <Edge source="somNode" target="infoNode">Info</Edge>
+
+
+                        <Node id="infoReality" x={150} y={200} width={150} height={340}>
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th colSpan="3">
+                                        REALITY <SomInfo modalTitle="What is Reality?" modalContent={txtInfoReality} />
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    ENTITIES.map( (e,idx) => {
+                                        const [r,g,b] = weightsToColors( TRAINING_DATA[idx] );
+                                        const color = `rgb(${r},${g},${b})`;
+                                        return (
+                                            <tr key={`${idx}${e.name}`}>
+                                                <td style={{backgroundColor: "black", borderRadius: "5px"}}>{idx}</td>
+                                                <td style={{textAlign:"left"}}>
+                                                    <Button style={{height:"20px", backgroundColor: color }}>{e.name}</Button>
+                                                </td>
+                                            </tr>);
+                                    })
+                                }
+                                </tbody>
+                            </table>
+                        </Node>
+                        <Edge source="infoReality" target="somNode">Reality</Edge>
+
+                        <Node id="predictNode" x={150} y={600} width={250} height={350}>
+                            <PredictPanel />
+                        </Node>
+                        <Edge source="predictNode" target="somNode">Predict</Edge>
+
+                        <Node id="predictResultNode" x={750} y={600} width={200} height={150}>
+                            <PredictResult />
+                        </Node>
+                        <Edge source="somNode" target="predictResultNode">Predict Result</Edge>
+
+                        <Node id="randomCircleButton" x={-400} y={450} width={200} height={50}>
+                            <Button type="primary" onClick={() => contextValue.animateRandomCircle()}>Animate Random Circle</Button>
+                        </Node>
+                    </GraphMap>
+                </AppContext.Provider>
+            </>
+        );
+    };
+</script>
+<script type="text/babel">
+    const container = document.getElementById('root');
+    const root = createRoot(container);
+    root.render(<App />);
+</script>
+</body>
+</html>

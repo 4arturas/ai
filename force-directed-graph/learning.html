@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sielos sampratos mokymosi planas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        html, body, #root {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+
+        .diagram-container {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #264653;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            transform: translateX(0);
+            z-index: 10;
+            font-size: 2em;
+            margin: 0;
+        }
+
+        #flow-diagram-svg {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fcfcfc;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .node-rect {
+            fill: #2a9d8f;
+            stroke: #264653;
+            stroke-width: 1.5;
+            rx: 8;
+            ry: 8;
+            cursor: grab;
+            filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3));
+            transition: filter 0.2s ease-in-out, transform 0.1s ease-out;
+        }
+
+        .node-rect:hover {
+            filter: drop-shadow(0 0 10px rgba(42, 157, 143, 0.8));
+            transform: translateY(-2px);
+        }
+
+        .edge-line {
+            stroke: #333;
+            stroke-width: 1.5;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .arrowhead {
+            fill: #333;
+        }
+
+        .edge-label-text {
+            fill: #555;
+            font-size: 10px;
+            text-anchor: middle;
+            background-color: #fcfcfc;
+            padding: 2px 4px;
+            border-radius: 4px;
+            pointer-events: none;
+            font-weight: 400;
+        }
+
+        .node-button-container {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+
+        .node-button-container .ant-btn:first-child {
+            margin-right: auto;
+        }
+
+        .node-button-container .ant-btn:last-child {
+            margin-left: auto;
+        }
+
+        .node-content-foreignobject {
+            overflow: visible;
+        }
+
+        .node-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            color: #fff;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 600;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .node-content p {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .spinner-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="diagram-container">
+    <h1>Sielos sampratos mokymosi planas</h1>
+    <div id="root"></div>
+</div>
+
+<script type="text/babel">
+    const { useEffect, useRef, useState, useCallback, Children, isValidElement } = React;
+    const { createRoot } = ReactDOM;
+    const { Modal, Button, Spin } = antd;
+
+    const extractPlainText = (content) => {
+        if (typeof content === 'string') {
+            return content;
+        }
+        if (React.isValidElement(content)) {
+            if (content.props.children) {
+                if (Array.isArray(content.props.children)) {
+                    return content.props.children.map(extractPlainText).join('');
+                }
+                return extractPlainText(content.props.children);
+            }
+        }
+        return '';
+    };
+
+    function getRectIntersection(rectX, rectY, rectWidth, rectHeight, p1x, p1y, p2x, p2y) {
+        const dx = p2x - p1x;
+        const dy = p2y - p1y;
+
+        const intersections = [];
+
+        if (dx !== 0) {
+            let t_left = (rectX - p1x) / dx;
+            if (t_left >= 0 && t_left <= 1) {
+                let y_intersect = p1y + t_left * dy;
+                if (y_intersect >= rectY && y_intersect <= rectY + rectHeight) {
+                    intersections.push({ t: t_left, x: rectX, y: y_intersect });
+                }
+            }
+            let t_right = (rectX + rectWidth - p1x) / dx;
+            if (t_right >= 0 && t_right <= 1) {
+                let y_intersect = p1y + t_right * dy;
+                if (y_intersect >= rectY && y_intersect <= rectY + rectHeight) {
+                    intersections.push({ t: t_right, x: rectX + rectWidth, y: y_intersect });
+                }
+            }
+        }
+
+        if (dy !== 0) {
+            let t_top = (rectY - p1y) / dy;
+            if (t_top >= 0 && t_top <= 1) {
+                let x_intersect = p1x + t_top * dx;
+                if (x_intersect >= rectX && x_intersect <= rectX + rectWidth) {
+                    intersections.push({ t: t_top, x: x_intersect, y: rectY });
+                }
+            }
+            let t_bottom = (rectY + rectHeight - p1y) / dy;
+            if (t_bottom >= 0 && t_bottom <= 1) {
+                let x_intersect = p1x + t_bottom * dx;
+                if (x_intersect >= rectX && x_intersect <= rectX + rectWidth) {
+                    intersections.push({ t: t_bottom, x: x_intersect, y: rectY + rectHeight });
+                }
+            }
+        }
+
+        let closestIntersection = null;
+        let minT = Infinity;
+
+        for (const intersection of intersections) {
+            if (intersection.t >= 0 && intersection.t < minT) {
+                minT = intersection.t;
+                closestIntersection = intersection;
+            }
+        }
+        return closestIntersection;
+    }
+
+    const Node = ({ id, content, width, height, x, y, onDrag, openModal }) => {
+        const nodeRef = useRef();
+        const currentPosRef = useRef({ x, y });
+
+        useEffect(() => {
+            currentPosRef.current = { x, y };
+        }, [x, y]);
+
+        useEffect(() => {
+            const nodeElement = d3.select(nodeRef.current);
+
+            if (!nodeElement.empty()) {
+                const dragBehavior = d3.drag()
+                    .filter(event => !event.target.classList.contains('ant-btn'))
+                    .subject(function() {
+                        return { x: currentPosRef.current.x, y: currentPosRef.current.y };
+                    })
+                    .on('start', function(event) {
+                        onDrag(id, 'start');
+                    })
+                    .on('drag', function(event) {
+                        onDrag(id, 'drag', event.x, event.y);
+                    })
+                    .on('end', function(event) {
+                        onDrag(id, 'end');
+                    });
+
+                nodeElement.call(dragBehavior);
+
+                return () => {
+                    nodeElement.on('.drag', null);
+                };
+            }
+        }, [id, onDrag]);
+
+        return (
+            <g ref={nodeRef} transform={`translate(${x - width / 2},${y - height / 2})`}>
+                <rect width={width} height={height} className="node-rect" />
+                <foreignObject x="0" y="0" width={width} height={height} className="node-content-foreignobject">
+                    <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+                        {content}
+                        <div className="node-button-container">
+                            <Button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openModal(id, content, false);
+                                }}
+                                style={{
+                                    backgroundColor: '#e76f51',
+                                    color: 'white',
+                                    borderColor: '#e76f51',
+                                    borderRadius: '5px',
+                                    width: '30px',
+                                    height: '30px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    padding: '0',
+                                    fontSize: '16px',
+                                    flexShrink: 0
+                                }}
+                                type="primary"
+                            >
+                                📚
+                            </Button>
+                            <Button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openModal(id, content, true);
+                                }}
+                                style={{
+                                    backgroundColor: '#f4a261',
+                                    color: 'white',
+                                    borderColor: '#f4a261',
+                                    borderRadius: '5px',
+                                    width: '30px',
+                                    height: '30px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    padding: '0',
+                                    fontSize: '16px',
+                                    flexShrink: 0
+                                }}
+                                type="primary"
+                            >
+                                ✨
+                            </Button>
+                        </div>
+                    </div>
+                </foreignObject>
+            </g>
+        );
+    };
+
+    const Edge = ({ source, target, label, nodes }) => {
+        const sourceNode = nodes.find(n => n.id === source);
+        const targetNode = nodes.find(n => n.id === target);
+
+        if (!sourceNode || !targetNode) {
+            return null;
+        }
+
+        const sourceCenterX = sourceNode.x;
+        const sourceCenterY = sourceNode.y;
+        const targetCenterX = targetNode.x;
+        const targetCenterY = targetNode.y;
+
+        const sourceRectX = sourceCenterX - sourceNode.width / 2;
+        const sourceRectY = sourceCenterY - sourceNode.height / 2;
+        const targetRectX = targetCenterX - targetNode.width / 2;
+        const targetRectY = targetCenterY - targetNode.height / 2;
+
+        const startPoint = getRectIntersection(
+            sourceRectX, sourceRectY, sourceNode.width, sourceNode.height,
+            sourceCenterX, sourceCenterY, targetCenterX, targetCenterY
+        );
+
+        const endPoint = getRectIntersection(
+            targetRectX, targetRectY, targetNode.width, targetNode.height,
+            targetCenterX, targetCenterY, sourceCenterX, sourceCenterY
+        );
+
+        const finalX1 = startPoint ? startPoint.x : sourceCenterX;
+        const finalY1 = startPoint ? startPoint.y : sourceCenterY;
+        const finalX2 = endPoint ? endPoint.x : targetCenterX;
+        const finalY2 = endPoint ? endPoint.y : targetCenterY;
+
+        return (
+            <>
+                <line x1={finalX1} y1={finalY1} x2={finalX2} y2={finalY2} className="edge-line" />
+                {label && (
+                    <text
+                        x={(finalX1 + finalX2) / 2}
+                        y={(finalY1 + finalY2) / 2 - 5}
+                        className="edge-label-text"
+                    >
+                        {label}
+                    </text>
+                )}
+            </>
+        );
+    };
+
+    const GraphMap = ({ children, width, height, openModal }) => {
+        const [nodes, setNodes] = useState([]);
+        const [links, setLinks] = useState([]);
+
+        useEffect(() => {
+            const initialNodesFromChildren = [];
+            const initialLinksFromChildren = [];
+
+            Children.forEach(children, child => {
+                if (isValidElement(child)) {
+                    if (child.type === Node) {
+                        initialNodesFromChildren.push({
+                            id: child.props.id,
+                            content: child.props.children,
+                            width: child.props.width,
+                            height: child.props.height,
+                            x: child.props.x,
+                            y: child.props.y
+                        });
+                    } else if (child.type === Edge) {
+                        initialLinksFromChildren.push({
+                            source: child.props.source,
+                            target: child.props.target,
+                            label: child.props.children
+                        });
+                    }
+                }
+            });
+
+            setNodes(initialNodesFromChildren);
+            setLinks(initialLinksFromChildren);
+
+        }, [children]);
+
+        const handleNodeDrag = useCallback((id, type, newX, newY) => {
+            if (type === 'drag' && newX != null && newY != null) {
+                setNodes(prevNodes =>
+                    prevNodes.map(node =>
+                        node.id === id ? { ...node, x: newX, y: newY } : node
+                    )
+                );
+            }
+        }, []);
+
+        return (
+            <svg id="flow-diagram-svg" width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <marker
+                        id="arrowhead"
+                        viewBox="0 0 10 10"
+                        refX="9"
+                        refY="5"
+                        markerUnits="strokeWidth"
+                        markerHeight="6"
+                        orient="auto"
+                    >
+                        <path d="M 0 0 L 10 5 L 0 10 z" className="arrowhead" />
+                    </marker>
+                </defs>
+                <g className="links">
+                    {links.map((link, index) => (
+                        <Edge key={index} source={link.source} target={link.target} label={link.label} nodes={nodes} />
+                    ))}
+                </g>
+                <g className="nodes">
+                    {nodes.map(node => (
+                        <Node
+                            key={node.id}
+                            id={node.id}
+                            content={node.content}
+                            width={node.width}
+                            height={node.height}
+                            x={node.x}
+                            y={node.y}
+                            onDrag={handleNodeDrag}
+                            openModal={openModal}
+                        />
+                    ))}
+                </g>
+            </svg>
+        );
+    };
+
+    const App = () => {
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [modalTitle, setModalTitle] = useState('');
+        const [modalContent, setModalContent] = useState('');
+        const [isLoadingAI, setIsLoadingAI] = useState(false);
+        const [modalNodeId, setModalNodeId] = useState(null);
+        const [modalNodeText, setModalNodeText] = useState(null);
+
+        const nodeExplanations = {
+            "siela_samprata": "Sielos samprata apima gilią ir kompleksinę idėją, nagrinėjančią gyvojo kūno vienybę, savijudrą ir esmę. Šis mokymosi planas detaliai analizuoja šią sampratą nuo antikos iki šių dienų.",
+            "siela_jud_principas": "Siela yra esminis gyvojo kūno judėjimo principas. Ji skiria gyvus organizmus nuo negyvų objektų, suteikdama jiems vidinę savijudros priežastį.",
+            "gyvas_negyvas": "Gyvas organizmas išsiskiria tuo, kad judėjimo priežastį turi savyje, skirtingai nei negyvi objektai, kurie juda dėl išorinių jėgų (pvz., kamuoliukas, vanduo).",
+            "siela_gyvybe": "Antikos filosofijoje siela dažnai buvo laikoma gyvybės sinonimu. Neigti sielos egzistavimą reiškia neigti gyvybės buvimą apskritai, nes būtent siela atgaivina kūną.",
+            "gyvybes_savijudra": "Gyvybės esmė glūdi savijudroje – gebėjime judėti ir keistis iš vidaus. Tai yra principas, leidžiantis gyvybei adaptyviai reaguoti į aplinką ir išlaikyti savo egzistavimą.",
+            "neg_jud": "Negyvi objektai juda veikiant išorinėms priežastims. Pavyzdžiui, biliardo kamuoliukas juda dėl smūgio, o vanduo teka dėl gravitacijos. Jie neturi vidinės varomosios jėgos.",
+            "gyv_jud": "Gyvi organizmai pasižymi vidine judėjimo priežastimi. Nors išorinės sąlygos gali paveikti jų judėjimo kryptį, pirminė aktyvumo priežastis yra būdinga pačiam organizmui.",
+            "gyv_perteklius": "Gyvybė turi tam tikrą 'perteklių', kuris leidžia jai tikslingai keisti fizinius ir cheminius procesus, pritaikant juos savo poreikiams, o ne vien būti pasyviai jų veikiamai.",
+            "siela_log_isvedimas": "Sielos samprata gali būti išvesta ir logiškai, remiantis filosofijos principu, kad kiekvienas judėjimas turi savo priežastį. Tai padeda atskleisti sielos, kaip pirminės judėjimo priežasties, loginį pagrindimą.",
+            "fil_metodas": "Filosofija skiriasi nuo kitų mokslų tuo, kad atskleidžia pamatinius, loginius ir prasminius visų dalykų pagrindus. Ji ieško pirminių principų, esančių už empiriškai stebimų reiškinių.",
+            "priezo_jud": "Jei kažkas juda, tai turi judėjimo priežastį. Todėl judantis objektas logiškai skirstomas į judantįjį (priežastį) ir judamąjį (veikiamąjį).",
+            "pirmapriez": "Nagrinėjant judėjimo priežastis, logiškai pasiekiama pirmapriežastis – ta, kuri pati nejuda, bet yra visų judėjimų šaltinis. Priešingu atveju, judėjimo grandinė būtų begalinė.",
+            "aristotelis_pirmas": "Aristotelis šią nejundančią pirmapriežastį vadino 'Pirmasis Judintojas'. Tai fundamentali idėja jo metafizikoje, paaiškinanti visatos judėjimą.",
+            "priespriesos_vienybe": "Siela pasirodo kaip trečioji kategorija, jungianti dvi priešpriešas: nejundančią judėjimo priežastį ir judamąjį objektą. Siela pati yra ir judanti, ir judinama.",
+            "esybes_struktura": "Antikos filosofijoje visas egzistuojantis pasaulis ir kiekviena būtybė turi bendrą struktūrą, kurią sudaro trys pagrindinės kategorijos: protas, siela ir kūnas.",
+            "protas": "Protas yra nekintanti, amžina ir nekintanti fizinės bei dvasinės veiklos priežastis. Jis yra aukščiausias, nejundantis principas, teikiantis tvarką ir prasmę.",
+            "kunas": "Kūnas yra tai, kas yra judama. Tai materiali būties dalis, kuri pati neturi savijudros ir yra veikiama išorinių jėgų ar sielos.",
+            "siela_tris": "Siela yra tarpinė grandis tarp proto ir kūno. Ji pati judina kūną ir yra judinama proto. Siela veikia kaip tiltas tarp nematerialaus proto ir materialaus kūno.",
+            "protinga_siela": "Protingoji sielos dalis (būdinga žmogui) yra atkreipta į protą. Ji atsakinga už mąstymą, racionalumą ir amžinų idėjų suvokimą.",
+            "neprotinga_siela": "Neprotingoji (jutiminė) sielos dalis yra atkreipta į kūną. Ji apima jusles, instinktus ir kūno poreikius, susijusius su materialiuoju pasauliu.",
+            "visata_strukt": "Visatos struktūra atspindi protą, sielą ir kūną įvairiais lygiais: nuo negyvų kūnų, judančių tik išoriniu poveikiu, iki protingų būtybių, turinčių sąmonę ir tikslą.",
+            "nemirtingumas": "Žmogaus siela, turėdama savyje amžinojo proto dalį, iš esmės yra nemirtinga. Jos likimas po kūno mirties priklauso nuo to, ar ji siekė pažinimo, ar pasidavė jusliniams malonumams.",
+            "protu_hier": "Klasikinis pasaulėvaizdis pripažino aukštesniųjų protų arba pirminių pradmenų hierarchiją, kurie yra visos egzistencijos šaltinis. Antikoje tai buvo dievai, viduramžiais – angelai.",
+            "siuolaikines_interpretacijos": "Šiuolaikiniame kontekste sielos samprata dažnai interpretuojama per aktyvumo, o ne tik fizinio judėjimo prizmę, siekiant ją pritaikyti prie modernių mokslo žinių ir supratimo.",
+            "savijudros_sunkumai": "Dabartiniams žmonėms kartais sunku suprasti savijudros idėją, nes jie judėjimą linkę interpretuoti tik kaip fizinį judėjimą erdvėje, pamiršdami vidinę aktyvumo priežastį.",
+            "auto_pavyzdys": "Automobilis, nors atrodo, kad juda pats, nėra gyvas, nes jo pirminė judėjimo priežastis (žmogus, kuris jį surinko ir paleido) yra už jo ribų. Gyvas organizmas pats yra savo judėjimo šaltinis.",
+            "term_adaptavimas": "Aristotelio argumentaciją galima pritaikyti šiuolaikinei realijai, pakeitus 'judėjimą' į 'aktyvumą'. Gyvas yra tas, kuris yra aktyvumo subjektas ir turi jo priežastį savyje, dažnai su tikslu išlaikyti save.",
+            "maistas_siela": "Gyvas sutvėrimas, be abejo, turi gauti maisto iš išorinio pasaulio, tačiau maistas reikalingas kūno palaikymui, o ne kaip pirminė judėjimo priežastis. Maisto vartojimas yra viena iš aktyvumo formų, kurios pirminė priežastis yra siela, o ne pats kūnas."
+        };
+
+        const generateAIExplanation = async (nodeId, nodeText) => {
+            const sentencesNumber = 5;
+            setIsLoadingAI(true);
+            setModalContent('Generuojama AI paaiškinimas...');
+
+            const prompt = `Pateikite išsamų paaiškinimą apie šią sielos sampratos mokymosi plano temą: "${nodeText}". Paaiškinime aprašykite naudojant ${sentencesNumber} sakinių, kas tai yra, kokia yra jos svarba ir koks ryšys su bendru sielos sampratos kontekstu, atsižvelgiant į filosofinį ir istorinį aspektą. Atsakykite lietuvių kalba.`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    setModalContent(text);
+                } else {
+                    setModalContent("Nepavyko gauti paaiškinimo iš AI. Bandykite dar kartą.");
+                }
+            } catch (error) {
+                console.error("Klaida gaunant AI paaiškinimą:", error);
+                setModalContent("Įvyko klaida gaunant AI paaiškinimą. Patikrinkite tinklo ryšį.");
+            } finally {
+                setIsLoadingAI(false);
+            }
+        };
+
+        const openModal = async (nodeId, nodeContentReactElement, triggerAIImmediately = false) => {
+            const plainTextTitle = extractPlainText(nodeContentReactElement);
+
+            setModalNodeId(nodeId);
+            setModalNodeText(plainTextTitle);
+            setModalTitle(plainTextTitle);
+
+            if (triggerAIImmediately) {
+                setModalContent('Generuojama AI paaiškinimas...');
+                setIsLoadingAI(true);
+                setIsModalOpen(true);
+                await generateAIExplanation(nodeId, plainTextTitle);
+            } else {
+                if (nodeExplanations[nodeId]) {
+                    setModalContent(nodeExplanations[nodeId]);
+                } else {
+                    setModalContent("Šio mazgo paaiškinimas dar nepateiktas. Paspauskite 'Generuoti AI paaiškinimą' mygtuką, kad gautumėte išsamų paaiškinimą.");
+                }
+                setIsModalOpen(true);
+                setIsLoadingAI(false);
+            }
+        };
+
+        const closeModal = () => {
+            setIsModalOpen(false);
+            setModalTitle('');
+            setModalContent('');
+            setModalNodeId(null);
+            setModalNodeText(null);
+            setIsLoadingAI(false);
+        };
+
+        return (
+            <>
+                <GraphMap width={900} height={850} openModal={openModal}>
+                    <Node id="siela_samprata" x={450} y={40} width={220} height={70}><p>Sielos samprata:<br/>Nuo antikos iki šių dienų</p></Node>
+
+                    <Node id="siela_jud_principas" x={160} y={150} width={280} height={70}><p>1. Siela kaip judėjimo principas</p></Node>
+                    <Node id="gyvas_negyvas" x={160} y={230} width={200} height={60}><p>Kas skiria gyvą nuo negyvo?</p></Node>
+                    <Node id="siela_gyvybe" x={160} y={290} width={200} height={60}><p>Siela = Gyvybė</p></Node>
+                    <Node id="gyvybes_savijudra" x={160} y={350} width={200} height={60}><p>Gyvybės esmė: Savijudra</p></Node>
+                    <Node id="neg_jud" x={60} y={430} width={150} height={60}><p>Negyvi:<br/>išor. priežastis</p></Node>
+                    <Node id="gyv_jud" x={260} y={430} width={150} height={60}><p>Gyvi:<br/>priež. savyje</p></Node>
+                    <Node id="gyv_perteklius" x={160} y={500} width={200} height={60}><p>Gyvybės "perteklius"</p></Node>
+
+                    <Node id="siela_log_isvedimas" x={450} y={150} width={280} height={70}><p>2. Sielos sampratos<br/>loginis išvedimas</p></Node>
+                    <Node id="fil_metodas" x={450} y={230} width={180} height={60}><p>Filosofijos metodas</p></Node>
+                    <Node id="priezo_jud" x={450} y={290} width={180} height={60}><p>Judėjimo priežastis</p></Node>
+                    <Node id="pirmapriez" x={450} y={350} width={180} height={60}><p>Pirmapriežastis</p></Node>
+                    <Node id="aristotelis_pirmas" x={450} y={410} width={180} height={60}><p>Aristotelio<br/>"Pirmasis Judintojas"</p></Node>
+                    <Node id="priespriesos_vienybe" x={450} y={470} width={180} height={60}><p>Priešpriešų vienybė:<br/>Siela</p></Node>
+
+                    <Node id="esybes_struktura" x={740} y={150} width={280} height={70}><p>3. Visų esybių struktūra</p></Node>
+                    <Node id="protas" x={660} y={230} width={100} height={60}><p>Protas</p></Node>
+                    <Node id="kunas" x={820} y={230} width={100} height={60}><p>Kūnas</p></Node>
+                    <Node id="siela_tris" x={740} y={290} width={150} height={60}><p>Siela<br/>(tarpinė)</p></Node>
+                    <Node id="protinga_siela" x={660} y={350} width={150} height={60}><p>Protingoji siela</p></Node>
+                    <Node id="neprotinga_siela" x={820} y={350} width={150} height={60}><p>Neprotingoji siela</p></Node>
+                    <Node id="visata_strukt" x={740} y={410} width={180} height={60}><p>Visatos struktūra</p></Node>
+                    <Node id="nemirtingumas" x={740} y={470} width={180} height={60}><p>Žmogaus sielos<br/>nemirtingumas</p></Node>
+                    <Node id="protu_hier" x={740} y={530} width={180} height={60}><p>Protų hierarchija</p></Node>
+
+                    <Node id="siuolaikines_interpretacijos" x={450} y={600} width={280} height={70}><p>4. Šiuolaikinės<br/>interpretacijos</p></Node>
+                    <Node id="savijudros_sunkumai" x={450} y={680} width={220} height={60}><p>Savijudros sampratos<br/>sunkumai</p></Node>
+                    <Node id="auto_pavyzdys" x={350} y={750} width={180} height={60}><p>Automobilio pavyzdys</p></Node>
+                    <Node id="term_adaptavimas" x={550} y={750} width={200} height={60}><p>Terminologijos adaptavimas</p></Node>
+                    <Node id="maistas_siela" x={450} y={810} width={220} height={60}><p>Maistas ir sielos vaidmuo</p></Node>
+
+                    <Edge source="siela_samprata" target="siela_jud_principas">Apžvalga</Edge>
+                    <Edge source="siela_samprata" target="siela_log_isvedimas">Loginis pagrindas</Edge>
+                    <Edge source="siela_samprata" target="esybes_struktura">Visuminė perspektyva</Edge>
+                    <Edge source="siela_samprata" target="siuolaikines_interpretacijos">Šiuolaikinis požiūris</Edge>
+
+                    <Edge source="siela_jud_principas" target="gyvas_negyvas">Pradžia</Edge>
+                    <Edge source="gyvas_negyvas" target="siela_gyvybe">Priežastis</Edge>
+                    <Edge source="siela_gyvybe" target="gyvybes_savijudra">Esmė</Edge>
+                    <Edge source="gyvybes_savijudra" target="neg_jud">Kontrastas</Edge>
+                    <Edge source="gyvybes_savijudra" target="gyv_jud">Pavyzdys</Edge>
+                    <Edge source="gyv_jud" target="gyv_perteklius">Aiškinimas</Edge>
+
+                    <Edge source="siela_log_isvedimas" target="fil_metodas">Naudoja</Edge>
+                    <Edge source="fil_metodas" target="priezo_jud">Tiria</Edge>
+                    <Edge source="priezo_jud" target="pirmapriez">Sąvoka</Edge>
+                    <Edge source="pirmapriez" target="aristotelis_pirmas">Plėtoja</Edge>
+                    <Edge source="aristotelis_pirmas" target="priespriesos_vienybe">Išvada</Edge>
+
+                    <Edge source="esybes_struktura" target="protas">Sudaro</Edge>
+                    <Edge source="esybes_struktura" target="kunas">Sudaro</Edge>
+                    <Edge source="esybes_struktura" target="siela_tris">Sudaro</Edge>
+                    <Edge source="siela_tris" target="protinga_siela">Dalis</Edge>
+                    <Edge source="siela_tris" target="neprotinga_siela">Dalis</Edge>
+                    <Edge source="protinga_siela" target="nemirtingumas">Poveikis</Edge>
+                    <Edge source="esybes_struktura" target="visata_strukt">Atspindi</Edge>
+                    <Edge source="visata_strukt" target="protu_hier">Apima</Edge>
+
+                    <Edge source="siuolaikines_interpretacijos" target="savijudros_sunkumai">Nagrinėja</Edge>
+                    <Edge source="savijudros_sunkumai" target="auto_pavyzdys">Pavyzdys</Edge>
+                    <Edge source="siuolaikines_interpretacijos" target="term_adaptavimas">Sprendimas</Edge>
+                    <Edge source="siuolaikines_interpretacijos" target="maistas_siela">Papildymas</Edge>
+                </GraphMap>
+
+                <Modal
+                    title={modalTitle}
+                    open={isModalOpen}
+                    onCancel={closeModal}
+                    footer={
+                        isLoadingAI ? (
+                            <div className="spinner-container">
+                                <Spin />
+                                <span>Generuojama AI paaiškinimas...</span>
+                            </div>
+                        ) : (
+                            <Button
+                                key="aiButton"
+                                type="primary"
+                                onClick={() => generateAIExplanation(modalNodeId, modalNodeText)}
+                                style={{ backgroundColor: '#f4a261', borderColor: '#f4a261', color: 'white' }}
+                            >
+                                Generuoti AI paaiškinimą ✨
+                            </Button>
+                        )
+                    }
+                >
+                    <p>{modalContent}</p>
+                </Modal>
+            </>
+        );
+    };
+
+    const container = document.getElementById('root');
+    const root = createRoot(container);
+    root.render(<App />);
+</script>
+</body>
+</html>
