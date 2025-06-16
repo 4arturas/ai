@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Force-Directed Graph</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+    const { Button, Checkbox, Modal, Select } = antd;
+
+    const GraphComponent = () => {
+        const graphRef = useRef(null);
+
+        useEffect(() => {
+            const xValues = [];
+            const yValues = [];
+
+            for (let x = -10; x <= 10; x += 0.1) {
+                xValues.push(x);
+                yValues.push(Math.pow(x, 2));
+            }
+
+            const trace = {
+                x: xValues,
+                y: yValues,
+                type: 'scatter',
+                mode: 'lines',
+                // name: 'y = x²',
+                line: {
+                    color: 'rgb(75, 192, 192)',
+                    width: 2
+                }
+            };
+
+            const layout = {
+                // title: 'Graph of y = x²',
+                xaxis: {
+                    title: 'x-axis',
+                    showgrid: true,
+                    zeroline: true,
+                    range: [-10, 10]
+                },
+                yaxis: {
+                    title: 'y-axis',
+                    showgrid: true,
+                    zeroline: true,
+                    range: [0, 100]
+                },
+                margin: { l: 50, r: 50, b: 50, t: 50, pad: 4 },
+                showlegend: true
+            };
+
+            Plotly.newPlot(graphRef.current, [trace], layout);
+
+            // Cleanup function
+            return () => {
+                if (graphRef.current) {
+                    Plotly.purge(graphRef.current);
+                }
+            };
+        }, []);
+
+        return (
+            <div
+                ref={graphRef}
+                style={{ width: '100%', height: '500px' }}
+            />
+        );
+    };
+
+    const App = () => {
+        return (
+            <div style={{ padding: '20px' }}>
+                <div style={{width:"200px", height:"200px"}}>
+                <GraphComponent />
+                </div>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

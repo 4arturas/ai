@@ -54,8 +54,8 @@ function getRectIntersection(rectX, rectY, rectWidth, rectHeight, p1x, p1y, p2x,
 }
 
 const Node = ({ id, content, width, height, x, y, onDrag, showCoordinates }) => {
-    const nodeRef = useRef();
-    const currentPosRef = useRef({ x, y });
+    const nodeRef = React.useRef();
+    const currentPosRef = React.useRef({ x, y });
 
     useEffect(() => {
         currentPosRef.current = { x, y };
@@ -158,8 +158,8 @@ const Edge = ({ source, target, label, nodes }) => {
 };
 
 const GraphMap = React.forwardRef(({ width, height, children, showNodeCoordinates }, ref) => {
-    const [internalNodes, setInternalNodes] = useState([]);
-    const [internalLinks, setInternalLinks] = useState([]);
+    const [internalNodes, setInternalNodes] = React.useState([]);
+    const [internalLinks, setInternalLinks] = React.useState([]);
 
     useEffect(() => {
         const parsedNodes = [];
