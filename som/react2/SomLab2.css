@@ -1,0 +1,137 @@
+html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.diagram-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.main-heading {
+    font-size: 2rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.flow-diagram-container {
+    width: 100%;
+    height: calc(100% - 70px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#flow-diagram-svg {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.node-rect {
+    fill: #4299e1;
+    stroke: #3182ce;
+    stroke-width: 2;
+    rx: 8;
+    ry: 8;
+    transition: fill 0.3s ease;
+    cursor: grab;
+}
+
+.node-rect:hover {
+    fill: #3182ce;
+}
+
+.node-content-foreignobject {
+    pointer-events: none;
+    overflow: visible;
+}
+
+.node-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 5px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.node-content > div {
+    padding: 5px;
+    margin: 2px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    width: calc(100% - 10px);
+    box-sizing: border-box;
+}
+
+.edge-line {
+    stroke: #4a5568;
+    stroke-width: 2;
+    fill: none;
+}
+
+.edge-label-text {
+    fill: #4a5568;
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+    background-color: #f7fafc;
+    padding: 2px 5px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.connection-point {
+    fill: #4a5568;
+    stroke: #ffffff;
+    stroke-width: 1.5;
+}
+
+@media (max-width: 768px) {
+    .main-heading {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+    .node-content {
+        font-size: 12px;
+    }
+    .diagram-container {
+        padding: 10px;
+    }
+    .flow-diagram-container {
+        height: calc(100% - 60px);
+    }
+}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID Water Tank Level Control</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .tank-container {
+            width: 200px;
+            height: 300px;
+            background-color: #ddd;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+            border: 1px solid #999;
+        }
+
+        #water-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #007bff;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+<div class="info-box">
+    <h1>PID Water Tank Level Control</h1>
+    <p>Set the <strong>Desired Level</strong>:</p>
+</div>
+
+<div class="tank-container">
+    <div id="water-level"></div>
+</div>
+
+<div class="controls">
+    <div class="slider-container">
+        <label for="setpoint-slider">Level:</label>
+        <input type="range" id="setpoint-slider" min="0" max="100" value="50">
+        <span id="setpoint-display">50%</span>
+    </div>
+    <p>Current Level: <strong id="current-level-display">0.0%</strong></p>
+    <p>Pump Speed: <strong id="pump-speed-display">0.0%</strong></p>
+</div>
+
+<script>
+    const waterLevelElement = document.getElementById('water-level');
+    const setpointSlider = document.getElementById('setpoint-slider');
+    const setpointDisplay = document.getElementById('setpoint-display');
+    const currentLevelDisplay = document.getElementById('current-level-display');
+    const pumpSpeedDisplay = document.getElementById('pump-speed-display');
+
+    const PID_CONSTANTS = {
+        kp: 5.0,
+        ki: 0.5,
+        kd: 1.0,
+        integralLimit: 200,
+        outputMax: 100
+    };
+
+    const SYSTEM = {
+        inflowRate: 1.0,
+        maxDrainRate: 2.0,
+        tankCapacity: 100,
+        timeStep: 0.1
+    };
+
+    let setpointLevel = parseFloat(setpointSlider.value);
+    let currentLevel = 20;
+    let pumpSpeed = 0;
+
+    let previousError = 0;
+    let integralError = 0;
+
+    function constrain(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function calculatePID(setpoint, current) {
+        const error = current - setpoint;
+
+        integralError += error * SYSTEM.timeStep;
+        integralError = constrain(integralError, -PID_CONSTANTS.integralLimit, PID_CONSTANTS.integralLimit);
+
+        const derivative = (error - previousError) / SYSTEM.timeStep;
+
+        let output = PID_CONSTANTS.kp * error +
+            PID_CONSTANTS.ki * integralError +
+            PID_CONSTANTS.kd * derivative;
+
+        output = constrain(output, 0, PID_CONSTANTS.outputMax);
+        previousError = error;
+        return output;
+    }
+
+    function updateSimulation() {
+        pumpSpeed = calculatePID(setpointLevel, currentLevel);
+        const outflowRate = (pumpSpeed / 100) * SYSTEM.maxDrainRate;
+        currentLevel += (SYSTEM.inflowRate - outflowRate) * SYSTEM.timeStep;
+        currentLevel = constrain(currentLevel, 0, SYSTEM.tankCapacity);
+
+        setpointDisplay.textContent = `${setpointLevel}%`;
+        currentLevelDisplay.textContent = `${currentLevel.toFixed(1)}%`;
+        pumpSpeedDisplay.textContent = `${pumpSpeed.toFixed(1)}%`;
+
+        waterLevelElement.style.height = `${currentLevel / SYSTEM.tankCapacity * 100}%`;
+
+        requestAnimationFrame(updateSimulation);
+    }
+
+    setpointSlider.addEventListener('input', (e) => {
+        setpointLevel = parseFloat(e.target.value);
+        setpointDisplay.textContent = `${setpointLevel}%`;
+        integralError = 0;
+    });
+
+    window.onload = function() {
+        updateSimulation();
+    };
+</script>
+</body>
+</html>

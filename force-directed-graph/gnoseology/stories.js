@@ -126,6 +126,30 @@ const stories = {
             title: "Epilogas: Dvynių Kelionių Pamoka",
             content: "Pelėnas nusiteikė:\n– „Ar matai? Tavo kelionė džiunglėse ir mano pilies paslaptys – tai tas pats!\nŽinios auga kaip medis: šaknys – jausmai, kamienas – suvokimas, lapai – atvaizdžiai, vaisiai – mintys, o visuma – išmintis.“\n\nEglė suprato: pažinimas yra ratas, kuris sukasi nuo jutimų iki žinių – ir atgal."
         }
+    },
+    warehouse: {
+        title: "Pažinimo kelionė per sandėlį, dirbtuves ir miestą",
+        description: "Alegorinė kelionė per penkias pažinimo erdves: nuo žaliavų sandėlio iki miesto panoramos.",
+        node1: {
+            title: "1. Žaliavų sandėlis",
+            content: "Pažinimo kelionė prasideda Žaliavų sandėlyje – chaotiškoje vietoje, pilnoje neapdorotų medžiagų: akmenų, medienos, smėlio, metalo. Šios žaliavos yra mūsų pojūčiai – spalvos, garsai, kvapai, lytėjimo įspūdžiai. Sandėlyje viskas suversta krūvomis, be jokios tvarkos ar paskirties. Žmogus vaikšto tarp šių krūvų, liesdamas, matydamas, girdėdamas, bet dar nesuprasdamas, ką su visu tuo daryti. Tai pirminė, nesustruktūruota patirtis – gryni pojūčiai, kurie dar neturi prasmės ar formos."
+        },
+        node2: {
+            title: "2. Brėžinių dirbtuvė",
+            content: "Iš sandėlio žmogus patenka į Brėžinių dirbtuvę – suvokimo erdvę. Čia stovi stalai, ant kurių guli pieštukai, liniuotės ir popierius, o žmogus pradeda rūšiuoti žaliavas ir piešti jų planus. Akmuo tampa siena, mediena – durimis, smėlis – pagrindu. Dirbtuvėje pojūčiai virsta atpažįstamais objektais: spalvos ir formos tampa medžiu, garsai – paukščio čiulbėjimu, lytėjimas – šiltu puodeliu. Ši dirbtuvė organizuoja chaotiškas žaliavas į struktūruotus, prasmingus vaizdinius, leidžiančius žmogui suvokti pasaulį kaip vientisą visumą."
+        },
+        node3: {
+            title: "3. Archyvų rūsys",
+            content: "Perėjęs dirbtuvę, žmogus nusileidžia į Archyvų rūsį – atminties ir vaizduotės erdvę. Šiame rūsyje lentynos pilnos brėžinių, nuotraukų ir užrašų apie visus anksčiau pastatytus statinius. Žmogus gali peržiūrėti šiuos archyvus, prisimindamas, kaip atrodė namas, tiltas ar gatvė. Jis taip pat gali derinti senus brėžinius, kurdamas naujus projektus – įsivaizduodamas dar nematytus pastatus ar net fantastinius statinius, kurių niekada nebuvo. Archyvų rūsys leidžia saugoti patirtis ir kurti naujas idėjas, remiantis tuo, kas jau žinoma."
+        },
+        node4: {
+            title: "4. Statybų aikštelė",
+            content: "Iš rūsio žmogus pakyla į Statybų aikštelę – mąstymo erdvę. Čia jis ima įrankius ir pradeda statyti, analizuodamas, kaip geriausiai sujungti brėžinius ir žaliavas. Aikštelėje žmogus lygina skirtingus projektus, ieško, kodėl vienas pastatas griūva, o kitas stovi tvirtai. Jis eksperimentuoja, deda pamatus, stato sienas, tikrina jų stabilumą. Tai logikos, analizės ir problemų sprendimo vieta, kur žmogus ieško priežastinių ryšių, daro išvadas ir kuria naujus sprendimus, remdamasis turimomis žiniomis."
+        },
+        node5: {
+            title: "5. Miesto panorama",
+            content: "Galiausiai žmogus užlipa ant aukščiausio pastato stogo ir atsiveria Miesto panorama – žinių erdvė. Iš čia jis mato ne tik atskirus namus ar gatves, bet visą miesto struktūrą: kaip pastatai jungiasi į kvartalus, kaip gatvės sudaro tinklą, kaip veikia vandentiekis ar elektros sistema. Šioje panoramoje žmogus kuria abstrakčias sistemas – mokslinius principus, filosofines idėjas, kurios paaiškina, kaip veikia visas miestas ir kaip jis gali augti. Tai vieta, kur atskiros patirtys ir analizės virsta bendromis sąvokomis, kurios keičia žmogaus supratimą apie pasaulį ir jo vietą jame."
+        }
     }
 };
 
@@ -134,10 +158,11 @@ const storyOptions = [
     { value: 'miracles', label: '5 Stebuklai: Pažinimo Kelionė su Senuoju Vandenyno Keliu' },
     { value: 'puzzle', label: 'Mįslės Išsprendimas: Pažinimo Kelias su Išmintingu Pelėnu' },
     { value: 'egle', label: 'Eglės kelionė į Žinių Kalną' },
-    { value: 'wisdom', label: 'Gelmės Išmintis: Susitikimas su Penkiomis Dvasionis' }
+    { value: 'wisdom', label: 'Gelmės Išmintis: Susitikimas su Penkiomis Dvasionis' },
+    { value: 'warehouse', label: 'Pažinimo kelionė per sandėlį, dirbtuves ir miestą' }
 ];
 
-const initialNodes= {
+const initialNodes = {
     journey: [
         { id: "node1", x: 300, y: 200, text: "Jausmai (viską pajutau)" },
         { id: "node2", x: 600, y: 400, text: "Suvokimas (suvokiau, kas tai)" },
@@ -145,34 +170,41 @@ const initialNodes= {
         { id: "node4", x: 1200, y: 400, text: "Mąstymas (analizavau)" },
         { id: "node5", x: 1500, y: 200, text: "Žinojimas (supratau)" }
     ],
-        miracles: [
+    miracles: [
         { id: "node1", x: 250, y: 150, text: "1. Pirmasis Stebuklas: Druskos Kaukolo Ragas" },
         { id: "node2", x: 550, y: 350, text: "2. Antrasis Stebuklas: Žuvies Akies Veidrodis" },
         { id: "node3", x: 850, y: 150, text: "3. Trečiasis Stebuklas: Bangų Tapyba" },
         { id: "node4", x: 1150, y: 350, text: "4. Ketvirtasis Stebuklas: Žvaigždžių Matematinė" },
         { id: "node5", x: 1450, y: 150, text: "5. Penktasis Stebuklas: Žemėlapis be Kraštų" }
     ],
-        puzzle: [
+    puzzle: [
         { id: "node1", x: 350, y: 250, text: "1. Pirmoji Durys – Pojūčių Kiemas" },
         { id: "node2", x: 650, y: 450, text: "2. Antroji Durys – Suvokimo Galerija" },
         { id: "node3", x: 950, y: 250, text: "3. Trečioji Durys – Atvaizdžių Biblioteka" },
         { id: "node4", x: 1250, y: 450, text: "4. Ketvirtoji Durys – Mąstymo Labirintas" },
         { id: "node5", x: 1550, y: 250, text: "5. Penktoji Durys – Žinojimo Šviesa" }
     ],
-        egle: [
-        { id: "node1", x: 400, y: 200, text: "1. Jausmų (sensorinė) pakopa: Džiunglių takas" },
-        { id: "node2", x: 700, y: 400, text: "2. Suvokimo (percepcinė) pakopa: Medžio atpažinimas" },
-        { id: "node3", x: 1000, y: 200, text: "3. Atvaizdžio (reprezentacinė) pakopa: Žemėlapis ir atmintis" },
-        { id: "node4", x: 1300, y: 400, text: "4. Mąstymo (kognityvinė) pakopa: Problemų sprendimas upėje" },
-        { id: "node5", x: 1600, y: 200, text: "5. Žinojimo (konceptualizacijos) pakopa: Žinių Kalno viršūnė" }
+    egle: [
+        { id: "node1", x: 300, y: 200, text: "Jausmų pakopa: Džiunglių takas" },
+        { id: "node2", x: 600, y: 400, text: "Suvokimo pakopa: Medžio atpažinimas" },
+        { id: "node3", x: 900, y: 200, text: "Atvaizdžio pakopa: Žemėlapis ir atmintis" },
+        { id: "node4", x: 1200, y: 400, text: "Mąstymo pakopa: Problemų sprendimas upėje" },
+        { id: "node5", x: 1500, y: 200, text: "Žinojimo pakopa: Žinių Kalno viršūnė" }
     ],
-        wisdom: [
-        { id: "node1", x: 200, y: 300, text: "Prologas: Dviejų Kelionių Susikirtimas" },
-        { id: "node2", x: 500, y: 500, text: "1. Dvasia Jauta: Pojūčių Karalienė" },
-        { id: "node3", x: 800, y: 300, text: "2. Dvasia Sama: Suvokimo Menininkė" },
-        { id: "node4", x: 1100, y: 500, text: "3. Dvasia Vaiza: Atvaizdžių Pasakotoja" },
-        { id: "node5", x: 1400, y: 300, text: "4. Dvasia Logis: Mąstymo Kalvis" },
-        { id: "node6", x: 1700, y: 500, text: "5. Dvasia Žinia: Žinojimo Saulė" },
-        { id: "node7", x: 1000, y: 100, text: "Epilogas: Dvynių Kelionių Pamoka" }
+    wisdom: [
+        { id: "node1", x: 200, y: 200, text: "Prologas: Dviejų Kelionių Susikirtimas" },
+        { id: "node2", x: 400, y: 400, text: "1. Dvasia Jauta: Pojūčių Karalienė" },
+        { id: "node3", x: 600, y: 200, text: "2. Dvasia Sama: Suvokimo Menininkė" },
+        { id: "node4", x: 800, y: 400, text: "3. Dvasia Vaiza: Atvaizdžių Pasakotoja" },
+        { id: "node5", x: 1000, y: 200, text: "4. Dvasia Logis: Mąstymo Kalvis" },
+        { id: "node6", x: 1200, y: 400, text: "5. Dvasia Žinia: Žinojimo Saulė" },
+        { id: "node7", x: 1400, y: 200, text: "Epilogas: Dvynių Kelionių Pamoka" }
+    ],
+    warehouse: [
+        { id: "node1", x: 300, y: 200, text: "1. Žaliavų sandėlis" },
+        { id: "node2", x: 600, y: 400, text: "2. Brėžinių dirbtuvė" },
+        { id: "node3", x: 900, y: 200, text: "3. Archyvų rūsys" },
+        { id: "node4", x: 1200, y: 400, text: "4. Statybų aikštelė" },
+        { id: "node5", x: 1500, y: 200, text: "5. Miesto panorama" }
     ]
-}
+};

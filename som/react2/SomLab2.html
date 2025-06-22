@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOM Lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="SomLab2.css" rel="stylesheet">
+
+    <script type="text/babel" src="graph.js"></script>
+</head>
+<body>
+<div class="diagram-container">
+    <div id="root"></div>
+</div>
+<script type="text/babel">
+    const { useEffect, useRef, useState, useCallback, Children, isValidElement, useImperativeHandle, forwardRef } = React;
+    const { createRoot } = ReactDOM;
+    const { Modal, Button, Checkbox, Input } = antd;
+
+    const AppContext = React.createContext(
+        {
+            error: 0,
+            setError: () => {},
+            currentEpoch: 0,
+            setCurrentEpoch: () => {},
+            somManager: null,
+            setSomManager: () => {},
+            predictedResult: null,
+            setPredictedResult: () => {},
+            animateCircle: () => {},
+            animateRandomCircle: () => {}
+        }
+    );
+    const contextValue = {
+    };
+</script>
+<script type="text/babel">
+    const App = () => {
+
+        return (
+            <>
+                <AppContext.Provider value={contextValue}>
+                    <div className="diagram-container">
+                        <FlowDiagram width={1600} height={900}>
+                            <Node id="start" x={150} y={150} width={150} height={70}>
+                                <div>Start Process</div>
+                            </Node>
+                            <Node id="step1" x={450} y={150} width={150} height={70}>
+                                <div>Gather Data</div>
+                            </Node>
+                            <Node id="step2" x={750} y={150} width={150} height={70}>
+                                <div>Analyze Input</div>
+                            </Node>
+                            <Node id="decision" x={950} y={350} width={120} height={80}>
+                                <div>Is Valid?</div>
+                            </Node>
+                            <Node id="step3a" x={450} y={550} width={150} height={70}>
+                                <div>Process Valid</div>
+                            </Node>
+                            <Node id="step3b" x={750} y={550} width={150} height={70}>
+                                <div>Return Error</div>
+                            </Node>
+                            <Node id="end" x={1250} y={450} width={150} height={70}>
+                                <div>End Process</div>
+                            </Node>
+
+                            <Edge source="start" target="step1"></Edge>
+                            <Edge source="step1" target="step2"></Edge>
+                            <Edge source="step2" target="decision"></Edge>
+                            <Edge source="decision" target="step3a">Yes</Edge>
+                            <Edge source="decision" target="step3b">No</Edge>
+                            <Edge source="step3a" target="end"></Edge>
+                            <Edge source="step3b" target="end"></Edge>
+                        </FlowDiagram>
+                    </div>
+                </AppContext.Provider>
+            </>
+        );
+    };
+</script>
+<script type="text/babel">
+    const container = document.getElementById('root');
+    const root = createRoot(container);
+    root.render(<App />);
+</script>
+</body>
+</html>

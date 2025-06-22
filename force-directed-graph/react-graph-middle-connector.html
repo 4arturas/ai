@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Fullscreen Static Flow Diagram</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/d3@7"></script>
+  <style>
+    html, body {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .diagram-container {
+      width: 100vw;
+      height: 100vh;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .main-heading {
+      font-size: 2rem;
+      line-height: 2.25rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .flow-diagram-container {
+      width: 100%;
+      height: calc(100% - 70px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #flow-diagram-svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .node-rect {
+      fill: #4299e1;
+      stroke: #3182ce;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+      transition: fill 0.3s ease;
+      cursor: grab;
+    }
+
+    .node-rect:hover {
+      fill: #3182ce;
+    }
+
+    .node-content-foreignobject {
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .node-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      padding: 5px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    .node-content > div {
+      padding: 5px;
+      margin: 2px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      width: calc(100% - 10px);
+      box-sizing: border-box;
+    }
+
+    .edge-line {
+      stroke: #4a5568;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .edge-label-text {
+      fill: #4a5568;
+      font-size: 12px;
+      font-weight: bold;
+      text-anchor: middle;
+      background-color: #f7fafc;
+      padding: 2px 5px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .connection-point {
+      fill: #4a5568;
+      stroke: #ffffff;
+      stroke-width: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .main-heading {
+        font-size: 1.5rem;
+        line-height: 2rem;
+      }
+      .node-content {
+        font-size: 12px;
+      }
+      .diagram-container {
+        padding: 10px;
+      }
+      .flow-diagram-container {
+        height: calc(100% - 60px);
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
+  const ReactDOM = window.ReactDOM;
+
+  const Node = ({ id, x, y, width, height, onDrag, children }) => {
+    const nodeRef = useRef();
+    const currentPosRef = useRef({ x, y });
+
+    useEffect(() => {
+      currentPosRef.current = { x, y };
+    }, [x, y]);
+
+    useEffect(() => {
+      const nodeElement = d3.select(nodeRef.current);
+
+      const dragBehavior = d3.drag()
+              .subject(function() {
+                return { x: currentPosRef.current.x, y: currentPosRef.current.y };
+              })
+              .on('start', function(event) {
+                onDrag(id, 'start', event);
+              })
+              .on('drag', function(event) {
+                onDrag(id, 'drag', event);
+              })
+              .on('end', function(event) {
+                onDrag(id, 'end', event);
+              });
+
+      nodeElement.call(dragBehavior);
+
+      return () => {
+        nodeElement.on('.drag', null);
+      };
+    }, [id, onDrag]);
+
+    return (
+            <g ref={nodeRef} transform={`translate(${x - width / 2},${y - height / 2})`}>
+              <rect width={width} height={height} className="node-rect" />
+              <foreignObject x="0" y="0" width={width} height={height} className="node-content-foreignobject">
+                <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+                  {children}
+                </div>
+              </foreignObject>
+              <text x={width / 2} y={height + 20} textAnchor="middle">
+                ({Math.round(x)}, {Math.round(y)})
+              </text>
+            </g>
+    );
+  };
+
+  const Edge = ({ source, target, label, linkHorizontal, linkVertical }) => {
+    const dx_center = target.x - source.x;
+    const dy_center = target.y - source.y;
+    const isPrimarilyHorizontal = Math.abs(dx_center) > Math.abs(dy_center);
+
+    let p0 = { x: source.x, y: source.y };
+    let p3 = { x: target.x, y: target.y };
+
+    if (isPrimarilyHorizontal) {
+      p0.x = source.x + (dx_center > 0 ? source.width / 2 : -source.width / 2);
+      p0.y = source.y;
+      p3.x = target.x + (dx_center > 0 ? -target.width / 2 : target.width / 2);
+      p3.y = target.y;
+    } else {
+      p0.x = source.x;
+      p0.y = source.y + (dy_center > 0 ? source.height / 2 : -source.height / 2);
+      p3.x = target.x;
+      p3.y = target.y + (dy_center > 0 ? -target.height / 2 : target.height / 2);
+    }
+
+    const pathData = isPrimarilyHorizontal
+            ? linkHorizontal({ source: p0, target: p3 })
+            : linkVertical({ source: p0, target: p3 });
+
+    let targetCx = target.x;
+    let targetCy = target.y;
+    if (isPrimarilyHorizontal) {
+      targetCx = target.x + (dx_center > 0 ? -target.width / 2 : target.width / 2);
+    } else {
+      targetCy = target.y + (dy_center > 0 ? -target.height / 2 : target.height / 2);
+    }
+
+    return (
+            <>
+              <path d={pathData} className="edge-line" />
+              {label && (
+                      <text
+                              x={(source.x + target.x) / 2}
+                              y={(source.y + target.y) / 2 - 5}
+                              className="edge-label-text"
+                      >
+                        {label}
+                      </text>
+              )}
+              <circle cx={targetCx} cy={targetCy} r={5} className="connection-point" />
+            </>
+    );
+  };
+
+  const FlowDiagram = ({ width, height, children }) => {
+    const [nodes, setNodes] = useState([]);
+    const [links, setLinks] = useState([]);
+
+    const linkHorizontal = d3.linkHorizontal()
+            .x(d => d.x)
+            .y(d => d.y);
+
+    const linkVertical = d3.linkVertical()
+            .x(d => d.x)
+            .y(d => d.y);
+
+    useEffect(() => {
+      const parsedNodes = [];
+      const parsedLinks = [];
+
+      React.Children.forEach(children, child => {
+        if (React.isValidElement(child)) {
+          if (child.type === Node) {
+            parsedNodes.push({
+              id: child.props.id,
+              children: child.props.children,
+              width: child.props.width,
+              height: child.props.height,
+              x: child.props.x,
+              y: child.props.y,
+            });
+          } else if (child.type === Edge) {
+            parsedLinks.push({
+              source: child.props.source,
+              target: child.props.target,
+              label: child.props.children,
+            });
+          }
+        }
+      });
+
+      setNodes(parsedNodes);
+      setLinks(parsedLinks);
+    }, [children]);
+
+    const handleNodeDrag = useCallback((id, type, event) => {
+      setNodes(prevNodes => {
+        return prevNodes.map(node => {
+          if (node.id === id) {
+            return { ...node, x: event.x, y: event.y };
+          }
+          return node;
+        });
+      });
+    }, []);
+
+    return (
+            <div className="flow-diagram-container">
+              <svg id="flow-diagram-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+                <g className="links">
+                  {links.map((link, index) => {
+                    const sourceNode = nodes.find(n => n.id === link.source);
+                    const targetNode = nodes.find(n => n.id === link.target);
+
+                    if (!sourceNode || !targetNode) {
+                      console.warn(`Skipping link ${link.source} -> ${link.target}: one or both nodes not found.`);
+                      return null;
+                    }
+
+                    return (
+                            <Edge
+                                    key={index}
+                                    source={sourceNode}
+                                    target={targetNode}
+                                    label={link.label}
+                                    linkHorizontal={linkHorizontal}
+                                    linkVertical={linkVertical}
+                            />
+                    );
+                  })}
+                </g>
+                <g className="nodes">
+                  {nodes.map(node => (
+                          <Node
+                                  key={node.id}
+                                  id={node.id}
+                                  width={node.width}
+                                  height={node.height}
+                                  x={node.x}
+                                  y={node.y}
+                                  onDrag={handleNodeDrag}
+                          >
+                            {node.children}
+                          </Node>
+                  ))}
+                </g>
+              </svg>
+            </div>
+    );
+  };
+
+  const TestComponent = () => <div>Test</div>
+  const App = () => {
+    return (
+            <div className="diagram-container">
+              <FlowDiagram width={1600} height={900}>
+                <Node id="start" x={150} y={150} width={150} height={70}>
+                  <div>Start Process</div>
+                </Node>
+                <Node id="step1" x={450} y={150} width={150} height={70}>
+                  <div>Gather Data</div>
+                </Node>
+                <Node id="step2" x={750} y={150} width={150} height={70}>
+                  <div>Analyze Input</div>
+                </Node>
+                <Node id="decision" x={950} y={350} width={120} height={80}>
+                  <div>Is Valid?</div>
+                </Node>
+                <Node id="step3a" x={450} y={550} width={150} height={70}>
+                  <div>Process Valid</div>
+                </Node>
+                <Node id="step3b" x={750} y={550} width={150} height={70}>
+                  <div>Return Error</div>
+                </Node>
+                <Node id="end" x={1250} y={450} width={150} height={70}>
+                  <div>End Process</div>
+                  <TestComponent/>
+                </Node>
+
+                <Edge source="start" target="step1"></Edge>
+                <Edge source="step1" target="step2"></Edge>
+                <Edge source="step2" target="decision"></Edge>
+                <Edge source="decision" target="step3a">Yes</Edge>
+                <Edge source="decision" target="step3b">No</Edge>
+                <Edge source="step3a" target="end"></Edge>
+                <Edge source="step3b" target="end"></Edge>
+              </FlowDiagram>
+            </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
