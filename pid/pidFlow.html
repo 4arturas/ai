@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Fullscreen Static Flow Diagram</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <style>
+        html, body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: white;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .diagram-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: transparent;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .flow-diagram-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #flow-diagram-svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            background-color: transparent;
+            border: 1px solid #e2e8f0;
+        }
+
+        .node-rect {
+            fill: #4299e1;
+            stroke: #3182ce;
+            stroke-width: 2;
+            rx: 8;
+            ry: 8;
+            transition: fill 0.3s ease;
+            cursor: grab;
+            filter: url(#drop-shadow);
+        }
+
+        .node-rect:hover {
+            fill: #3182ce;
+            filter: url(#drop-shadow-hover);
+        }
+
+        .node-content-foreignobject {
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .node-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 5px;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .node-content > div {
+            padding: 2px;
+            margin: 1px;
+            width: calc(100% - 2px);
+            box-sizing: border-box;
+        }
+
+        .edge-line {
+            stroke: #4a5568;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .edge-label-text {
+            fill: #4a5568;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .connection-point {
+            fill: #4a5568;
+            stroke: #ffffff;
+            stroke-width: 1.5;
+        }
+
+        .grid-line {
+            stroke: #cccccc;
+            stroke-width: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .diagram-container {
+                padding: 10px;
+            }
+            .node-content {
+                font-size: 12px;
+            }
+        }
+    </style>
+    <style>
+        #target {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #f00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+        #follower {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: hsl(120, 80%, 50%);
+            border: 2px solid black;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+    const ReactDOM = window.ReactDOM;
+
+    const ConnectionType = {
+        TOP: 'top',
+        BOTTOM: 'bottom',
+        LEFT: 'left',
+        RIGHT: 'right',
+        DEFAULT: 'default'
+    };
+
+    const Node = ({ id, x, y, width, height, onDrag, children }) => {
+        const nodeRef = useRef();
+        const currentPosRef = useRef({ x, y });
+
+        useEffect(() => {
+            currentPosRef.current = { x, y };
+        }, [x, y]);
+
+        useEffect(() => {
+            const nodeElement = d3.select(nodeRef.current);
+
+            const dragBehavior = d3.drag()
+                .subject(function() {
+                    return { x: currentPosRef.current.x, y: currentPosRef.current.y };
+                })
+                .on('start', function(event) {
+                    onDrag(id, 'start', event);
+                })
+                .on('drag', function(event) {
+                    onDrag(id, 'drag', event);
+                })
+                .on('end', function(event) {
+                    onDrag(id, 'end', event);
+                });
+
+            nodeElement.call(dragBehavior);
+
+            return () => {
+                nodeElement.on('.drag', null);
+            };
+        }, [id, onDrag]);
+
+        return (
+            <g ref={nodeRef} transform={`translate(${x - width / 2},${y - height / 2})`}>
+                <rect width={width} height={height} className="node-rect" />
+                <foreignObject x="0" y="0" width={width} height={height} className="node-content-foreignobject">
+                    <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+                        {children}
+                    </div>
+                </foreignObject>
+            </g>
+        );
+    };
+
+    const Edge = ({ source, target, label, linkHorizontal, linkVertical, sourceConnection = ConnectionType.DEFAULT, targetConnection = ConnectionType.DEFAULT }) => {
+        const dx_center = target.x - source.x;
+        const dy_center = target.y - source.y;
+        const isPrimarilyHorizontal = Math.abs(dx_center) > Math.abs(dy_center);
+
+        const calculateConnectionPoint = (node, type, isSource) => {
+            let px = node.x;
+            let py = node.y;
+
+            switch (type) {
+                case ConnectionType.TOP:
+                    py = node.y - node.height / 2;
+                    break;
+                case ConnectionType.BOTTOM:
+                    py = node.y + node.height / 2;
+                    break;
+                case ConnectionType.LEFT:
+                    px = node.x - node.width / 2;
+                    break;
+                case ConnectionType.RIGHT:
+                    px = node.x + node.width / 2;
+                    break;
+                case ConnectionType.DEFAULT:
+                default:
+                    if (isPrimarilyHorizontal) {
+                        px = node.x + (isSource ? (node.width / 2) * Math.sign(dx_center) : -(node.width / 2) * Math.sign(dx_center));
+                        py = node.y;
+                    } else {
+                        py = node.y + (isSource ? (node.height / 2) * Math.sign(dy_center) : -(node.height / 2) * Math.sign(dy_center));
+                        px = node.x;
+                    }
+                    break;
+            }
+            return { x: px, y: py };
+        };
+
+        const p0 = calculateConnectionPoint(source, sourceConnection, true);
+        const p3 = calculateConnectionPoint(target, targetConnection, false);
+
+        const pathData = isPrimarilyHorizontal
+            ? linkHorizontal({ source: p0, target: p3 })
+            : linkVertical({ source: p0, target: p3 });
+
+        let targetCx = p3.x;
+        let targetCy = p3.y;
+
+        return (
+            <>
+                <path d={pathData} className="edge-line" />
+                {label && (
+                    <text
+                        x={(p0.x + p3.x) / 2}
+                        y={(p0.y + p3.y) / 2 - 5}
+                        className="edge-label-text"
+                    >
+                        {label}
+                    </text>
+                )}
+                <circle cx={targetCx} cy={targetCy} r={5} className="connection-point" />
+            </>
+        );
+    };
+
+    const FlowDiagram = ({ width, height, children }) => {
+        const [nodes, setNodes] = useState([]);
+        const [links, setLinks] = useState([]);
+        const [transform, setTransform] = useState(d3.zoomIdentity);
+
+        const svgRef = useRef();
+
+        const linkHorizontal = d3.linkHorizontal()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        const linkVertical = d3.linkVertical()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        useEffect(() => {
+            const parsedNodes = [];
+            const parsedLinks = [];
+
+            React.Children.forEach(children, child => {
+                if (React.isValidElement(child)) {
+                    if (child.type === Node) {
+                        parsedNodes.push({
+                            id: child.props.id,
+                            children: child.props.children,
+                            width: child.props.width,
+                            height: child.props.height,
+                            x: child.props.x,
+                            y: child.props.y,
+                        });
+                    } else if (child.type === Edge) {
+                        parsedLinks.push({
+                            source: child.props.source,
+                            target: child.props.target,
+                            label: child.props.children,
+                            sourceConnection: child.props.sourceConnection,
+                            targetConnection: child.props.targetConnection,
+                        });
+                    }
+                }
+            });
+
+            setNodes(parsedNodes);
+            setLinks(parsedLinks);
+        }, [children]);
+
+        const handleNodeDrag = useCallback((id, type, event) => {
+            setNodes(prevNodes => {
+                return prevNodes.map(node => {
+                    if (node.id === id) {
+                        const newX = (event.x - transform.x) / transform.k;
+                        const newY = (event.y - transform.y) / transform.k;
+                        return { ...node, x: newX, y: newY };
+                    }
+                    return node;
+                });
+            });
+        }, [transform]);
+
+        useEffect(() => {
+            const svg = d3.select(svgRef.current);
+
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on('zoom', (event) => {
+                    setTransform(event.transform);
+                });
+
+            svg.call(zoom);
+
+            return () => {
+                svg.on('.zoom', null);
+            };
+        }, []);
+
+        const gridSize = 50;
+
+        return (
+            <div className="flow-diagram-container">
+                <svg id="flow-diagram-svg" ref={svgRef} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <filter id="drop-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.2" />
+                        </filter>
+                        <filter id="drop-shadow-hover" x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="3" dy="3" stdDeviation="5" floodColor="#000000" floodOpacity="0.3" />
+                        </filter>
+
+                        <pattern id="smallGrid" width={gridSize / 5} height={gridSize / 5} patternUnits="userSpaceOnUse">
+                            <path d={`M ${gridSize / 5} 0 L 0 0 0 ${gridSize / 5}`} fill="none" stroke="#e0e0e0" strokeWidth="0.2" />
+                        </pattern>
+                        <pattern id="grid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse">
+                            <rect width={gridSize} height={gridSize} fill="url(#smallGrid)" />
+                            <path d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`} fill="none" stroke="#cccccc" strokeWidth="0.5" />
+                        </pattern>
+                    </defs>
+
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <g className="main-group" transform={transform.toString()}>
+                        <g className="links">
+                            {links.map((link, index) => {
+                                const sourceNode = nodes.find(n => n.id === link.source);
+                                const targetNode = nodes.find(n => n.id === link.target);
+
+                                if (!sourceNode || !targetNode) {
+                                    console.warn(`Skipping link ${link.source} -> ${link.target}: one or both nodes not found.`);
+                                    return null;
+                                }
+
+                                return (
+                                    <Edge
+                                        key={index}
+                                        source={sourceNode}
+                                        target={targetNode}
+                                        label={link.label}
+                                        linkHorizontal={linkHorizontal}
+                                        linkVertical={linkVertical}
+                                        sourceConnection={link.sourceConnection}
+                                        targetConnection={link.targetConnection}
+                                    />
+                                );
+                            })}
+                        </g>
+                        <g className="nodes">
+                            {nodes.map(node => (
+                                <Node
+                                    key={node.id}
+                                    id={node.id}
+                                    width={node.width}
+                                    height={node.height}
+                                    x={node.x}
+                                    y={node.y}
+                                    onDrag={handleNodeDrag}
+                                >
+                                    {node.children}
+                                </Node>
+                            ))}
+                        </g>
+                    </g>
+                </svg>
+            </div>
+        );
+    };
+</script>
+<script>
+    const PID = {
+        kp: 0.04,
+        ki: 0.002,
+        kd: 0.15,
+        maxForce: 0.8,
+        integralLimit: 200,
+        damping: 0.95
+    }
+</script>
+<script type="text/babel">
+    const AppContext = React.createContext(
+        {
+            mouse: null,
+            setMouse: () => {},
+            target: null,
+            setTarget: () => {},
+            plant: null,
+            setPlant: () => {},
+        }
+    );
+
+</script>
+<script type="text/babel">
+
+    const App = () =>
+    {
+        const targetRef = React.useRef();
+        const followerRef = React.useRef();
+        const mousePosRef = React.useRef({ x: 0, y: 0 });
+
+        const [mouse, setMouse] = React.useState({x:0,y:0});
+        const [plant, setPlant] = React.useState(
+            {
+                pos: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+                vel: { x: 0, y: 0 },
+                integral: { x: 0, y: 0 },
+                derivative: { x: 0, y: 0 },
+                error: { x: 0, y: 0 },
+                prevError: { x: 0, y: 0 },
+            }
+        );
+
+        const contextValue = {
+            mouse, setMouse,
+            target: mouse,
+        };
+
+        React.useEffect( ()=> {
+            const initialCoords = { x: window.innerWidth/2, y:window.innerHeight/2 };
+            mousePosRef.current = initialCoords;
+            setMouse( initialCoords );
+            setPlant(prevPlant => ({
+                ...prevPlant,
+                pos: { ...initialCoords },
+            }));
+        }, []);
+
+        React.useEffect(() => {
+            const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+            let animationFrameId;
+
+            const animateLoop = () => {
+                setPlant(prevPlant => {
+                    const newPlant = { ...prevPlant };
+                    const currentMouse = mousePosRef.current;
+
+                    ['x', 'y'].forEach(axis => {
+                        const currentError = currentMouse[axis] - prevPlant.pos[axis];
+                        newPlant.error[axis] = currentError;
+
+                        newPlant.integral[axis] = clamp(
+                            prevPlant.integral[axis] + currentError,
+                            -PID.integralLimit,
+                            PID.integralLimit
+                        );
+
+                        const derivative = currentError - prevPlant.prevError[axis];
+                        newPlant.derivative[axis] = derivative;
+
+                        const force = clamp(
+                            PID.kp * currentError +
+                            PID.ki * newPlant.integral[axis] +
+                            PID.kd * derivative,
+                            -PID.maxForce, PID.maxForce
+                        );
+                        newPlant.vel[axis] = (prevPlant.vel[axis] + force) * PID.damping;
+                        newPlant.pos[axis] = prevPlant.pos[axis] + newPlant.vel[axis];
+                        newPlant.prevError[axis] = currentError;
+                    });
+                    return newPlant;
+                });
+
+                animationFrameId = requestAnimationFrame(animateLoop);
+            };
+
+            animationFrameId = requestAnimationFrame(animateLoop);
+
+            return () => cancelAnimationFrame(animationFrameId);
+        }, []);
+
+        React.useEffect(() => {
+            const PX = (v) => `${v}px`;
+            if (targetRef.current && followerRef.current) {
+                targetRef.current.style.left = PX(mousePosRef.current.x);
+                targetRef.current.style.top = PX(mousePosRef.current.y);
+                followerRef.current.style.left = PX(plant.pos.x);
+                followerRef.current.style.top = PX(plant.pos.y);
+            }
+        }, [plant]);
+
+        document.onmousemove = function ( e )
+        {
+            mousePosRef.current = {x:e.clientX, y:e.clientY};
+            setMouse( {x:e.clientX, y:e.clientY});
+        }
+
+        return (
+            <div className="diagram-container">
+                <div id="target" ref={targetRef}></div>
+                <div id="follower" ref={followerRef}></div>
+
+                <AppContext.Provider value={contextValue}>
+                    <FlowDiagram width={1700} height={800}>
+                        <Node id="input_source" x={100} y={300} width={150} height={90}>
+                            <div>input (set point)</div>
+                            <div>x: {mouse.x}</div>
+                            <div>y: {mouse.y}</div>
+                        </Node>
+                        <Node id="sum1" x={300} y={300} width={60} height={60}>
+                            <div>&Sigma;</div>
+                        </Node>
+                        <Node id="error_signal" x={420} y={300} width={80} height={80}>
+                            <div>e(t)</div>
+                            <div>x: {plant.error?.x.toFixed(0)}</div>
+                            <div>y: {plant.error?.y.toFixed(0)}</div>
+                        </Node>
+
+                        <Node id="kp_block" x={650} y={100} width={90} height={50}>
+                            <div>K<sub>p</sub> ({PID.kp})</div>
+                        </Node>
+                        <Node id="proportional_output_val" x={900} y={100} width={130} height={160}>
+                            <div>proportional</div>
+                            <div>present</div>
+                            <div>Force X: {(PID.kp * plant.error?.x).toFixed(2)}</div>
+                            <div>Force Y: {(PID.kp * plant.error?.y).toFixed(2)}</div>
+                        </Node>
+
+                        <Node id="ki_block" x={650} y={300} width={90} height={50}>
+                            <div>K<sub>i</sub> ({PID.ki})</div>
+                        </Node>
+                        <Node id="integral_op_block" x={900} y={300} width={130} height={160}>
+                            <div>integral</div>
+                            <div>past</div>
+                            <div>Int X: {plant.integral?.x.toFixed(0)}</div>
+                            <div>Int Y: {plant.integral?.y.toFixed(0)}</div>
+                            <div>limit: {PID.integralLimit}</div>
+                            <div>Force X: {(PID.ki * plant.integral?.x).toFixed(2)}</div>
+                            <div>Force Y: {(PID.ki * plant.integral?.y).toFixed(2)}</div>
+                        </Node>
+
+                        <Node id="kd_block" x={650} y={500} width={90} height={50}>
+                            <div>K<sub>d</sub> ({PID.kd})</div>
+                        </Node>
+                        <Node id="derivative_op_block" x={900} y={500} width={130} height={160}>
+                            <div>derivative</div>
+                            <div>future</div>
+                            <div>Der X: {plant.derivative?.x.toFixed(0)}</div>
+                            <div>Der Y: {plant.derivative?.y.toFixed(0)}</div>
+                            <div>Force X: {(PID.kd * plant.derivative?.x).toFixed(2)}</div>
+                            <div>Force Y: {(PID.kd * plant.derivative?.y).toFixed(2)}</div>
+                        </Node>
+
+                        <Node id="sum2" x={1050} y={300} width={100} height={130}>
+                            <div>&Sigma;</div>
+                            <div>Max F: {PID.maxForce}</div>
+                            <div>Output X: {(
+                                (PID.kp * plant.error?.x) +
+                                (PID.ki * plant.integral?.x) +
+                                (PID.kd * plant.derivative?.x)
+                            ).toFixed(2)}</div>
+                            <div>Output Y: {(
+                                (PID.kp * plant.error?.y) +
+                                (PID.ki * plant.integral?.y) +
+                                (PID.kd * plant.derivative?.y)
+                            ).toFixed(2)}</div>
+                        </Node>
+                        <Node id="process_block" x={1280} y={300} width={180} height={100}>
+                            <div>process (plant)</div>
+                            <div>Damping: {PID.damping}</div>
+                            <div>Velocity X: {plant.vel.x.toFixed(2)}</div>
+                            <div>Velocity Y: {plant.vel.y.toFixed(2)}</div>
+                        </Node>
+                        <Node id="output_sink" x={1550} y={500} width={100} height={90}>
+                            <div>output</div>
+                            <div>x: {plant.pos.x.toFixed(0)}</div>
+                            <div>y: {plant.pos.y.toFixed(0)}</div>
+                        </Node>
+
+                        <Edge source="input_source" target="sum1"></Edge>
+                        <Edge source="sum1" target="error_signal"></Edge>
+
+                        <Edge source="error_signal" target="kp_block" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="kp_block" target="proportional_output_val" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="proportional_output_val" target="sum2" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.TOP}></Edge>
+
+                        <Edge source="error_signal" target="ki_block" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="ki_block" target="integral_op_block" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="integral_op_block" target="sum2" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.DEFAULT}></Edge>
+
+                        <Edge source="error_signal" target="kd_block" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="kd_block" target="derivative_op_block" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+                        <Edge source="derivative_op_block" target="sum2" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.BOTTOM}></Edge>
+
+                        <Edge source="sum2" target="process_block"></Edge>
+                        <Edge source="process_block" target="output_sink" sourceConnection={ConnectionType.RIGHT} targetConnection={ConnectionType.LEFT}></Edge>
+
+                        <Edge source="output_sink" target="sum1" sourceConnection={ConnectionType.LEFT} targetConnection={ConnectionType.BOTTOM}>feedback</Edge>
+
+                    </FlowDiagram>
+                </AppContext.Provider>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

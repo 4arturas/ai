@@ -254,6 +254,9 @@
   const FlowDiagram = ({ width, height, children }) => {
     const [nodes, setNodes] = useState([]);
     const [links, setLinks] = useState([]);
+    const [transform, setTransform] = useState(d3.zoomIdentity);
+
+    const svgRef = useRef();
 
     const linkHorizontal = d3.linkHorizontal()
             .x(d => d.x)
@@ -296,52 +299,72 @@
       setNodes(prevNodes => {
         return prevNodes.map(node => {
           if (node.id === id) {
-            return { ...node, x: event.x, y: event.y };
+            const newX = (event.x - transform.x) / transform.k;
+            const newY = (event.y - transform.y) / transform.k;
+            return { ...node, x: newX, y: newY };
           }
           return node;
         });
       });
+    }, [transform]);
+
+    useEffect(() => {
+      const svg = d3.select(svgRef.current);
+
+      const zoom = d3.zoom()
+              .scaleExtent([0.1, 4])
+              .on('zoom', (event) => {
+                setTransform(event.transform);
+              });
+
+      svg.call(zoom);
+
+      return () => {
+        svg.on('.zoom', null);
+      };
     }, []);
 
     return (
             <div className="flow-diagram-container">
-              <svg id="flow-diagram-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-                <g className="links">
-                  {links.map((link, index) => {
-                    const sourceNode = nodes.find(n => n.id === link.source);
-                    const targetNode = nodes.find(n => n.id === link.target);
+              <svg id="flow-diagram-svg" ref={svgRef} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+                <g className="main-group" transform={transform.toString()}>
+                  <g className="links">
+                    {links.map((link, index) => {
+                      const sourceNode = nodes.find(n => n.id === link.source);
+                      const targetNode = nodes.find(n => n.id === link.target);
 
-                    if (!sourceNode || !targetNode) {
-                      console.warn(`Skipping link ${link.source} -> ${link.target}: one or both nodes not found.`);
-                      return null;
-                    }
+                      if (!sourceNode || !targetNode) {
+                        console.warn(`Skipping link ${link.source} -> ${link.target}: one or both nodes not found.`);
+                        return null;
+                      }
 
-                    return (
-                            <Edge
-                                    key={index}
-                                    source={sourceNode}
-                                    target={targetNode}
-                                    label={link.label}
-                                    linkHorizontal={linkHorizontal}
-                                    linkVertical={linkVertical}
-                            />
-                    );
-                  })}
-                </g>
-                <g className="nodes">
-                  {nodes.map(node => (
-                          <Node
-                                  key={node.id}
-                                  id={node.id}
-                                  width={node.width}
-                                  height={node.height}
-                                  x={node.x}
-                                  y={node.y}
-                                  onDrag={handleNodeDrag}
-                          >
-                            {node.children}
-                          </Node>
-                  ))}
+                      return (
+                              <Edge
+                                      key={index}
+                                      source={sourceNode}
+                                      target={targetNode}
+                                      label={link.label}
+                                      linkHorizontal={linkHorizontal}
+                                      linkVertical={linkVertical}
+                              />
+                      );
+                    })}
+                  </g>
+                  <g className="nodes">
+                    {nodes.map(node => (
+                            <Node
+                                    key={node.id}
+                                    id={node.id}
+                                    width={node.width}
+                                    height={node.height}
+                                    x={node.x}
+                                    y={node.y}
+                                    onDrag={handleNodeDrag}
+                            >
+                              {node.children}
+                            </Node>
+                    ))}
+                  </g>
                 </g>
               </svg>
             </div>

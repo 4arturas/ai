@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filosofijos Kategorijos</title>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.10.0/reset.min.css" rel="stylesheet">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState } = React;
+    const { Button, Modal } = antd;
+
+    function App() {
+        const [isModalVisible, setIsModalVisible] = useState(false);
+        const [modalTitle, setModalTitle] = useState('');
+        const [modalContent, setModalContent] = useState('');
+        const [modalEmoji, setModalEmoji] = useState('');
+
+        const showModal = (title, content, emoji) => {
+            setModalEmoji(emoji);
+            setModalTitle(title);
+            setModalContent(content);
+            setIsModalVisible(true);
+        };
+
+        const handleOk = () => {
+            setIsModalVisible(false);
+        };
+
+        const handleCancel = () => {
+            setIsModalVisible(false);
+        };
+
+        const CATEGORY_METAPHYSICS = 'Metafizika';
+        const CATEGORY_PHYSICS = 'Fizika';
+        const CATEGORY_BEING = 'BŪTIS';
+        const CATEGORY_WORLD = 'PASAULIS';
+        const CATEGORY_NOUMENON = 'Nomenas';
+        const CATEGORY_CAUSE = 'Priežastis';
+        const CATEGORY_ESSENCE = 'Esmė';
+        const CATEGORY_FORM = 'Forma';
+        const CATEGORY_NECESSITY = 'Būtinumas';
+        const CATEGORY_UNITY = 'Vienybė';
+        const CATEGORY_POSSIBILITY = 'Galimybė';
+        const CATEGORY_IDEAL = 'Idealas';
+        const CATEGORY_SUBSTANCE = 'Substancija';
+        const CATEGORY_PHENOMENON = 'Fenomenas';
+        const CATEGORY_CONSEQUENCE = 'Pasekmė';
+        const CATEGORY_APPEARANCE = 'Reiškinys';
+        const CATEGORY_CONTENT = 'Turinys';
+        const CATEGORY_CONTINGENCY = 'Atsitiktinumas';
+        const CATEGORY_DIVERSITY = 'Įvairovė';
+        const CATEGORY_REALITY = 'Tikrovė';
+        const CATEGORY_MATERIAL = 'Materialus';
+        const CATEGORY_CATEGORIES = 'Kategorijos';
+
+        const explanations = {
+            [CATEGORY_METAPHYSICS]: "Metafizika yra filosofijos šaka, tirianti fundamentalius būties, egzistencijos, tikrovės ir esmės klausimus. Ji nagrinėja tai, kas yra už fizinio pasaulio ribų, ir klausia, kodėl pasaulis yra toks, koks yra. Pagrindinės metafizikos temos apima substanciją, priežastingumą, erdvę, laiką ir galimybę.",
+            [CATEGORY_PHYSICS]: "Fizika yra gamtos mokslas, tiriantis materiją, energiją ir jų sąveiką erdvėje ir laike. Ji siekia formuluoti fundamentalius dėsnius, kurie valdo visatą. Nors fizika yra mokslas, jos atradimai dažnai turi gilių filosofinių implikacijų, ypač kosmologijoje ir kvantinėje mechanikoje, kurios liečia būties ir tikrovės prigimties klausimus.",
+            [CATEGORY_BEING]: "Būtis filosofijoje yra viena pagrindinių metafizikos kategorijų, reiškianti viską, kas egzistuoja, nepriklausomai nuo to, ar tai suvokiama. Ji apima tiek materialųjį, tiek nematerialųjį pasaulį, esmę ir substanciją. Filosofai nuo Antikos laikų bandė apibrėžti, kas yra būtis ir kokios yra jos savybės.  Tai yra visa tai, kas yra, buvo ir bus. Būties samprata yra esminė ontologijos studijoms.",
+            [CATEGORY_WORLD]: "Pasaulis filosofijoje apibūdina visą egzistuojančių daiktų, reiškinių ir ryšių visumą, dažnai priešpriešinant jį Būčiai. Jis dažniausiai suprantamas kaip empiriškai patiriamas, kintantis ir laiko bei erdvės ribotas darinys. Pasaulis apima tiek gamtinę, tiek žmogaus sukurtą tikrovę, kurią mes galime pažinti per jusles ir protą. Tai yra visuma, kurioje vyksta reiškiniai ir kyla pasekmės. Pasaulio samprata yra esminė fenomenologijos ir kosmologijos studijoms.",
+            [CATEGORY_NOUMENON]: "Nomenas, arba „daiktas savyje“, yra Immanuelio Kanto filosofijoje naudojama sąvoka, reiškianti objektyvią tikrovę, kuri egzistuoja nepriklausomai nuo mūsų patirties ir kurią mes tiesiogiai negalime pažinti. Jis yra priežastis to, ką mes patiriame kaip fenomenus, tačiau pats lieka nepasiekiamas. Nomenas nėra suvokiamas per jusles ir negali būti moksliškai ištirtas. Jis atspindi idėją, kad už mūsų suvokimo ribų yra kažkas nepažinaus. Filosofijoje šis terminas pabrėžia žmogaus pažinimo ribotumą.",
+            [CATEGORY_CAUSE]: "Priežastis filosofijoje yra tai, kas sukelia tam tikrą efektą ar pasekmę. Ji nagrinėja santykius tarp įvykių, kur vienas įvykis (priežastis) lemia kito įvykio (pasekmės) atsiradimą. Aristotelis išskyrė keturias priežasčių rūšis: materialinę, formalinę, veiksmą ir galutinę. Priežastingumas yra esminė sąvoka moksle ir kasdieniame gyvenime, padedanti suprasti pasaulio veikimą. Ši kategorija giliai susijusi su determinizmu ir laisvos valios diskusijomis.",
+            [CATEGORY_ESSENCE]: "Esmė (lot. essentia, gr. ousia) yra filosofijos sąvoka, reiškianti tai, kas daro daiktą tuo, kuo jis yra, ir be ko jis negalėtų būti savimi. Tai yra pagrindinės, nekintamos savybės, kurios apibrėžia daikto prigimtį. Esmė skiriasi nuo atsitiktinių savybių, kurios gali kisti, nepakeisdamos daikto identiteto. Klasikinėje filosofijoje, ypač pas Aristotelį, esmė buvo laikoma daikto forma ir jo paskirtimi. Ji padeda mums klasifikuoti ir suprasti pasaulio objektus, atskiriant esminius bruožus nuo paviršutiniškų.",
+            [CATEGORY_FORM]: "Filosofijoje Forma (gr. morphē, eidos) yra susijusi su daikto struktūra, organizacija ar kokybe, kuri jam suteikia tapatumą. Aristotelio filosofijoje forma yra vienas iš keturių priežastingumo tipų ir apibrėžia daikto esmę, jo idėją ar struktūrinį principą, kuris organizuoja materiją. Forma nėra tik išorinė išvaizda, bet vidinis, apibrėžiantis principas, suteikiantis daiktui jo charakteristikas ir funkcijas. Ji yra tai, kas leidžia atskirti vieną daiktą nuo kito, net jei jie sudaryti iš tos pačios materijos. Platonas formas laikė amžinomis ir nekintamomis idėjomis, egzistuojančiomis atskirai nuo materialaus pasaulio.",
+            [CATEGORY_NECESSITY]: "Būtinumas filosofijoje reiškia, kad kažkas negali būti kitaip, nei yra. Tai yra tai, kas turi egzistuoti arba kas turi įvykti. Būtinumas gali būti loginis (pvz., matematinės tiesos), metafizinis (pvz., Dievo egzistavimas kai kuriose teologijose) arba fizinis (pvz., gamtos dėsniai). Ši sąvoka yra glaudžiai susijusi su laisvos valios ir determinizmo diskusijomis. Jei viskas yra būtinumas, kyla klausimas apie žmogaus pasirinkimo galimybes. Būtinumas yra priešingas atsitiktinumui ir yra pamatas tam tikrų filosofinių sistemų, kurios pabrėžia tvarką ir dėsningumą visatoje.",
+            [CATEGORY_UNITY]: "Vienybė filosofijoje reiškia koherenciją, vientisumą arba nedalomumą. Tai gali būti individualaus objekto vientisumas, arba daugelio elementų sujungimas į darnią visumą. Platono filosofijoje vienybė yra aukščiausias principas, iš kurio kyla visa egzistencija. Neoplatonizme, Pirmasis Vienis yra visų dalykų šaltinis. Vienybės sąvoka taip pat svarbi epistemologijoje, kur ji nagrinėja žinių ir patirties vientisumą. Ji padeda suprasti, kaip įvairūs reiškiniai susijungia į prasmingą ir sutvarkytą visumą, priešingai įvairovei.",
+            [CATEGORY_POSSIBILITY]: "Galimybė filosofijoje nurodo potencialų egzistavimą ar įvykimą – tai, kas dar nėra, bet gali būti. Tai yra priešinga tikrovei, kuri yra tai, kas jau yra. Galimybė gali būti logiška (tai, kas neprieštarauja logikos dėsniams), fizinė (tai, kas neprieštarauja gamtos dėsniams) arba metafizinė. Ši sąvoka yra svarbi ontologijoje, nagrinėjant būties prigimtį. Ji leidžia mums kalbėti apie ateities įvykius, alternatyvias realybes ir tai, kas galėtų nutikti. Galimybių samprata yra esminė diskusijoms apie pasirinkimą, laisvą valią ir neapibrėžtumą.",
+            [CATEGORY_IDEAL]: "Idealas filosofijoje reiškia tobulą pavyzdį, normą ar siekiamybę, kuri gali būti nepasiekiama realybėje, bet tarnauja kaip gairė ar orientyras. Platono filosofijoje Idėjos (arba Formos) yra amžini ir nekintami idealai, kurių materialūs daiktai yra tik netobulos kopijos. Idealas gali būti etinis (pvz., tobula moralinė asmenybė), estetinis (pvz., tobulas grožis) ar pažintinis (pvz., visiškas žinojimas). Ši sąvoka yra ypač svarbi etikoje ir politinėje filosofijoje, formuojant utopines visuomenes ar moralinius principus. Idealas dažnai priešpastatomas materialiai tikrovei.",
+            [CATEGORY_SUBSTANCE]: "Substancija (lot. substantia) filosofijoje reiškia kažką, kas egzistuoja savaime ir nepriklauso nuo nieko kito egzistencijos. Tai yra savarankiškas, nepriklausomas pagrindas, išlaikantis savybes ir kintamus akcidentus. Aristotelis substanciją laikė pirminiuoju būties tipu, tuo, kas gali būti subjektu, bet pats nėra kito subjektas. Racionalistinėje filosofijoje, ypaip pas Spinozą, substancija tapo vienintele, begaline Dievo prigimtimi. Empiristai, tokie kaip Locke'as ir Hume'as, kritikavo substancijos sąvoką, teigdami, kad ji yra nepažini arba visai neegzistuojanti. Substancija yra esminė ontologijos kategorija, bandanti apibrėžti, kas yra tikrasis pamatas viskam, kas egzistuoja.",
+            [CATEGORY_PHENOMENON]: "Fenomenas (gr. phainomenon) Kanto filosofijoje reiškia „reiškinį“ – tai, kaip daiktai mums pasirodo ir yra suvokiami per mūsų jusles bei apdorojami proto kategorijomis. Tai yra patiriamoji realybė, kurią mes pažįstame. Fenomenai yra pažinūs, nes jie atitinka mūsų proto struktūras ir jutiminio suvokimo formas. Kantas pabrėžė, kad mes pažįstame tik fenomenus, o ne daiktus savyje (nomenus). Ši perskyra yra esminė jo pažinimo teorijai, nustatanti žmogaus pažinimo ribas. Fenomenai yra kintami ir priklausomi nuo stebėtojo.",
+            [CATEGORY_CONSEQUENCE]: "Pasekmė filosofijoje yra rezultatas ar padarinys, kilęs iš tam tikros priežasties ar veiksmo. Tai yra antra priežastingumo santykio pusė, kur vienas įvykis natūraliai seka po kito. Etiškai, pasekmės analizė yra svarbi teleologinėms teorijoms, kurios vertina veiksmus pagal jų rezultatus. Pasekmės gali būti numatytos arba nenumatytos, tiesioginės arba netiesioginės. Suprasti priežasties ir pasekmės ryšį yra esminis dalykas moksle, logikoje ir kasdieniame mąstyme, padedantis nustatyti atsakomybę ir prognozuoti įvykius. Jos yra materialaus pasaulio pasireiškimo dalis.",
+            [CATEGORY_CONTENT]: "Turinys filosofijoje gali reikšti daikto vidinę struktūrą, esmę ar informaciją, kuri sudaro jo prasmę ar identitetą. Jis priešinamas formai, kuri labiau susijusi su išorine struktūra ar organizacija. Pavyzdžiui, knygos turinys yra mintys ir idėjos, kurios yra išreikštos tekstu, o forma būtų knygos fizinė struktūra. Gnoseologijoje (pažinimo teorijoje) turinys gali būti žinių objektas, tai, ką mes pažįstame. Semiotikoje turinys yra ženklo ar simbolio perduodama prasmė. Tai yra tai, kas suteikia esmę daiktams Pasaulyje.",
+            [CATEGORY_CONTINGENCY]: "Atsitiktinumas (lot. contingentia) filosofijoje reiškia tai, kas gali būti arba nebūti, arba gali būti kitaip, nei yra. Tai yra priešinga būtinumui. Atsitiktiniai įvykiai ar daiktai neturi priežasties savo egzistencijoje, kuri priverstų juos egzistuoti. Pavyzdžiui, aš esu, bet galėjau ir nebūti. Ši sąvoka yra svarbi diskusijose apie laisvą valią, determinizmą ir Visatos prigimtį. Atsitiktinumas dažnai siejamas su materialiu pasauliu ir empiriškai stebimais įvykiais, kurie nėra griežtai nulemti.",
+            [CATEGORY_DIVERSITY]: "Įvairovė filosofijoje reiškia daugybę skirtingų elementų, skirtumų ar savybių. Ji yra priešinga vienybės sąvokai ir pabrėžia pluralizmą bei unikalumą. Įvairovė gali būti matoma gamtoje, kultūroje, visuomenėje ir mintyse. Filosofijoje ji kelia klausimus apie tai, kaip daugybė skirtingų dalykų gali sudaryti vieną visumą, arba ar tokia visuma apskritai egzistuoja. Ši sąvoka svarbi ir metafizikoje, ir epistemologijoje, nagrinėjant, kaip mes suvokiame ir klasifikuojame pasaulio reiškinius. Įvairovė yra būdinga fenomenaliam Pasauliui.",
+            [CATEGORY_REALITY]: "Tikrovė filosofijoje yra tai, kas egzistuoja arba yra realu, priešingai galimybei ar iliuzijai. Ji apima viską, kas yra, nepriklausomai nuo to, ar mes tai suvokiame. Skirtingos filosofinės kryptys turi skirtingus požiūrius į tai, kas yra tikrovė. Realistai teigia, kad tikrovė egzistuoja nepriklausomai nuo mūsų proto, o idealistai mano, kad tikrovė yra proto ar sąmonės produktas. Tikrovė gali būti empiriška (patiriama per jusles) arba transcendentinė. Ši sąvoka yra pamatinė ontologijos ir epistemologijos srityse, bandant nustatyti, kas iš tiesų egzistuoja ir kaip mes tai pažįstame.",
+            [CATEGORY_MATERIAL]: "Materialumas filosofijoje reiškia savybę, susijusią su materija, fizine substancija. Materialistinės filosofijos kryptys teigia, kad materija yra vienintelė arba pirminė tikrovės forma, o viskas, įskaitant sąmonę ir mintis, yra materijos produktas. Materialumas apima visus fizinius objektus, energiją ir jų sąveiką. Jis priešinamas idealumui, dvasinėms ar nematerialioms esybėms. Diskusijos apie materialumą yra pagrindinės metafizikoje ir proto filosofijoje, bandant suprasti, kokia yra tikrovės prigimtis ir kaip sąmonė susijusi su fiziniu pasauliu.",
+            [CATEGORY_CATEGORIES]: "Kategorijos filosofijoje yra pagrindinės sąvokos arba klasifikacijos, per kurias protas organizuoja patirtį ir supranta tikrovę. Aristotelis išskyrė dešimt kategorijų (pvz., substancija, kiekybė, kokybė, vieta, laikas), kurios apibūdina būties aspektus. Immanuelis Kantas sukūrė savo kategorijų lentelę (pvz., kiekybė, kokybė, santykis, modalumas), teigdami, kad tai yra įgimtos proto struktūros, kurios leidžia mums suvokti fenomenus. Kategorijos yra esminės logikai, metafizikai ir pažinimo teorijai, nes jos padeda sisteminti mūsų mintis apie Pasaulį."
+        };
+
+        const cellStyle = {
+            padding: '10px',
+            textAlign: 'center',
+            verticalAlign: 'middle',
+            border: '1px solid #ccc',
+            whiteSpace: 'nowrap',
+        };
+
+        const buttonStyle = {
+            fontSize: '1em',
+            height: 'auto',
+            padding: '10px 15px',
+            borderRadius: '8px',
+            whiteSpace: 'normal',
+            lineHeight: '1.2',
+        };
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f0f0f0', fontFamily: 'Inter, sans-serif', padding: '20px', boxSizing: 'border-box' }}>
+                <div style={{ width: '100%', backgroundColor: '#e0e0e0', padding: '10px', textAlign: 'center', marginBottom: '20px' }}>
+                    Menu
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
+                <div style={{ border: '2px solid black', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                    <table style={{ borderCollapse: 'collapse', fontSize: '2em', width: 'auto' }}>
+                        <thead>
+                        <tr>
+                            <th colSpan="10" style={{ backgroundColor: '#e0e0e0', fontWeight: 'bold', textAlign: 'center', padding: '10px 0' }}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_BEING, explanations[CATEGORY_BEING], '🌌')}>🌌 {CATEGORY_BEING}</Button>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_METAPHYSICS, explanations[CATEGORY_METAPHYSICS], '🌀')}>🌀 {CATEGORY_METAPHYSICS}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_NOUMENON, explanations[CATEGORY_NOUMENON], '👻')}>👻 {CATEGORY_NOUMENON}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_CAUSE, explanations[CATEGORY_CAUSE], '🔗')}>🔗 {CATEGORY_CAUSE}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_ESSENCE, explanations[CATEGORY_ESSENCE], '💡')}>💡 {CATEGORY_ESSENCE}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_FORM, explanations[CATEGORY_FORM], '📐')}>📐 {CATEGORY_FORM}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_NECESSITY, explanations[CATEGORY_NECESSITY], '🔒')}>🔒 {CATEGORY_NECESSITY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_UNITY, explanations[CATEGORY_UNITY], '🤝')}>🤝 {CATEGORY_UNITY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_POSSIBILITY, explanations[CATEGORY_POSSIBILITY], '✨')}>✨ {CATEGORY_POSSIBILITY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_IDEAL, explanations[CATEGORY_IDEAL], '🌟')}>🌟 {CATEGORY_IDEAL}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_SUBSTANCE, explanations[CATEGORY_SUBSTANCE], '🧱')}>🧱 {CATEGORY_SUBSTANCE}</Button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan="10" style={{ borderTop: '2px solid black', padding: '0' }}></td>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_PHYSICS, explanations[CATEGORY_PHYSICS], '⚛️')}>⚛️ {CATEGORY_PHYSICS}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_PHENOMENON, explanations[CATEGORY_PHENOMENON], '🎭')}>🎭 {CATEGORY_PHENOMENON}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_CONSEQUENCE, explanations[CATEGORY_CONSEQUENCE], '➡️')}>➡️ {CATEGORY_CONSEQUENCE}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_APPEARANCE, explanations[CATEGORY_APPEARANCE], '👁️')}>👁️ {CATEGORY_APPEARANCE}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_CONTENT, explanations[CATEGORY_CONTENT], '📚')}>📚 {CATEGORY_CONTENT}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_CONTINGENCY, explanations[CATEGORY_CONTINGENCY], '🎲')}>🎲 {CATEGORY_CONTINGENCY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_DIVERSITY, explanations[CATEGORY_DIVERSITY], '🌈')}>🌈 {CATEGORY_DIVERSITY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_REALITY, explanations[CATEGORY_REALITY], '🌐')}>🌐 {CATEGORY_REALITY}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_MATERIAL, explanations[CATEGORY_MATERIAL], '⚛️')}>⚛️ {CATEGORY_MATERIAL}</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_CATEGORIES, explanations[CATEGORY_CATEGORIES], '🗂️')}>🗂️ {CATEGORY_CATEGORIES}</Button>
+                            </td>
+                        </tr>
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th colSpan="10" style={{ backgroundColor: '#e0e0e0', fontWeight: 'bold', textAlign: 'center', padding: '10px 0' }}>
+                                <Button style={buttonStyle} onClick={() => showModal(CATEGORY_WORLD, explanations[CATEGORY_WORLD], '🌍')}>🌍 {CATEGORY_WORLD}</Button>
+                            </th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <Modal
+                    title={modalEmoji ? `${modalEmoji} ${modalTitle}` : modalTitle}
+                    visible={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    footer={[
+                        <Button key="back" onClick={handleCancel}>
+                                    Close
+                                </Button>,
+                    ]}
+                >
+                    <p style={{ fontSize: '2.0em', lineHeight: '1.5' }}>{modalContent}</p>
+                </Modal>
+            </div>
+            </div>
+        )
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

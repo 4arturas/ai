@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PID Follower</title>
+    <title>PID Follower (Reworked)</title>
     <style>
         body {
             margin: 0;
@@ -16,7 +16,7 @@
             background-color: #f00;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 2; /* Higher z-index to appear on top */
+            z-index: 2;
         }
         #follower {
             position: absolute;
@@ -26,111 +26,95 @@
             border: 2px solid white;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 1; /* Lower z-index to appear behind */
+            z-index: 1;
         }
     </style>
 </head>
 <body>
-<div id="follower"></div> <!-- Follower first in DOM -->
-<div id="target"></div>   <!-- Target second in DOM -->
+<div id="follower"></div>
+<div id="target"></div>
 
 <script>
-    // PID Constants
-    const PID = {
-        kp: 0.04,    // Proportional gain
-        ki: 0.002,   // Integral gain
-        kd: 0.15,    // Derivative gain
+    const PID_CONTROLLER_PARAMS = {
+        kp: 0.04,
+        ki: 0.002,
+        kd: 0.15,
         maxForce: 0.8,
         damping: 0.95,
         integralLimit: 200
     };
 
-    // Elements
-    const target = document.getElementById('target');
-    const follower = document.getElementById('follower');
-
-    // State
-    const state = {
-        pos: { x: window.innerWidth/2, y: window.innerHeight/2 },
+    const PLANT_STATE = {
+        pos: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
         vel: { x: 0, y: 0 },
-        error: { x: 0, y: 0 },
-        prevError: { x: 0, y: 0 },
-        integral: { x: 0, y: 0 }
+        integral: { x: 0, y: 0 },
+        prevError: { x: 0, y: 0 }
     };
 
-    // Mouse position
-    const mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+    const INPUT_TARGET_POSITION = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-    // Initialize positions
-    function init() {
-        target.style.left = `${mouse.x}px`;
-        target.style.top = `${mouse.y}px`;
-        follower.style.left = `${state.pos.x}px`;
-        follower.style.top = `${state.pos.y}px`;
-        animate();
-    }
+    const targetElement = document.getElementById('target');
+    const followerElement = document.getElementById('follower');
 
-    // Animation loop
-    function animate() {
-        updatePID();
-        updateElements();
-        requestAnimationFrame(animate);
-    }
-
-    // Update PID controller
-    function updatePID() {
-        ['x', 'y'].forEach(axis => {
-            // Calculate error terms
-            state.error[axis] = mouse[axis] - state.pos[axis];
-            state.integral[axis] = constrain(
-                state.integral[axis] + state.error[axis],
-                -PID.integralLimit,
-                PID.integralLimit
-            );
-            const derivative = state.error[axis] - state.prevError[axis];
-
-            // Calculate output
-            const output = PID.kp * state.error[axis] +
-                PID.ki * state.integral[axis] +
-                PID.kd * derivative;
-
-            // Update physics
-            state.vel[axis] = (state.vel[axis] + constrain(output, -PID.maxForce, PID.maxForce)) * PID.damping;
-            state.pos[axis] += state.vel[axis];
-            state.prevError[axis] = state.error[axis];
-        });
-    }
-
-    // Constrain helper function
     function constrain(value, min, max) {
         return Math.min(Math.max(value, min), max);
     }
 
-    // Update DOM elements
-    function updateElements() {
-        follower.style.left = `${state.pos.x}px`;
-        follower.style.top = `${state.pos.y}px`;
+    function initializeSimulation() {
+        targetElement.style.left = `${INPUT_TARGET_POSITION.x}px`;
+        targetElement.style.top = `${INPUT_TARGET_POSITION.y}px`;
+        followerElement.style.left = `${PLANT_STATE.pos.x}px`;
+        followerElement.style.top = `${PLANT_STATE.pos.y}px`;
+        animateLoop();
     }
 
-    // Track mouse movement
+    function animateLoop() {
+        ['x', 'y'].forEach(axis => {
+            const currentError = INPUT_TARGET_POSITION[axis] - PLANT_STATE.pos[axis];
+
+            PLANT_STATE.integral[axis] = constrain(
+                PLANT_STATE.integral[axis] + currentError,
+                -PID_CONTROLLER_PARAMS.integralLimit,
+                PID_CONTROLLER_PARAMS.integralLimit
+            );
+
+            const derivativeError = currentError - PLANT_STATE.prevError[axis];
+
+            const pidOutput =
+                (PID_CONTROLLER_PARAMS.kp * currentError) +
+                (PID_CONTROLLER_PARAMS.ki * PLANT_STATE.integral[axis]) +
+                (PID_CONTROLLER_PARAMS.kd * derivativeError);
+
+            PLANT_STATE.prevError[axis] = currentError;
+
+            PLANT_STATE.vel[axis] =
+                (PLANT_STATE.vel[axis] + constrain(pidOutput, -PID_CONTROLLER_PARAMS.maxForce, PID_CONTROLLER_PARAMS.maxForce)) *
+                PID_CONTROLLER_PARAMS.damping;
+
+            PLANT_STATE.pos[axis] += PLANT_STATE.vel[axis];
+        });
+
+        followerElement.style.left = `${PLANT_STATE.pos.x}px`;
+        followerElement.style.top = `${PLANT_STATE.pos.y}px`;
+
+        requestAnimationFrame(animateLoop);
+    }
+
     document.addEventListener('mousemove', (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-        target.style.left = `${mouse.x}px`;
-        target.style.top = `${mouse.y}px`;
+        INPUT_TARGET_POSITION.x = e.clientX;
+        INPUT_TARGET_POSITION.y = e.clientY;
+        targetElement.style.left = `${INPUT_TARGET_POSITION.x}px`;
+        targetElement.style.top = `${INPUT_TARGET_POSITION.y}px`;
     });
 
-    // Handle window resize
     window.addEventListener('resize', () => {
-        // If mouse hasn't moved, keep it centered
-        if (mouse.x === window.innerWidth/2 && mouse.y === window.innerHeight/2) {
-            mouse.x = window.innerWidth/2;
-            mouse.y = window.innerHeight/2;
+        if (INPUT_TARGET_POSITION.x === window.innerWidth/2 && INPUT_TARGET_POSITION.y === window.innerHeight/2) {
+            INPUT_TARGET_POSITION.x = window.innerWidth/2;
+            INPUT_TARGET_POSITION.y = window.innerHeight/2;
         }
     });
 
-    // Start the animation
-    init();
+    initializeSimulation();
 </script>
 </body>
 </html>

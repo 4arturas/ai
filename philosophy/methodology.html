@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mokslo Metodologijos Principai</title>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.10.0/reset.min.css" rel="stylesheet">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.23.3/antd.min.js"></script>
+
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState } = React;
+    const { Button, Modal } = antd;
+
+    function App() {
+        const [isModalVisible, setIsModalVisible] = useState(false);
+        const [modalTitle, setModalTitle] = useState('');
+        const [modalContent, setModalContent] = useState('');
+        const [modalEmoji, setModalEmoji] = useState('');
+
+        const showModal = (title, content, emoji) => {
+            setModalEmoji(emoji);
+            setModalTitle(title);
+            setModalContent(content);
+            setIsModalVisible(true);
+        };
+
+        const handleOk = () => {
+            setIsModalVisible(false);
+        };
+
+        const handleCancel = () => {
+            setIsModalVisible(false);
+        };
+
+        const explanations = {
+            ESMINGUMAS: "Esmingumas (сущностнности) reiškia, kad mokslinis tyrimas turi būti nukreiptas į reiškinio esmės, jo giluminių priežasčių ir vidinių ryšių atskleidimą, o ne tik į paviršutinių savybių aprašymą. Tai pabrėžia analitinį ir sintetinį mąstymą, siekiant suprasti fundamentalius principus, kurie lemia stebimus reiškinius.",
+            APIBENDRINIMAS: "Apibendrinimas (обобщенность) reiškia, kad mokslinio tyrimo rezultatai turėtų būti taikomi ne tik konkrečiam tirtam atvejui, bet ir platesnei reiškinių klasei. Mokslas siekia atrasti bendrus dėsningumus, kurie paaiškintų ne pavienius faktus, o visą jų grupę, leidžiant daryti apibendrinančias išvadas.",
+            PAGRĮSTUMAS: "Pagrįstumas (обоснованности) reiškia, kad mokslinės išvados ir teiginiai turi būti paremti įrodymais, logiškai nuoseklūs ir empiriškai patvirtinti. Tai apima eksperimentinius duomenis, stebėjimus, statistinę analizę ir teorinį pagrindimą, užtikrinant tyrimo validumą ir patikimumą.",
+            SISTEMIŠKUMAS: "Sistemiškumas (системности) reiškia, kad mokslinis tyrimas turi būti atliekamas nuosekliai ir struktūrizuotai, atsižvelgiant į visumą ir ryšius tarp atskirų elementų. Tai apima aiškų tyrimo plano sudarymą, hipotezių formulavimą, duomenų rinkimą ir analizę, siekiant išvengti fragmentiškumo ir užtikrinti išsamumą.",
+            INSTRUMENTINIS_SAVARANKIŠKUMAS: "Instrumentinis savarankiškumas (инструментальной самообеспеченности) pabrėžia, kad mokslinis tyrimas turi turėti pakankamus įrankius ir metodus savo tikslams pasiekti. Tai reiškia, kad tyrimas turi būti aprūpintas reikalinga įranga, programine įranga ir technologijomis, kurios leidžia efektyviai rinkti ir analizuoti duomenis.",
+            OBJEKTYVUMAS: "Objektyvumas (объективности) reiškia, kad mokslinis tyrimas turi būti atliekamas be asmeninių šališkumų, išankstinių nuostatų ar subjektyvių interpretacijų. Tai siekiama užtikrinti, kad tyrimo rezultatai atspindėtų tikrovę tokią, kokia ji yra, nepriklausomai nuo tyrėjo. Objektyvumas yra esminis mokslo patikimumui ir universalumui.",
+            PROBLEMOS_FORMULAVIMAS: "Tai pirmasis tyrimo etapas, kuriame aiškiai apibrėžiamas tyrimo objektas, formuluojamas pagrindinis klausimas arba problema, kurią siekiama išspręsti. Svarbu, kad problema būtų aktuali, nauja ir moksliškai tiriama.",
+            HIPOTEZES_KELIMAS: "Remiantis esamomis žiniomis ir teorija, formuluojama hipotezė – pagrįstas spėjimas apie galimą problemos sprendimą ar reiškinio paaiškinimą. Hipotezė turi būti patikrinama, t. y., turi būti įmanoma ją patvirtinti arba paneigti tyrimo metu.",
+            DUOMENU_RINKIMAS: "Šiame etape, remiantis pasirinkta metodika (pvz., eksperimentu, stebėjimu, apklausa), renkami empiriniai duomenys, kurie padės patikrinti iškeltą hipotezę. Svarbu užtikrinti duomenų patikimumą ir validumą.",
+            DUOMENU_ANALIZE: "Surinkti duomenys yra sisteminami, apdorojami ir analizuojami naudojant statistinius ar kitus analizės metodus. Šio etapo tikslas – išryškinti dėsningumus, patvirtinti arba paneigti hipotezę.",
+            ISVADU_DARYMAS: "Remiantis duomenų analizės rezultatais, formuluojamos išvados, kurios atsako į tyrimo pradžioje keltą klausimą. Išvados turi būti logiškai pagrįstos ir tiesiogiai susijusios su gautais duomenimis.",
+            REZULTATU_VIESINIMAS: "Tyrimo rezultatai ir išvados yra pristatomi mokslo bendruomenei (pvz., publikuojant straipsnį, skaitant pranešimą konferencijoje). Tai užtikrina mokslo viešumą, leidžia kitiems mokslininkams patikrinti rezultatus ir jais remtis savo tyrimuose."
+        };
+
+        const cellStyle = {
+            padding: '10px',
+            textAlign: 'center',
+            verticalAlign: 'middle',
+            border: '1px solid #ccc',
+            whiteSpace: 'nowrap',
+        };
+
+        const buttonStyle = {
+            fontSize: '1em',
+            height: 'auto',
+            padding: '10px 15px',
+            borderRadius: '8px',
+            whiteSpace: 'normal',
+            lineHeight: '1.2',
+        };
+
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f0f0', fontFamily: 'Inter, sans-serif', padding: '20px', boxSizing: 'border-box' }}>
+                <div style={{ border: '2px solid black', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                    <table style={{ borderCollapse: 'collapse', fontSize: '2em', width: 'auto' }}>
+                        <thead>
+                        <tr>
+                            <th colSpan="7" style={{ backgroundColor: '#e0e0e0', fontWeight: 'bold', textAlign: 'center', padding: '10px 0' }}>
+                                Mokslo Metodologijos Principai
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Esmingumas', explanations.ESMINGUMAS, '💡')}>💡 Esmingumas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Apibendrinimas', explanations.APIBENDRINIMAS, '🌐')}>🌐 Apibendrinimas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Pagrįstumas', explanations.PAGRĮSTUMAS, '✅')}>✅ Pagrįstumas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Sistemiškumas', explanations.SISTEMIŠKUMAS, '⚙️')}>⚙️ Sistemiškumas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Instrumentinis Savarankiškumas', explanations.INSTRUMENTINIS_SAVARANKIŠKUMAS, '🛠️')}>🛠️ Instrumentinis Savarankiškumas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Objektyvumas', explanations.OBJEKTYVUMAS, '⚖️')}>⚖️ Objektyvumas</Button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan="7" style={{ borderTop: '2px solid black', padding: '0' }}></td>
+                        </tr>
+                        <tr>
+                            <th colSpan="7" style={{ backgroundColor: '#e0e0e0', fontWeight: 'bold', textAlign: 'center', padding: '10px 0' }}>
+                                Mokslo Tyrimo Etapai
+                            </th>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Problemos Formulavimas', explanations.PROBLEMOS_FORMULAVIMAS, '❓')}>❓ Problemos Formulavimas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Hipotezės Kėlimas', explanations.HIPOTEZES_KELIMAS, '🤔')}>🤔 Hipotezės Kėlimas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Duomenų Rinkimas', explanations.DUOMENU_RINKIMAS, '📊')}>📊 Duomenų Rinkimas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Duomenų Analizė', explanations.DUOMENU_ANALIZE, '📈')}>📈 Duomenų Analizė</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Išvadų Darymas', explanations.ISVADU_DARYMAS, '📄')}>📄 Išvadų Darymas</Button>
+                            </td>
+                            <td style={cellStyle}>
+                                <Button style={buttonStyle} onClick={() => showModal('Rezultatų Viešinimas', explanations.REZULTATU_VIESINIMAS, '📢')}>📢 Rezultatų Viešinimas</Button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <Modal
+                    title={modalEmoji ? `${modalEmoji} ${modalTitle}` : modalTitle}
+                    visible={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    footer={[
+                        <Button key="back" onClick={handleCancel}>
+                            Uždaryti
+                        </Button>,
+                    ]}
+                >
+                    <p style={{ fontSize: '2.0em', lineHeight: '1.5' }}>{modalContent}</p>
+                </Modal>
+            </div>
+        );
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

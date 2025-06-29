@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patirčių Modifikavimo Technika</title>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/d3@7"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.13.3/antd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.13.3/reset.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    html, body, #root {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5;
+    }
+
+    .diagram-container {
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        width: 100%;
+        background-color: #fff;
+        z-index: 10;
+        flex-shrink: 0;
+    }
+
+    .main-heading {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    
+    .api-key-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .flow-diagram-wrapper {
+        width: 100%;
+        height: 100%;
+        flex-grow: 1;
+        position: relative;
+    }
+
+    #flow-diagram-svg {
+      width: 100%;
+      height: 100%;
+      background-color: #f7fafc;
+    }
+
+    .node-rect {
+      fill: #4299e1;
+      stroke: #2b6cb0;
+      stroke-width: 2;
+      rx: 12;
+      ry: 12;
+      transition: fill 0.3s ease, transform 0.2s ease, stroke 0.3s;
+      cursor: default; /* Changed cursor to default */
+    }
+
+    .node-rect:hover {
+      fill: #3182ce;
+      transform: scale(1.02);
+    }
+    
+    .node-rect.active {
+        stroke: #dd6b20;
+        stroke-width: 4px;
+    }
+    
+    .node-rect.end-node {
+        fill: #48bb78;
+        stroke: #2f855a;
+    }
+
+    .node-content-foreignobject {
+      pointer-events: all;
+      overflow: visible;
+    }
+
+    .node-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      padding: 10px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    
+    .node-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .node-input {
+        width: 90%;
+        margin-top: 8px;
+    }
+    
+    .ant-input, .ant-slider, .ant-input-number, .ant-btn {
+        pointer-events: all;
+        background: #ffffff;
+    }
+
+    .edge-line {
+      stroke: #718096;
+      stroke-width: 2.5;
+      fill: none;
+    }
+    
+    .edge-line.has-marker {
+        marker-end: url(#arrowhead);
+    }
+    
+    .edge-label-text {
+      fill: #2d3748;
+      font-size: 14px;
+      font-weight: bold;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+    
+    .edge-label-bg {
+        fill: #f7fafc;
+    }
+
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
+
+  const Node = ({ id, x, y, width, height, children, isActive, isEndNode = false }) => {
+    const nodeRef = useRef();
+
+    // Nodes are not draggable, so no d3.drag() is applied
+    // The useEffect hook that previously handled d3.drag is now completely removed.
+    // This ensures no drag behavior is ever attached to the nodes.
+    // The onDrag prop is also removed from the Node component's signature.
+    // The cursor style is handled in CSS.
+
+    return (
+      <g ref={nodeRef} transform={`translate(${x},${y})`}>
+        <rect 
+            className={`node-rect ${isActive ? 'active' : ''} ${isEndNode ? 'end-node' : ''}`}
+            x={-width / 2} 
+            y={-height / 2} 
+            width={width} 
+            height={height} 
+        />
+        <foreignObject x={-width / 2} y={-height / 2} width={width} height={height} className="node-content-foreignobject">
+          <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+            {children}
+          </div>
+        </foreignObject>
+      </g>
+    );
+  };
+
+  const Edge = ({ source, target, label, hasMarker = true }) => {
+    if (!source || !target) return null;
+
+    const dx = target.x - source.x;
+    const dy = target.y - source.y;
+    const angle = Math.atan2(dy, dx);
+    
+    const getIntersectionPoint = (node, angle) => {
+        const w = node.width / 2;
+        const h = node.height / 2;
+        const tan_phi = h / w;
+        const tan_theta = Math.abs(Math.tan(angle));
+
+        let x_border, y_border;
+
+        if (tan_theta < tan_phi) {
+            x_border = w;
+            y_border = w * tan_theta;
+        } else {
+            x_border = h / tan_theta;
+            y_border = h;
+        }
+        
+        return {
+            x: x_border * Math.sign(Math.cos(angle)),
+            y: y_border * Math.sign(Math.sin(angle))
+        }
+    }
+
+    const sourceIntersection = getIntersectionPoint(source, angle);
+    const targetIntersection = getIntersectionPoint(target, angle + Math.PI);
+
+    const sourcePoint = {
+        x: source.x + sourceIntersection.x,
+        y: source.y + sourceIntersection.y
+    };
+
+    const targetPoint = {
+        x: target.x + targetIntersection.x,
+        y: target.y + targetIntersection.y
+    };
+    
+    const path = d3.line()([[sourcePoint.x, sourcePoint.y], [targetPoint.x, targetPoint.y]]);
+    
+    const labelX = (source.x + target.x) / 2;
+    const labelY = (source.y + target.y) / 2;
+
+    return (
+      <g>
+        <path d={path} className={`edge-line ${hasMarker ? 'has-marker' : ''}`} />
+        {label && 
+            <text x={labelX} y={labelY} dy="-5" className="edge-label-text">
+                {label}
+            </text>
+        }
+      </g>
+    );
+  };
+
+  const FlowDiagram = ({ children, width, height }) => {
+    const [nodes, setNodes] = useState([]);
+    const [edges, setEdges] = useState([]);
+    const [transform, setTransform] = useState(d3.zoomIdentity);
+    const svgRef = useRef();
+
+    useEffect(() => {
+      const parsedNodes = React.Children.toArray(children)
+        .filter(c => c.type === Node)
+        .map(c => ({ ...c.props, width: c.props.width || 250, height: c.props.height || 150 }));
+      
+      const parsedEdges = React.Children.toArray(children)
+        .filter(c => c.type === Edge)
+        .map(c => c.props);
+
+      setNodes(parsedNodes);
+      setEdges(parsedEdges);
+    }, [children]);
+
+    useEffect(() => {
+        // Zoom and pan functionality is disabled as per user request.
+        // The initial transform is set to center the diagram.
+        setTransform(d3.zoomIdentity.translate(width / 2, height / 2).scale(0.7));
+    }, [width, height]);
+
+    return (
+        <svg id="flow-diagram-svg" ref={svgRef} width={width} height={height}>
+          <defs>
+            <marker id="arrowhead" viewBox="-0 -5 10 10" refX="5" refY="0" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0,-5 L 10,0 L 0,5" fill="#718096"></path>
+            </marker>
+          </defs>
+          <g transform={transform}>
+            {edges.map((edge, i) => (
+              <Edge
+                key={`edge-${i}`}
+                source={nodes.find(n => n.id === edge.source)}
+                target={nodes.find(n => n.id === edge.target)}
+                label={edge.label}
+                hasMarker={edge.hasMarker}
+              />
+            ))}
+            {nodes.map(node => (
+              <Node key={node.id} {...node}>
+                {node.children}
+              </Node>
+            ))}
+          </g>
+        </svg>
+    );
+  };
+</script>
+
+<script type="text/babel">
+  const { Input, InputNumber, Button, Spin, message } = antd;
+  
+  const App = () => {
+    const [apiKey, setApiKey] = useState('');
+    const [data, setData] = useState({
+      step1: '', step2: '', step3: '', step4: '', step5: '',
+      step6: 0, step7: '', step8: '', step9: 0
+    });
+    const [activeStep, setActiveStep] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
+    const diagramWrapperRef = useRef(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const TEXT_AREA_FONT_SIZE = 30;
+    const AUTO_SIZE = {minRows: 5, maxRows: 10};
+
+    // Load data and API key from local storage on startup
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem('pmt-app-data');
+            if (savedData) {
+                setData(JSON.parse(savedData));
+            }
+            const savedApiKey = localStorage.getItem('gemini-api-key');
+            if (savedApiKey) {
+                setApiKey(savedApiKey);
+            }
+        } catch (error) {
+            console.error("Failed to load data from local storage", error);
+            message.error("Klaida kraunant duomenis iš lokalios saugyklos.");
+        }
+    }, []);
+
+    // Save data to local storage on change
+    useEffect(() => {
+        try {
+            localStorage.setItem('pmt-app-data', JSON.stringify(data));
+        } catch (error) {
+            console.error("Failed to save data to local storage", error);
+        }
+    }, [data]);
+
+    const handleApiKeySave = () => {
+        localStorage.setItem('gemini-api-key', apiKey);
+        message.success("API raktas sėkmingai išsaugotas!");
+    };
+
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver(entries => {
+            if (entries && entries.length > 0) {
+                const { width, height } = entries[0].contentRect;
+                setDimensions({ width, height });
+            }
+        });
+
+        if (diagramWrapperRef.current) {
+            resizeObserver.observe(diagramWrapperRef.current);
+        }
+
+        return () => {
+            if (diagramWrapperRef.current) {
+                resizeObserver.unobserve(diagramWrapperRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (activeStep === 10) {
+            const timer = setTimeout(() => {
+                if (data.step9 < 10) {
+                    setActiveStep(7);
+                } else {
+                    setActiveStep(null); // End process
+                    setIsCompleted(true);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [activeStep, data.step9]);
+
+    const handleInputChange = (step, value) => {
+      setData(prev => ({ ...prev, [step]: value }));
+      const currentStepNum = parseInt(step.replace('step', ''));
+
+      if (currentStepNum < 6) {
+          setActiveStep(currentStepNum + 1);
+      } else if (currentStepNum === 7) {
+          setActiveStep(8);
+      } else if (currentStepNum === 8) {
+          setActiveStep(9);
+      } else if (currentStepNum === 9) {
+          setActiveStep(10);
+      }
+    };
+    
+    const callGeminiAPI = async (prompt) => {
+        if (!apiKey) {
+            throw new Error("Nenurodytas Gemini API raktas. Prašome jį įvesti ir išsaugoti.");
+        }
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }]
+        };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("API Error:", errorBody);
+            throw new Error(`API klaida: ${response.status} - ${errorBody.error?.message || 'Nežinoma klaida'}`);
+        }
+
+        const responseData = await response.json();
+        return responseData.candidates[0].content.parts[0].text;
+    };
+
+    const handleGenerate = async () => {
+        setIsLoading(true);
+        const prompt = `Atsakyk lietuviškai. Analizuojama situacija:
+        - Vieta: ${data.step1 || 'nenurodyta'}
+        - Laikas: ${data.step2 || 'nenurodytas'}
+        - Dalyviai: ${data.step3 || 'nenurodyti'}
+        - Aprašymas: ${data.step4 || 'nenurodyta'}
+        - Nemaloniausia dalis: ${data.step5 || 'nenurodyta'}
+        - Įvertinimas (nuo -10 iki 10): ${data.step9}
+        
+        Pasiūlyk, kas galėtų būti kitaip šioje patirtyje, kad ji taptų priimtinesnė ir teigiamesnė. Pateik konkretų, įgyvendinamą pasiūlymą. Atsakymą pateik kaip vienu labai trumpu sakiniu, keliais žodžiais, be formatavimo. Tai neturi būti pasiulymas ką daryti, tai gali būti visiška fantazija. Sakinys gali prasidėti - "turėtų būti taip ir taip...", ar sugalvok ką nors panašaus.`;
+
+        try {
+            const suggestion = await callGeminiAPI(prompt);
+            setData(prev => ({ ...prev, step7: suggestion }));
+            setActiveStep(7);
+        } catch (error) {
+            console.error("Error generating suggestion:", error);
+            message.error(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const isStepActive = (stepNum) => activeStep === stepNum;
+
+    const NODE_WIDTH = 500;
+    const NODE_HEIGHT = 300;
+
+    const POSX1 = -650;
+    const POSX2 = 650;
+    const POSX3 = 0;
+
+    const POSY1 = -525;
+    const POSY2 = -175;
+    const POSY3 = 175;
+
+    const nodePositions = {
+        step1: { x: POSX1, y: POSY1 },
+        step2: { x: POSX3, y: POSY1 },
+        step3: { x: POSX2, y: POSY1 },
+
+        step4: { x: POSX1, y: POSY2 },
+        step5: { x: POSX3, y: POSY2 },
+        step6: { x: POSX2, y: POSY2 },
+
+        step7: { x: POSX1, y: POSY3 },
+        step8: { x: POSX3, y: POSY3 },
+        step9: { x: POSX2, y: POSY3 },
+
+        step10: { x: POSX3, y: 525 },
+    };
+
+    return (
+      <div className="diagram-container">
+        <div className="header">
+            <h1 className="main-heading">Patirčių Modifikavimo Technika</h1>
+            <div className="api-key-container">
+                <Input.Password 
+                    placeholder="Įveskite Gemini API raktą" 
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    style={{ width: 250 }}
+                />
+                <Button type="primary" onClick={handleApiKeySave}>Išsaugoti</Button>
+            </div>
+        </div>
+        <div ref={diagramWrapperRef} className="flow-diagram-wrapper">
+            {dimensions.width > 0 && (
+                <FlowDiagram width={dimensions.width} height={dimensions.height}>
+                  <Node id="step1" {...nodePositions.step1} isActive={isStepActive(1)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">1. Kur tu randiesi?</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step1} onChange={e => handleInputChange('step1', e.target.value)} placeholder="Namuose, darbe, gamtoje..." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step2" {...nodePositions.step2} isActive={isStepActive(2)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">2. Kada tai vyksta?</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step2} onChange={e => handleInputChange('step2', e.target.value)} placeholder="Vakare, po darbo, savaitgalį..." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step3" {...nodePositions.step3} isActive={isStepActive(3)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">3. Kas yra dalyviai?</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step3} onChange={e => handleInputChange('step3', e.target.value)} placeholder="Aš, kolega, šeimos narys..." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step4" {...nodePositions.step4} isActive={isStepActive(4)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">4. Trumpai aprašyk patirtį</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step4} onChange={e => handleInputChange('step4', e.target.value)} placeholder="Aprašyk situaciją, kas įvyko." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step5" {...nodePositions.step5} isActive={isStepActive(5)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">5. Nemaloniausia dalis?</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step5} onChange={e => handleInputChange('step5', e.target.value)} placeholder="Kas konkrečiai sukėlė daugiausiai neigiamų emocijų?" style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step6" {...nodePositions.step6} isActive={isStepActive(6)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">6. Įvertink patirtį</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginBottom: '10px' }}>
+                        <Button onClick={() => setData(prev => ({...prev, step6: Math.max(-10, prev.step6 - 1)}))} style={{ marginRight: '8px', backgroundColor: 'lightgreen' }}>-</Button>
+                        <InputNumber min={-10} max={10} value={data.step6} onChange={value => setData(prev => ({...prev, step6: value}))} style={{ width:"65px", height:"75px", fontSize: 40 }}/>
+                        <Button onClick={() => setData(prev => ({...prev, step6: Math.min(10, prev.step6 + 1)}))} style={{ marginLeft: '8px', backgroundColor: 'lightcoral' }}>+</Button>
+                    </div>
+                    <Button onClick={handleGenerate} loading={isLoading} style={{ width:"300px", height:"70px", fontSize: 30 }}>Generuoti pasiūlymą</Button>
+                  </Node>
+                  <Node id="step7" {...nodePositions.step7} isActive={isStepActive(7)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">7. Kas turėtų būti kitaip?<Spin spinning={isLoading}/></div>
+                        <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step7} onChange={e => handleInputChange('step7', e.target.value)} placeholder="Čia atsiras sugeneruotas pasiūlymas..." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step8" {...nodePositions.step8} isActive={isStepActive(8)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">8. Pakeista patirtis (tarsi dabar)</div>
+                    <Input.TextArea autoSize={AUTO_SIZE} className="node-input" value={data.step8} onChange={e => handleInputChange('step8', e.target.value)} placeholder="Aprašyk patirtį iš naujo, su norimais pakeitimais." style={{width: '100%', fontSize: TEXT_AREA_FONT_SIZE}} />
+                  </Node>
+                  <Node id="step9" {...nodePositions.step9} isActive={isStepActive(9)} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">9. Įvertink naują patirtį</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        <Button onClick={() => handleInputChange('step9', Math.max(-10, data.step9 - 1))} style={{ marginRight: '8px', backgroundColor: 'lightgreen' }}>-</Button>
+                        <InputNumber min={-10} max={10} value={data.step9} onChange={value => handleInputChange('step9', value)}  style={{ width:"65px", height:"75px", fontSize: 40 }} />
+                        <Button onClick={() => handleInputChange('step9', Math.min(10, data.step9 + 1))} style={{ marginLeft: '8px', backgroundColor: 'lightcoral' }}>+</Button>
+                    </div>
+                  </Node>
+                  <Node id="step10" {...nodePositions.step10} isActive={activeStep === 10 || isCompleted} isEndNode={isCompleted} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                    <div className="node-title">{isCompleted ? 'Pabaiga' : '10. Sprendimas'}</div>
+                    {isCompleted ? (
+                        <div>Sėkmingai užbaigėte techniką.</div>
+                    ) : (
+                        <>
+                            <div>Įvertinimas: {data.step9}</div>
+                            <div>{data.step9 < 10 ? 'Procesas kartojamas...' : 'Procesas baigtas!'}</div>
+                            {data.step9 < 10 && <Button onClick={handleGenerate} loading={isLoading} style={{ width:"300px", height:"70px", fontSize: 30, marginTop: "10px" }}>Generuoti pasiūlymą</Button>}
+                        </>
+                    )}
+                  </Node>
+
+                  <Edge source="step1" target="step2" />
+                  <Edge source="step2" target="step3" />
+                  <Edge source="step3" target="step4" />
+                  <Edge source="step4" target="step5" />
+                  <Edge source="step5" target="step6" />
+                  <Edge source="step6" target="step7" label="Generuoti" />
+                  <Edge source="step7" target="step8" />
+                  <Edge source="step8" target="step9" />
+                  <Edge source="step9" target="step10" />
+                  <Edge source="step10" target="step7" label="Kartoti (<10)" />
+                </FlowDiagram>
+            )}
+        </div>
+      </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
