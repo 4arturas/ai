@@ -73,14 +73,9 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const trainButton = document.getElementById('trainButton');
-        const runButton = document.getElementById('runButton');
-        const qTableElement = document.getElementById('q-table');
+
 
         const gridSize = 4;
-        const tileSize = canvas.width / gridSize;
         const states = gridSize * gridSize;
         const actions = 4; // 0: up, 1: right, 2: down, 3: left
 
@@ -101,45 +96,6 @@
         const epsilonDecay = 0.999;
         const minEpsilon = 0.1;
         const trainingEpisodes = 10000;
-
-        function drawWorld() {
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    const tileIndex = y * gridSize + x;
-                    switch (lake[tileIndex]) {
-                        case 'S': ctx.fillStyle = 'lightblue'; break;
-                        case 'F': ctx.fillStyle = 'white'; break;
-                        case 'H': ctx.fillStyle = 'black'; break;
-                        case 'G': ctx.fillStyle = 'gold'; break;
-                    }
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                    ctx.strokeStyle = 'gray';
-                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                }
-            }
-        }
-
-        function drawAgent() {
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.arc(agentPos.x * tileSize + tileSize / 2, agentPos.y * tileSize + tileSize / 2, tileSize / 3, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-
-        function updateQTableDisplay(currentState = -1) {
-            let html = '<thead><tr><th>State</th><th>Up</th><th>Right</th><th>Down</th><th>Left</th></tr></thead><tbody>';
-            for (let i = 0; i < states; i++) {
-                const highlightClass = (i === currentState) ? ' class="highlight"' : '';
-                html += `<tr${highlightClass}><td>${i}</td>`;
-                for (let j = 0; j < actions; j++) {
-                    html += `<td>${qTable[i][j].toFixed(2)}</td>`;
-                }
-                html += '</tr>';
-            }
-            html += '</tbody>';
-            qTableElement.innerHTML = html;
-        }
-
         function getState() {
             return agentPos.y * gridSize + agentPos.x;
         }
@@ -201,10 +157,58 @@
                 }
                 epsilon = Math.max(minEpsilon, epsilon * epsilonDecay);
             }
-            alert('Training complete!');
-            updateQTableDisplay();
-            draw();
         }
+
+    </script>
+    <script>
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const trainButton = document.getElementById('trainButton');
+        const runButton = document.getElementById('runButton');
+        const qTableElement = document.getElementById('q-table');
+
+        const tileSize = canvas.width / gridSize;
+
+        function drawWorld() {
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const tileIndex = y * gridSize + x;
+                    switch (lake[tileIndex]) {
+                        case 'S': ctx.fillStyle = 'lightblue'; break;
+                        case 'F': ctx.fillStyle = 'white'; break;
+                        case 'H': ctx.fillStyle = 'black'; break;
+                        case 'G': ctx.fillStyle = 'gold'; break;
+                    }
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    ctx.strokeStyle = 'gray';
+                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                }
+            }
+        }
+
+        function drawAgent() {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(agentPos.x * tileSize + tileSize / 2, agentPos.y * tileSize + tileSize / 2, tileSize / 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function updateQTableDisplay(currentState = -1) {
+            let html = '<thead><tr><th>State</th><th>Up</th><th>Right</th><th>Down</th><th>Left</th></tr></thead><tbody>';
+            for (let i = 0; i < states; i++) {
+                const highlightClass = (i === currentState) ? ' class="highlight"' : '';
+                html += `<tr${highlightClass}><td>${i}</td>`;
+                for (let j = 0; j < actions; j++) {
+                    html += `<td>${qTable[i][j].toFixed(2)}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody>';
+            qTableElement.innerHTML = html;
+        }
+
+
 
         function runPolicy() {
             resetAgent();
@@ -218,7 +222,7 @@
                     clearInterval(interval);
                     const tile = lake[getState()];
                     if (tile === 'G') {
-                        alert('Goal reached!');
+                        // alert('Goal reached!');
                     } else {
                         alert('Agent failed to reach the goal.');
                     }
@@ -248,7 +252,13 @@
             drawAgent();
         }
 
-        trainButton.addEventListener('click', train);
+        trainButton.onclick = function ()
+        {
+            train();
+            // alert('Training complete!');
+            updateQTableDisplay();
+            draw();
+        }
         runButton.addEventListener('click', runPolicy);
 
         // Initial setup
