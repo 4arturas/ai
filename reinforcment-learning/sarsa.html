@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reinforcement Learning - Frozen Lake</title>
+    <title>Reinforcement Learning - SARSA</title>
     <style>
         body {
             font-family: sans-serif;
@@ -60,7 +60,7 @@
     </style>
 </head>
 <body>
-    <h1>Frozen Lake Q-Learning</h1>
+    <h1>Frozen Lake SARSA</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div class="controls">
         <button id="trainButton">Train Agent</button>
@@ -96,6 +96,7 @@
         const epsilonDecay = 0.999;
         const minEpsilon = 0.1;
         const trainingEpisodes = 10000;
+
         function getState() {
             return agentPos.y * gridSize + agentPos.x;
         }
@@ -141,24 +142,26 @@
             for (let i = 0; i < trainingEpisodes; i++) {
                 resetAgent();
                 let done = false;
+                let state = getState();
+                let action = chooseAction(state);
 
                 while (!done) {
-                    const state = getState();
-                    const action = chooseAction(state);
                     const { reward, done: newDone } = takeAction(action);
                     const newState = getState();
+                    const nextAction = chooseAction(newState);
 
                     const oldQValue = qTable[state][action];
-                    const nextMaxQ = newDone ? 0 : Math.max(...qTable[newState]);
-                    const newQ = oldQValue + learningRate * (reward + discountFactor * nextMaxQ - oldQValue);
+                    const nextQValue = newDone ? 0 : qTable[newState][nextAction];
+                    const newQ = oldQValue + learningRate * (reward + discountFactor * nextQValue - oldQValue);
                     qTable[state][action] = newQ;
 
+                    state = newState;
+                    action = nextAction;
                     done = newDone;
                 }
                 epsilon = Math.max(minEpsilon, epsilon * epsilonDecay);
             }
         }
-
     </script>
     <script>
 

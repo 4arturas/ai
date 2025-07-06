@@ -19,3 +19,15 @@ This project aims to teach reinforcement learning concepts through simple, inter
 ## Future Plans
 
 - Explore a different algorithm like SARSA.
+
+## SARSA Use Cases
+
+Here are some examples of problems that can be solved using the SARSA algorithm:
+
+1.  **Robotic Navigation:** Training a robot to navigate a maze or an obstacle course to reach a target destination.
+2.  **Elevator Scheduling:** Optimizing elevator movements in a building to minimize passenger wait times.
+3.  **Inventory Management:** Determining the optimal level of inventory to keep in stock to maximize profit and minimize waste.
+4.  **Simple Game AI:** Teaching an AI to play simple games like Tic-Tac-Toe or a simplified version of Pac-Man.
+5.  **Grid-World Problems:** A classic reinforcement learning problem where an agent learns to navigate a grid from a starting point to a goal while avoiding obstacles.
+6.  **Resource Management in a Network:** Allocating bandwidth or other network resources to different users or applications to optimize performance.
+7.  **Automated Guided Vehicle (AGV) Routing:** Directing AGVs in a warehouse to pick up and drop off items efficiently.

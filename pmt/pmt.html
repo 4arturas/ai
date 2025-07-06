@@ -441,9 +441,10 @@
         - Dalyviai: ${data.step3 || 'nenurodyti'}
         - Aprašymas: ${data.step4 || 'nenurodyta'}
         - Nemaloniausia dalis: ${data.step5 || 'nenurodyta'}
+        - Ankstesnis atsakymas: ${data.step8 || 'nenurodyta'}
         - Įvertinimas (nuo -10 iki 10): ${data.step9}
-        
-        Pasiūlyk, kas galėtų būti kitaip šioje patirtyje, kad ji taptų priimtinesnė ir teigiamesnė. Pateik konkretų, įgyvendinamą pasiūlymą. Atsakymą pateik kaip vienu labai trumpu sakiniu, keliais žodžiais, be formatavimo. Tai neturi būti pasiulymas ką daryti, tai gali būti visiška fantazija. Sakinys gali prasidėti - "turėtų būti taip ir taip...", ar sugalvok ką nors panašaus.`;
+
+        Pasiūlyk, kas galėtų būti kitaip šioje patirtyje, kad ji taptų priimtinesnė ir teigiamesnė. Pateik konkretų, įgyvendinamą pasiūlymą. Atsakymą pateik kaip vienu labai trumpu sakiniu, keliais žodžiais, be formatavimo. Tai neturi būti pasiulymas ką daryti, tai gali būti visiška fantazija. Sakinys gali prasidėti - "turėtų būti taip ir taip...", "gerai būtų kad...", ar sugalvok ką nors panašaus.`;
 
         try {
             const suggestion = await callGeminiAPI(prompt);
@@ -497,7 +498,7 @@
                     onChange={(e) => setApiKey(e.target.value)}
                     style={{ width: 250 }}
                 />
-                <Button type="primary" onClick={handleApiKeySave}>Išsaugoti</Button>
+                <Button type="secondary" onClick={handleApiKeySave}>Išsaugoti</Button>
             </div>
         </div>
         <div ref={diagramWrapperRef} className="flow-diagram-wrapper">

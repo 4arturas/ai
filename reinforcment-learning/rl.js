@@ -20,6 +20,7 @@ const lake = [
 
 let qTable = Array(states).fill(0).map(() => Array(actions).fill(0));
 let agentPos = { x: 0, y: 0 };
+
 function resetAgent()
 {
     agentPos = { x: 0, y: 0 };
@@ -32,23 +33,28 @@ function chooseAction( state )
 {
     if ( Math.random() < epsilon )
         return Math.floor( Math.random() * actions );
+    const maxQ = Math.max( ...qTable[state] );
+    const bestActions = [];
+    for ( let i = 0; i < actions; i++ )
+    {
+        if ( maxQ === qTable[state][i] )
+            bestActions.push( i );
+    }
+    return bestActions[Math.floor( Math.random()*bestActions.length)];
 }
-function takeAction( action )
+function takeActions( action )
 {
     let { x, y } = agentPos;
     if ( action === 0 ) y--;
     if ( action === 1 ) x++;
     if ( action === 2 ) y++;
     if ( action === 3 ) x--;
-
     if ( x < 0 || x >= gridSize || y < 0 || y >= gridSize )
         return { reward: -1, done: true };
-
-    agentPos = { x, y };
     const title = lake[getState()];
-    if ( title === 'H' )
+    if ( title === "H" )
         return { reward: -1, done: true };
-    if ( title === 'G' )
+    if ( title === "G" )
         return { reward: +1, done: true };
     return { reward: 0, done: false };
 }
@@ -56,19 +62,23 @@ function train()
 {
     for ( let i = 0; i < trainingEpisodes; i++ )
     {
+        resetAgent();
         let done = false;
+        let state = getState();
+        let action = chooseAction( state );
         while ( !done )
         {
-            const state = getState();
-            const action = chooseAction( state );
-            const { reward, done: newDone } = takeAction( action );
+            const { reward, done: newDone } = takeActions( action );
             const newState = getState();
+            const newAction = chooseAction( newState );
 
-            const oldQ = gaTable[state][action];
-            const nextMaxQ = Math.max( ...qTable[newState] );
-            const newQ = oldQ + learningRate * ( reward + discountFactor * nextMaxQ - oldQ );
+            const oldQ = qTable[state][action];
+            const nextQValue = newDone ? 0 : qTable[newState][newAction];
+            const newQ = oldQ + learningRate * ( reward + discountFactor * nextQValue - oldQ );
             qTable[state][action] = newQ;
 
+            state = newState;
+            action = newAction;
             done = newDone;
         }
         epsilon = Math.max( minEpsilon, epsilon*epsilonDecay );
