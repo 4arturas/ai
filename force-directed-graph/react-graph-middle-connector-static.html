@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Fullscreen Static Flow Diagram</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/d3@7"></script>
+  <style>
+    html, body {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .diagram-container {
+      width: 100vw;
+      height: 100vh;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .main-heading {
+      font-size: 2rem;
+      line-height: 2.25rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .flow-diagram-container {
+      width: 100%;
+      height: calc(100% - 70px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #flow-diagram-svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .node-rect {
+      fill: #4299e1;
+      stroke: #3182ce;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+      /*transition: fill 0.3s ease;*/
+      cursor: grab;
+    }
+
+    .node-rect:hover {
+      fill: #3182ce;
+    }
+
+    .node-content-foreignobject {
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .node-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      padding: 5px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    .node-content > div {
+      padding: 5px;
+      margin: 2px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      width: calc(100% - 10px);
+      box-sizing: border-box;
+    }
+
+    .edge-line {
+      stroke: #4a5568;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .edge-label-text {
+      /*fill: #4a5568;*/
+      font-size: 12px;
+      font-weight: bold;
+      text-anchor: middle;
+      /*background-color: #f7fafc;*/
+      padding: 2px 5px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .edge-label-foreignobject {
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .edge-label-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2d3748;
+      padding: 5px;
+      box-sizing: border-box;
+      user-select: none;
+      /*background-color: rgba(247, 250, 252, 0.85);*/
+      /*border-radius: 6px;*/
+    }
+
+    .connection-point {
+      fill: #4a5568;
+      stroke: #ffffff;
+      stroke-width: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .main-heading {
+        font-size: 1.5rem;
+        line-height: 2rem;
+      }
+      .node-content {
+        font-size: 12px;
+      }
+      .diagram-container {
+        padding: 10px;
+      }
+      .flow-diagram-container {
+        height: calc(100% - 60px);
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
+  const ReactDOM = window.ReactDOM;
+
+  const ConnectionType = {
+    TOP: 'top',
+    BOTTOM: 'bottom',
+    LEFT: 'left',
+    RIGHT: 'right',
+    DEFAULT: 'default'
+  };
+
+  const Node = ({ id, x, y, width, height, onDrag, children }) => {
+    const nodeRef = useRef();
+    const currentPosRef = useRef({ x, y });
+
+    useEffect(() => {
+      currentPosRef.current = { x, y };
+    }, [x, y]);
+
+    useEffect(() => {
+      const nodeElement = d3.select(nodeRef.current);
+
+      const dragBehavior = d3.drag()
+              .subject(function() {
+                return { x: currentPosRef.current.x, y: currentPosRef.current.y };
+              })
+              .on('start', function(event) {
+                onDrag(id, 'start', event);
+              })
+              .on('drag', function(event) {
+                onDrag(id, 'drag', event);
+              })
+              .on('end', function(event) {
+                onDrag(id, 'end', event);
+              });
+
+      nodeElement.call(dragBehavior);
+
+      return () => {
+        nodeElement.on('.drag', null);
+      };
+    }, [id, onDrag]);
+
+    return (
+            <g ref={nodeRef} transform={`translate(${x - width / 2},${y - height / 2})`}>
+              <rect width={width} height={height} className="node-rect" />
+              <foreignObject x="0" y="0" width={width} height={height} className="node-content-foreignobject">
+                <div xmlns="http://www.w3.org/1999/xhtml" className="node-content">
+                  {children}
+                </div>
+              </foreignObject>
+              <text x={width / 2} y={height + 20} textAnchor="middle">
+                ({Math.round(x)}, {Math.round(y)})
+              </text>
+            </g>
+    );
+  };
+
+  const Edge = ({ source, target, label, linkHorizontal, linkVertical, sourceConnection = ConnectionType.DEFAULT, targetConnection = ConnectionType.DEFAULT }) => {
+    const dx_center = target.x - source.x;
+    const dy_center = target.y - source.y;
+    const isPrimarilyHorizontal = Math.abs(dx_center) > Math.abs(dy_center);
+
+    const calculateConnectionPoint = (node, type, isSource) => {
+      let px = node.x;
+      let py = node.y;
+
+      switch (type) {
+        case ConnectionType.TOP:
+          py = node.y - node.height / 2;
+          break;
+        case ConnectionType.BOTTOM:
+          py = node.y + node.height / 2;
+          break;
+        case ConnectionType.LEFT:
+          px = node.x - node.width / 2;
+          break;
+        case ConnectionType.RIGHT:
+          px = node.x + node.width / 2;
+          break;
+        case ConnectionType.DEFAULT:
+        default:
+          if (isPrimarilyHorizontal) {
+            px = node.x + (isSource ? (dx_center > 0 ? node.width / 2 : -node.width / 2) : (dx_center > 0 ? -node.width / 2 : node.width / 2));
+            py = node.y;
+          } else {
+            py = node.y + (isSource ? (dy_center > 0 ? node.height / 2 : -node.height / 2) : (dy_center > 0 ? -node.height / 2 : node.height / 2));
+            px = node.x;
+          }
+          break;
+      }
+      return { x: px, y: py };
+    };
+
+    const p0 = calculateConnectionPoint(source, sourceConnection, true);
+    const p3 = calculateConnectionPoint(target, targetConnection, false);
+
+    const pathData = isPrimarilyHorizontal
+            ? linkHorizontal({ source: p0, target: p3 })
+            : linkVertical({ source: p0, target: p3 });
+
+    let targetCx = p3.x;
+    let targetCy = p3.y;
+
+    const labelX = (p0.x + p3.x) / 2;
+    const labelY = (p0.y + p3.y) / 2;
+    const labelWidth = 120;
+    const labelHeight = 50;
+
+    const renderLabel = () => {
+      if (!label) {
+        return null;
+      }
+
+      if (typeof label === 'string') {
+        return (
+                <text
+                        x={labelX}
+                        y={labelY - 5}
+                        className="edge-label-text"
+                >
+                  {label}
+                </text>
+        );
+      }
+
+      return (
+              <foreignObject
+                      x={labelX - labelWidth / 2}
+                      y={labelY - labelHeight / 2}
+                      width={labelWidth}
+                      height={labelHeight}
+                      className="edge-label-foreignobject"
+              >
+                <div xmlns="http://www.w3.org/1999/xhtml" className="edge-label-content">
+                  {label}
+                </div>
+              </foreignObject>
+      );
+    };
+
+
+    return (
+            <>
+              <path d={pathData} className="edge-line" />
+              {renderLabel()}
+              <circle cx={targetCx} cy={targetCy} r={5} className="connection-point" />
+            </>
+    );
+  };
+
+  const FlowDiagram = ({ width, height, children }) => {
+    const [nodes, setNodes] = useState([]);
+    const [links, setLinks] = useState([]);
+    const [transform, setTransform] = useState(d3.zoomIdentity);
+
+    const svgRef = useRef();
+
+    const linkHorizontal = d3.linkHorizontal()
+            .x(d => d.x)
+            .y(d => d.y);
+
+    const linkVertical = d3.linkVertical()
+            .x(d => d.x)
+            .y(d => d.y);
+
+    useEffect(() => {
+      const parsedNodes = [];
+      const parsedLinks = [];
+
+      React.Children.forEach(children, child => {
+        if (React.isValidElement(child)) {
+          if (child.type === Node) {
+            parsedNodes.push({
+              id: child.props.id,
+              children: child.props.children,
+              width: child.props.width,
+              height: child.props.height,
+              x: child.props.x,
+              y: child.props.y,
+            });
+          } else if (child.type === Edge) {
+            parsedLinks.push({
+              source: child.props.source,
+              target: child.props.target,
+              label: child.props.children,
+              sourceConnection: child.props.sourceConnection,
+              targetConnection: child.props.targetConnection,
+            });
+          }
+        }
+      });
+
+      setNodes(parsedNodes);
+      setLinks(parsedLinks);
+    }, [children]);
+
+    const handleNodeDrag = useCallback((id, type, event) => {
+      setNodes(prevNodes => {
+        return prevNodes.map(node => {
+          if (node.id === id) {
+            const newX = (event.x - transform.x) / transform.k;
+            const newY = (event.y - transform.y) / transform.k;
+            return { ...node, x: newX, y: newY };
+          }
+          return node;
+        });
+      });
+    }, [transform]);
+
+    useEffect(() => {
+      const svg = d3.select(svgRef.current);
+
+      const zoom = d3.zoom()
+              .scaleExtent([0.1, 4])
+              .on('zoom', (event) => {
+                setTransform(event.transform);
+              });
+
+      svg.call(zoom);
+
+      return () => {
+        svg.on('.zoom', null);
+      };
+    }, []);
+
+    return (
+            <div className="flow-diagram-container">
+              <svg id="flow-diagram-svg" ref={svgRef} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+                <g className="main-group" transform={transform.toString()}>
+                  <g className="links">
+                    {links.map((link, index) => {
+                      const sourceNode = nodes.find(n => n.id === link.source);
+                      const targetNode = nodes.find(n => n.id === link.target);
+
+                      if (!sourceNode || !targetNode) {
+                        console.warn(`Skipping link ${link.source} -> ${link.target}: one or both nodes not found.`);
+                        return null;
+                      }
+
+                      return (
+                              <Edge
+                                      key={index}
+                                      source={sourceNode}
+                                      target={targetNode}
+                                      label={link.label}
+                                      linkHorizontal={linkHorizontal}
+                                      linkVertical={linkVertical}
+                                      sourceConnection={link.sourceConnection}
+                                      targetConnection={link.targetConnection}
+                              />
+                      );
+                    })}
+                  </g>
+                  <g className="nodes">
+                    {nodes.map(node => (
+                            <Node
+                                    key={node.id}
+                                    id={node.id}
+                                    width={node.width}
+                                    height={node.height}
+                                    x={node.x}
+                                    y={node.y}
+                                    onDrag={handleNodeDrag}
+                            >
+                              {node.children}
+                            </Node>
+                    ))}
+                  </g>
+                </g>
+              </svg>
+            </div>
+    );
+  };
+
+
+</script>
+<script type="text/babel">
+  const TestComponent = () => <div>Test</div>;
+
+  const NodeComponent = ({text, val}) =>
+          <div style={{backgroundColor:"white", color:"black", fontWeight:"",  border: "1px solid black", borderRadius:"10%", padding: "2px 5px"}}>
+            {text}<br/>{val}
+          </div>;
+
+  const EdgeComponent = ({val}) => <div style={{backgroundColor:"white", border: "1px solid black", borderRadius:"10%", padding: "2px 5px"}}>{val}%</div>;
+  const App = () => {
+    function setNode(id,text,val,x,y,width=150,height=70)
+    {
+      return { id,text,val,x,y,width,height };
+    }
+
+    const start = React.useRef(setNode("start", "Reality", 1000, 100, 400));
+    const step1 = React.useRef(setNode("step1", "Use Drugs", 1, 350, 200));
+    const step1a = React.useRef(setNode("step1a", "A", 1, 600, 100));
+    const step1b = React.useRef(setNode("step1b", "B", 1, 600, 300));
+    const step2 = React.useRef(setNode("step2", "No Drugs", 1, 350, 600));
+    const step2a = React.useRef(setNode("step2a", "C", 1, 600, 500));
+    const step2b = React.useRef(setNode("step2b", "D", 1, 600, 700));
+
+    function setEdge(source, target, label = "") {
+      return {source, target, label}
+    }
+
+
+    const step1_TO_step1a = React.useRef(setEdge(step1.current.id, step1a.current.id));
+    const start_TO_step1 = React.useRef(setEdge(start.current.id, step1.current.id, <EdgeComponent val={1}/> ));
+    const step1_TO_step1b = React.useRef(setEdge(step1.current.id, step1b.current.id));
+    const step2_TO_step2a = React.useRef(setEdge(step2.current.id, step2a.current.id, <div style={{border: "1px solid red"}}>Test</div>));
+    const step2_TO_step2b = React.useRef(setEdge(step2.current.id, step2b.current.id, <TestComponent/>));
+    const start_TO_step2 = React.useRef(setEdge(start.current.id, step2.current.id));
+
+
+    return (
+            <div className="diagram-container">
+              <FlowDiagram width={1600} height={900}>
+                <Node id={start.current.id} x={start.current.x} y={start.current.y} width={start.current.width} height={start.current.height}>
+                  <NodeComponent text={start.current.text} val={start.current.val}/>
+                </Node>
+                <Node id={step1.current.id} x={step1.current.x} y={step1.current.y} width={step1.current.width} height={step1.current.height}>
+                  <NodeComponent text={step1.current.text} val={step1.current.val}/>
+                </Node>
+                <Node id={step1a.current.id} x={step1a.current.x} y={step1a.current.y} width={step1a.current.width} height={step1a.current.height}>
+                  <NodeComponent text={step1a.current.text} val={step1a.current.val}/>
+                </Node>
+                <Node id={step1b.current.id} x={step1b.current.x} y={step1b.current.y} width={step1b.current.width} height={step1b.current.height}>
+                  <NodeComponent text={step1b.current.text} val={step1b.current.val}/>
+                </Node>
+                <Node id={step2.current.id} x={step2.current.x} y={step2.current.y} width={step2.current.width} height={step2.current.height}>
+                  <NodeComponent text={step2.current.text} val={step2.current.val}/>
+                </Node>
+                <Node id={step2a.current.id} x={step2a.current.x} y={step2a.current.y} width={step2a.current.width} height={step2a.current.height}>
+                  <NodeComponent text={step2a.current.text} val={step2a.current.val}/>
+                </Node>
+                <Node id={step2b.current.id} x={step2b.current.x} y={step2b.current.y} width={step2b.current.width} height={step2b.current.height}>
+                  <NodeComponent text={step2b.current.text} val={step2b.current.val}/>
+                </Node>
+
+                <Edge source={step1_TO_step1a.current.source} target={step1_TO_step1a.current.target}>{step1_TO_step1a.current.label}</Edge>
+                <Edge source={step1_TO_step1b.current.source} target={step1_TO_step1b.current.target}>{step1_TO_step1b.current.label}</Edge>
+                <Edge source={step2_TO_step2a.current.source} target={step2_TO_step2a.current.target}>{step2_TO_step2a.current.label}</Edge>
+                <Edge source={step2_TO_step2b.current.source} target={step2_TO_step2b.current.target}>{step2_TO_step2b.current.label}</Edge>
+                <Edge source={start_TO_step1.current.source} target={start_TO_step1.current.target}>{start_TO_step1.current.label}</Edge>
+                <Edge source={start_TO_step2.current.source} target={start_TO_step2.current.target}>{start_TO_step2.current.label}</Edge>
+              </FlowDiagram>
+            </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>

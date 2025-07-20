@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Metaphysics, Physics, Dialectics - Multilingual</title>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.5/reset.css" rel="stylesheet">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.26.5/antd.min.js"></script>
+    <style>
+        .lang-button {
+            margin: 0 8px;
+            cursor: pointer;
+        }
+        .essay-modal {
+            maxHeight: 500px;
+            overflowY: auto;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { Tabs, Table, Button, Modal } = antd;
+
+    // Translations object
+    const translations = {
+        en: {
+            title: 'Metaphysics, Physics, Dialectics',
+            metaphysics: 'Metaphysics',
+            physics: 'Physics',
+            dialectics: 'Dialectics',
+            property: 'Property',
+            description: 'Description',
+            info: 'Info',
+            example: 'Example',
+            physicsIntro: 'Physics begins with assumptions about space, time, causality, and matter—concepts rooted in metaphysical thought.',
+            metaphysicsIntro: 'The fundamental nature of what is real, beyond empirical observation.',
+            dialecticsIntro: 'The logic of contradictions, development through opposition and synthesis.',
+            essays: {
+                reality: "Reality in metaphysics refers to the ultimate nature of being, beyond empirical observation.",
+                existence: "The state of something having being, whether material or immaterial.",
+                being: "The quality or state of 'is'—what it means for something to exist or persist.",
+                time: "A dimension of experience, possibly emergent or fundamental to reality.",
+                causality: "The relationship between cause and effect at a conceptual level.",
+                consciousness: "The nature of awareness and subjective experience, not fully explained by physical laws.",
+                identity: "What makes an entity itself over time and change.",
+                possibility: "The realm of what could be, whether or not it is actualized.",
+                matter: "Physical substance that has mass and occupies space.",
+                energy: "The capacity to do work, conserved and transformable according to physical laws.",
+                motion: "Change in position of an object with respect to time and reference frame.",
+                force: "An interaction that changes the motion of an object; described through mathematical models.",
+                space: "A three-dimensional continuum in which objects are located and move.",
+                law: "A mathematical description of consistent behavior in nature.",
+                thesis: "An initial proposition or idea that starts the dialectical process.",
+                antithesis: "Opposition or negation of the initial idea, creating tension or contradiction.",
+                synthesis: "Resolution of contradiction by integrating thesis and antithesis into a higher-level idea.",
+                contradiction: "The core of dialectical development — the dynamic tension between opposites.",
+                development: "Progress through contradiction and synthesis, not linear progression.",
+                unity: "The unity of opposites — a key principle in dialectical logic.",
+                transformation: "Internal change driven by internal contradictions and their resolution."
+            },
+            examples: {
+                reality: "For example, the idea that time might not be real but an illusion created by human perception.",
+                existence: "A tree exists even when no one is observing it — but what does that mean metaphysically?",
+                being: "A river remains the same river even though its water is constantly changing.",
+                time: "Time may be a human construct, like how we divide the day into hours.",
+                causality: "If a tree falls in the forest and no one hears it, does it make a sound?",
+                consciousness: "A person may dream of flying, but this experience is not physical.",
+                identity: "A car that has all its parts replaced over time is still considered the same car.",
+                possibility: "A seed has the possibility of becoming a tree, even if it never grows.",
+                matter: "A rock is made of atoms and has mass and volume.",
+                energy: "A battery stores chemical energy and converts it into electrical energy.",
+                motion: "A car moving on the road changes its position relative to the Earth.",
+                force: "Gravity pulls objects toward the Earth, causing them to fall.",
+                space: "We live in a three-dimensional space, but we can imagine more dimensions mathematically.",
+                law: "Newton’s second law describes how force relates to mass and acceleration.",
+                thesis: "The world is governed by deterministic laws.",
+                antithesis: "Human beings have free will, which contradicts determinism.",
+                synthesis: "Free will and determinism can coexist in a higher-level understanding of reality.",
+                contradiction: "Freedom and necessity are opposites that drive social change.",
+                development: "History is not linear—it moves through conflict and resolution.",
+                unity: "Life and death are opposites but part of the same cycle.",
+                transformation: "Ice melts into water due to internal changes caused by heat."
+            }
+        },
+        ru: {
+            title: 'Метафизика, Физика, Диалектика',
+            metaphysics: 'Метафизика',
+            physics: 'Физика',
+            dialectics: 'Диалектика',
+            property: 'Свойство',
+            description: 'Описание',
+            info: 'Инфо',
+            example: 'Пример',
+            physicsIntro: 'Физика начинается с предположений о пространстве, времени, причинности и материи — концепциях, укоренившихся в метафизических идеях.',
+            metaphysicsIntro: 'Фундаментальная природа того, что реально, за пределами эмпирических наблюдений.',
+            dialecticsIntro: 'Логика противоречий, развитие через противоположности и синтез.',
+            essays: {
+                reality: "Реальность в метафизике относится к конечной природе бытия, за пределами эмпирических наблюдений.",
+                existence: "Существование — это состояние реальности, материальной или нематериальной.",
+                being: "Бытие — фундаментальное понятие в метафизике, означающее качество или состояние 'есть'.",
+                time: "Время — центральная тема метафизики, исследующая, является ли оно человеческой конструкцией или фундаментальной чертой реальности.",
+                causality: "Причинность исследует связь между причиной и следствием на концептуальном уровне.",
+                consciousness: "Сознание остается одной из великих загадок метафизики.",
+                identity: "Тождество исследует, что делает сущность самой собой во времени и изменении.",
+                possibility: "Возможность — это сфера того, что может быть, независимо от того, реализовано это или нет.",
+                matter: "Материя — физическое вещество, имеющее массу и занимающее пространство.",
+                energy: "Энергия — способность выполнять работу, сохраняемая и преобразуемая согласно физическим законам.",
+                motion: "Движение — изменение положения объекта относительно времени и системы отсчёта.",
+                force: "Сила — взаимодействие, изменяющее движение объекта; описывается с помощью математических моделей.",
+                space: "Пространство — трехмерный континуум, в котором находятся и перемещаются объекты.",
+                law: "Законы физики — математические описания согласованного поведения в природе.",
+                thesis: "Тезис — отправная точка в диалектике, предложение, инициирующее диалектический процесс.",
+                antithesis: "Антитезис противоположен тезису, создавая напряжение и противоречие.",
+                synthesis: "Синтез разрешает противоречие, интегрируя тезис и антитезис в более высокую идею.",
+                contradiction: "Противоречие — основа диалектического развития — динамическое напряжение между противоположностями.",
+                development: "Развитие в диалектике происходит через противоречие и синтез, а не линейное движение.",
+                unity: "Единство противоположностей — ключевой принцип диалектической логики.",
+                transformation: "Преобразование — внутреннее изменение, вызванное внутренними противоречиями и их разрешением."
+            },
+            examples: {
+                reality: "Например, идея, что время может быть иллюзией, созданной человеческим восприятием.",
+                existence: "Дерево существует даже тогда, когда его никто не видит — но что это означает метафизически?",
+                being: "Река остается той же рекой, хотя ее вода постоянно меняется.",
+                time: "Время может быть человеческой конструкцией, как деление дня на часы.",
+                causality: "Если дерево падает в лесу и никто его не слышит, издает ли оно звук?",
+                consciousness: "Человек может мечтать о полете, но этот опыт не физичен.",
+                identity: "Автомобиль, у которого со временем заменены все детали, все еще считается тем же автомобилем.",
+                possibility: "Семя имеет возможность стать деревом, даже если оно никогда не прорастает.",
+                matter: "Камень состоит из атомов и имеет массу и объем.",
+                energy: "Батарея хранит химическую энергию и преобразует ее в электрическую.",
+                motion: "Автомобиль, движущийся по дороге, меняет свое положение относительно Земли.",
+                force: "Гравитация притягивает объекты к Земле, заставляя их падать.",
+                space: "Мы живем в трехмерном пространстве, но можем представить больше измерений математически.",
+                law: "Второй закон Ньютона описывает, как сила связана с массой и ускорением.",
+                thesis: "Мир управляется детерминированными законами.",
+                antithesis: "У людей есть свободная воля, что противоречит детерминизму.",
+                synthesis: "Свободная воля и детерминизм могут сосуществовать в более высоком понимании реальности.",
+                contradiction: "Свобода и необходимость — противоположности, которые вызывают социальные изменения.",
+                development: "История не линейна — она движется через конфликт и разрешение.",
+                unity: "Жизнь и смерть — противоположности, но они часть одного цикла.",
+                transformation: "Лед тает в воду из-за внутренних изменений, вызванных теплом."
+            }
+        },
+        lt: {
+            title: 'Metafizika, Fizika, Dialektika',
+            metaphysics: 'Metafizika',
+            physics: 'Fizika',
+            dialectics: 'Dialektika',
+            property: 'Savybė',
+            description: 'Aprašymas',
+            info: 'Aprašymas',
+            example: 'Pavyzdys',
+            physicsIntro: 'Fizika prasideda nuo prielaidų apie erdvę, laiką, priežastingumą ir materiją – sąvokas, šaknijusias metafizinėje mąstysenoje.',
+            metaphysicsIntro: 'Fundamentali realybės prigimtis, esanti už empirinio stebėjimo ribų.',
+            dialecticsIntro: 'Prieštaravimų logika, vystymasis per priešingybes ir sintezę.',
+            essays: {
+                reality: "Realybė metafizikoje reiškia galutinę būties prigimtį, esančią už empirinio stebėjimo ribų.",
+                existence: "Egzistavimas yra būties būklė, tiek materiali, tiek nemateriali. Ji kelia klausimus apie būties prigimtį.",
+                being: "Būtis yra pagrindinis metafizikos terminas, reiškiantis „yra“ kokybę ar būklę.",
+                time: "Laikas yra viena svarbiausių metafizikos temų, tirianti, ar jis yra žmogaus sukurta sąvoka ar realybės esmė.",
+                causality: "Priežastingumas tyrinėja priežasties ir pasekmės ryšį konceptualiu lygmenimi.",
+                consciousness: "Sąmonė yra viena didžiausių metafizikos mįslių.",
+                identity: "Tapatumas tyrinėja, kas daro objektą pačiu savimi per laiką ir pokyčius.",
+                possibility: "Galimybė reiškia tai, kas galėtų būti – nepriklausomai nuo to, ar tai realizuota.",
+                matter: "Materija yra fizinė medžiaga, turinti masę ir užimanti erdvę.",
+                energy: "Energija yra darbo atlikimo gebėjimas, išlaikomas ir keičiamas pagal fizikinius dėsnius.",
+                motion: "Judėjimas yra objekto padėties pokytis laiko ir atskaitos sistemos atžvilgiu.",
+                force: "Jėga yra sąveika, keičianti objekto judėjimą; aprašoma matematiniais modeliais.",
+                space: "Erdvė yra trimatis tolydys, kuriame yra ir juda objektai.",
+                law: "Fizikos dėsniai yra matematiniai gamtos nuoseklaus elgsenos aprašymai.",
+                thesis: "Pradinis teiginys ar idėja, inicijuojanti dialektinį procesą.",
+                antithesis: "Priešinga ar neigianti idėja, sukurianti įtampą ar prieštaravimą.",
+                synthesis: "Prieštaravimo išsprendimas integruojant tezę ir antitezę į aukštesnio lygio idėją.",
+                contradiction: "Pagrindinė dialektinio vystymosi dalis – dinaminė įtampa tarp priešingybių.",
+                development: "Vystymasis dialektikoje vyksta per prieštaravimus ir sintezę, o ne tiesioginį judėjimą.",
+                unity: "Priešingybių vienybė – pagrindinis dialektinės logikos principas.",
+                transformation: "Vidinis pokytis, sukeltas vidinių prieštaravimų ir jų išsprendimo."
+            },
+            examples: {
+                reality: "Pavyzdžiui, laikas gali būti žmogaus sukurta iliuzija, kuri atsiranda dėl suvokimo.",
+                existence: "Medis egzistuoja net kai jo niekas nemato – bet ką tai reiškia metafiziškai?",
+                being: "Upė lieka ta pati upė, net jei jos vanduo nuolat keičiasi.",
+                time: "Laikas gali būti žmogaus sukurtas konceptas, kaip valandų skaičiavimas per dieną.",
+                causality: "Jei medis krenta miške ir niekas jo negirdi, ar jis sukelia garsą?",
+                consciousness: "Žmogus gali sapnuoti skrydį, bet šis patyrimas nėra fizinis.",
+                identity: "Automobilis, kurio dalys pakeistos, vis tiek laikomas tuo pačiu automobiliu.",
+                possibility: "Sėkla turi galimybę tapti medžiu, net jei ji niekada neauga.",
+                matter: "Akmuo sudarytas iš atomų, turi masę ir užima erdvę.",
+                energy: "Baterija kaupia cheminę energiją ir keičia ją į elektrinę.",
+                motion: "Automobilis, judėdamas keliu, keičia savo padėtį žemės atžvilgiu.",
+                force: "Gravitacija traukia objektus žemyn, verčiant juos kristi.",
+                space: "Gyvename trimatėje erdvėje, bet galime įsivaizduoti daugiau matmenų.",
+                law: "Niutono antrasis dėsnis apibūdina jėgos, masės ir pagreičio ryšį.",
+                thesis: "Pasaulis valdomas deterministinių dėsnių.",
+                antithesis: "Žmogus turi laisvą valią, kuri prieštarauja determinizmui.",
+                synthesis: "Laisvoji valia ir determinizmas gali egzistuoti kartu aukštesniame realybės supratime.",
+                contradiction: "Laisvė ir būtinybė – priešingybės, kurios skatina socialinius pokyčius.",
+                development: "Istorija nėra tiesioginė – ji vystosi per konfliktus ir jų išsprendimus.",
+                unity: "Gyvenimas ir mirtis – priešingybės, bet jos sudaro vieną ciklą.",
+                transformation: "Ledas tirpsta į vandenį dėl vidinių pokyčių, sukeltų šilumos."
+            }
+        }
+    };
+
+    // Property Translations
+    const propertyTranslations = {
+        en: {
+            reality: 'Reality',
+            existence: 'Existence',
+            being: 'Being',
+            time: 'Time',
+            causality: 'Causality',
+            consciousness: 'Consciousness',
+            identity: 'Identity',
+            possibility: 'Possibility',
+            matter: 'Matter',
+            energy: 'Energy',
+            motion: 'Motion',
+            force: 'Force',
+            space: 'Space',
+            law: 'Law',
+            thesis: 'Thesis',
+            antithesis: 'Antithesis',
+            synthesis: 'Synthesis',
+            contradiction: 'Contradiction',
+            development: 'Development',
+            unity: 'Unity',
+            transformation: 'Transformation'
+        },
+        ru: {
+            reality: 'Реальность',
+            existence: 'Существование',
+            being: 'Бытие',
+            time: 'Время',
+            causality: 'Причинность',
+            consciousness: 'Сознание',
+            identity: 'Тождество',
+            possibility: 'Возможность',
+            matter: 'Материя',
+            energy: 'Энергия',
+            motion: 'Движение',
+            force: 'Сила',
+            space: 'Пространство',
+            law: 'Закон',
+            thesis: 'Тезис',
+            antithesis: 'Антитезис',
+            synthesis: 'Синтез',
+            contradiction: 'Противоречие',
+            development: 'Развитие',
+            unity: 'Единство',
+            transformation: 'Преобразование'
+        },
+        lt: {
+            reality: 'Realybė',
+            existence: 'Egzistavimas',
+            being: 'Būtis',
+            time: 'Laikas',
+            causality: 'Priežastingumas',
+            consciousness: 'Sąmonė',
+            identity: 'Tapatumas',
+            possibility: 'Galimybė',
+            matter: 'Materija',
+            energy: 'Energija',
+            motion: 'Judėjimas',
+            force: 'Jėga',
+            space: 'Erdvė',
+            law: 'Dėsnis',
+            thesis: 'Tezė',
+            antithesis: 'Antitezė',
+            synthesis: 'Sintezė',
+            contradiction: 'Prieštaravimas',
+            development: 'Vystymasis',
+            unity: 'Vienybė',
+            transformation: 'Transformacija'
+        }
+    };
+
+    // JSON objects
+    const metaphysics = {
+        reality: {
+            en: "The fundamental nature of what is real, beyond empirical observation.",
+            ru: "Фундаментальная природа реального, выходящего за рамки эмпирических наблюдений.",
+            lt: "Fundamentali realybės prigimtis, esanti už empirinio stebėjimo ribų.",
+        },
+        existence: {
+            en: "The state or fact of something having being, whether material or immaterial.",
+            ru: "Состояние или факт наличия бытия у чего-либо, материального или нематериального.",
+            lt: "Būties būklė ar faktas, kad kažkas egzistuoja, tiek materialiame, tiek nematerialiame pasaulyje.",
+        },
+        being: {
+            en: "The quality or state of 'is'—what it means for something to exist or persist.",
+            ru: "Качество или состояние 'есть' — что означает для чего-либо существовать или сохраняться.",
+            lt: "„Yra“ kokybė ar būklė – ką reiškia egzistuoti ar išlikti.",
+        },
+        time: {
+            en: "A dimension of experience, possibly emergent or fundamental to reality.",
+            ru: "Измерение опыта, которое может быть возникающим или фундаментальным для реальности.",
+            lt: "Vienas iš patyrimo matmenų, galbūт atsirandantis arba esminis realybės aspektas.",
+        },
+        causality: {
+            en: "The relationship between cause and effect at a conceptual level.",
+            ru: "Связь между причиной и следствием на концептуальном уровне.",
+            lt: "Priežasties ir pasekmės ryšys konceptualiu lygmenimi.",
+        },
+        consciousness: {
+            en: "The nature of awareness and subjective experience, not fully explained by physical laws.",
+            ru: "Природа сознания и субъективного опыта, не полностью объясняемая физическими законами.",
+            lt: "Sąmonės ir subjektyvaus patyrimo prigimtis, kuri ne visiškai paaiškinama fiziniais dėsniais.",
+        },
+        identity: {
+            en: "What makes an entity itself over time and change.",
+            ru: "Что делает сущность самой собой во времени и изменении.",
+            lt: "Kas daro objektą pačiu savimi per laiką ir pokyčius.",
+        },
+        possibility: {
+            en: "The realm of what could be, whether or not it is actualized.",
+            ru: "Сфера того, что может быть, независимо от того, реализовано это или нет.",
+            lt: "Tas, kas galėtų būti – nepriklausomai nuo to, ar tai realizuota.",
+        }
+    };
+
+    const physics = {
+        metaphysics: {
+            en: "Physics begins with assumptions about space, time, causality, and matter—concepts rooted in metaphysical thought.",
+            ru: "Физика начинается с предположений о пространстве, времени, причинности и материи — концепциях, укоренившихся в метафизических идеях.",
+            lt: "Fizika prasideda nuo prielaidų apie erdvę, laiką, priežastingumą ir materiją – sąvokas, šaknijusias metafizinėje mąstysenoje.",
+        },
+        reality: {
+            en: "The observable and measurable universe governed by natural laws.",
+            ru: "Наблюдаемая и измеряемая вселенная, governed законами природы.",
+            lt: "Stebima ir matuojama visata, valdoma gamtos dėsnių.",
+        },
+        matter: {
+            en: "Physical substance that has mass and occupies space.",
+            ru: "Физическое вещество, имеющее массу и занимающее пространство.",
+            lt: "Fizinė medžiaga, turinti masę ir užimanti erdvę.",
+        },
+        energy: {
+            en: "The capacity to do work, conserved and transformable according to physical laws.",
+            ru: "Способность выполнять работу, сохраняемая и преобразуемая согласно физическим законам.",
+            lt: "Darbo atlikimo gebėjimas, kuris yra išlaikomas ir keičiamas pagal fizikinius dėsnius.",
+        },
+        motion: {
+            en: "Change in position of an object with respect to time and reference frame.",
+            ru: "Изменение положения объекта относительно времени и системы отсчёта.",
+            lt: "Objekto padėties pokytis laiko ir atskaitos sistemos atžvilgiu.",
+        },
+        force: {
+            en: "An interaction that changes the motion of an object; described through mathematical models.",
+            ru: "Взаимодействие, изменяющее движение объекта; описывается с помощью математических моделей.",
+            lt: "Sąveika, keičianti objekto judėjimą; aprašoma matematiniais modeliais.",
+        },
+        space: {
+            en: "A three-dimensional continuum in which objects are located and move.",
+            ru: "Трехмерный континуум, в котором находятся и перемещаются объекты.",
+            lt: "Trimatis tolydys, kuriame yra ir juda objektai.",
+        },
+        time: {
+            en: "A dimension in which events occur in sequence, measurable and quantifiable.",
+            ru: "Измерение, в котором события происходят последовательно, поддающееся измерению и количественной оценке.",
+            lt: "Matmuo, kuriame įvykiai vyksta seka, matuojamas ir kiekybiškai apibrėžiamas.",
+        },
+        law: {
+            en: "A mathematical description of consistent behavior in nature (e.g., Newton's laws, relativity, quantum mechanics).",
+            ru: "Математическое описание согласованного поведения в природе (например, законы Ньютона, теория относительности, квантовая механика).",
+            lt: "Matematinis gamtos nuoseklaus elgsenos aprašymas (pvz., Niutono dėsniai, reliatyvumo teorija, kvantinė mechanika).",
+        }
+    };
+
+    const dialectics = {
+        thesis: {
+            en: "An initial proposition or idea that starts the dialectical process.",
+            ru: "Исходное предложение или идея, которая запускает диалектический процесс.",
+            lt: "Pradinis teiginys ar idėja, inicijuojanti dialektinį procesą."
+        },
+        antithesis: {
+            en: "Opposition or negation of the initial idea, creating tension or contradiction.",
+            ru: "Противоположная или отрицающая идея, создающая напряжение или противоречие.",
+            lt: "Priešinga ar neigianti idėja, sukurianti įtampą ar prieštaravimą."
+        },
+        synthesis: {
+            en: "Resolution of contradiction by integrating thesis and antithesis into a higher-level idea.",
+            ru: "Разрешение противоречия путем интеграции тезиса и антитезиса в более высокую идею.",
+            lt: "Prieštaravimo išsprendimas integruojant tezę ir antitezę į aukštesnio lygio idėją."
+        },
+        contradiction: {
+            en: "The core of dialectical development — the dynamic tension between opposites.",
+            ru: "Основа диалектического развития — динамическое напряжение между противоположностями.",
+            lt: "Pagrindinė dialektinio vystymosi dalis – dinaminė įtampa tarp priešingybių."
+        },
+        development: {
+            en: "Progress through contradiction and synthesis, not linear progression.",
+            ru: "Развитие через противоречие и синтез, а не линейное движение.",
+            lt: "Vystymasis per prieštaravimus ir sintezę, o ne tiesioginis judėjimas."
+        },
+        unity: {
+            en: "The unity of opposites — a key principle in dialectical logic.",
+            ru: "Единство противоположностей — ключевой принцип диалектической логики.",
+            lt: "Priešingybių vienybė – pagrindinis dialektinės logikos principas."
+        },
+        transformation: {
+            en: "Internal change driven by internal contradictions and their resolution.",
+            ru: "Внутреннее изменение, вызванное внутренними противоречиями и их разрешением.",
+            lt: "Vidinis pokytis, sukeltas vidinių prieštaravimų ir jų išsprendimo."
+        }
+    };
+
+    function App() {
+        const [language, setLanguage] = React.useState('en');
+        const [isModalVisible, setIsModalVisible] = React.useState(false);
+        const [modalContent, setModalContent] = React.useState('');
+        const [modalTitle, setModalTitle] = React.useState('');
+
+        const showModal = (key, type) => {
+            setModalTitle(propertyTranslations[language][key]);
+            setModalContent(translations[language][type][key]);
+            setIsModalVisible(true);
+        };
+
+        const handleOk = () => setIsModalVisible(false);
+        const handleCancel = () => setIsModalVisible(false);
+
+        const objectToTableData = (obj, type) =>
+            Object.keys(obj).map((key) => ({
+                key,
+                property: propertyTranslations[language][key],
+                description: obj[key][language],
+                infoAction: (
+                    <Button onClick={() => showModal(key, 'essays')}>
+                        {translations[language].info}
+                    </Button>
+                ),
+                exampleAction: (
+                    <Button onClick={() => showModal(key, 'examples')}>
+                        {translations[language].example}
+                    </Button>
+                )
+            }));
+
+        const columns = [
+            {
+                title: translations[language].property,
+                dataIndex: 'property',
+                key: 'property',
+            },
+            {
+                title: translations[language].description,
+                dataIndex: 'description',
+                key: 'description',
+            },
+            {
+                title: translations[language].info,
+                dataIndex: 'infoAction',
+                key: 'action',
+            },
+            {
+                title: translations[language].example,
+                dataIndex: 'exampleAction',
+                key: 'example',
+            }
+        ];
+
+        return (
+            <div style={{ padding: 24 }}>
+                <div style={{ marginBottom: 16 }}>
+            <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
+              {translations[language].title}
+            </span>
+                    <div style={{ marginTop: 8 }}>
+                        <Button className="lang-button" onClick={() => setLanguage('en')}>English</Button>
+                        <Button className="lang-button" onClick={() => setLanguage('ru')}>Русский</Button>
+                        <Button className="lang-button" onClick={() => setLanguage('lt')}>Lietuvių</Button>
+                    </div>
+                </div>
+
+                <Tabs
+                    defaultActiveKey="1"
+                    items={[
+                        {
+                            label: translations[language].metaphysics,
+                            key: '1',
+                            children: (
+                                <Table
+                                    dataSource={objectToTableData(metaphysics, 'essays')}
+                                    columns={columns}
+                                    pagination={false}
+                                    size="middle"
+                                />
+                            ),
+                        },
+                        {
+                            label: translations[language].physics,
+                            key: '2',
+                            children: (
+                                <Table
+                                    dataSource={objectToTableData(physics, 'essays')}
+                                    columns={columns}
+                                    pagination={false}
+                                    size="middle"
+                                />
+                            ),
+                        },
+                        {
+                            label: translations[language].dialectics,
+                            key: '3',
+                            children: (
+                                <Table
+                                    dataSource={objectToTableData(dialectics, 'essays')}
+                                    columns={columns}
+                                    pagination={false}
+                                    size="middle"
+                                />
+                            ),
+                        },
+                    ]}
+                />
+
+                <Modal
+                    title={modalTitle}
+                    open={isModalVisible}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    footer={[
+                        <Button key="ok" onClick={handleOk}>OK</Button>
+                    ]}
+                >
+                    <div className="essay-modal">
+                        <p>{modalContent}</p>
+                    </div>
+                </Modal>
+            </div>
+        );
+    }
+
+    const { createRoot } = ReactDOM;
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
