@@ -471,11 +471,11 @@
     const [isModalVisible, setIsModalVisible] = useState(false);
     const shiftRight = 100;
 
-    const start = React.useRef(setNode("start", "Applicants", 10000, 100 + shiftRight, 400));
-    const step1UseDrugs = React.useRef(setNode("step1", "True", 1, 350 + shiftRight, 200));
+    const population = React.useRef(setNode("start", "Population", 10000, 100 + shiftRight, 400));
+    const trueFact = React.useRef(setNode("step1", "True", 1, 350 + shiftRight, 200));
     const truePositive = React.useRef(setNode("step1a", "Positive", 1, 600 + shiftRight, 100));
     const trueNegative = React.useRef(setNode("step1b", "Negative", 1, 600 + shiftRight, 300));
-    const step2NoDrugs = React.useRef(setNode("step2", "False", 1, 350 + shiftRight, 600));
+    const falseFact = React.useRef(setNode("step2", "False", 1, 350 + shiftRight, 600));
     const falsePositive = React.useRef(setNode("step2a", "Positive", 1, 600 + shiftRight, 500));
     const falseNegative = React.useRef(setNode("step2b", "Negative", 1, 600 + shiftRight, 700));
 
@@ -483,12 +483,12 @@
       return { source, target, val };
     }
 
-    const edgeApplicantsToUseDrugs = React.useRef(setEdge(start.current.id, step1UseDrugs.current.id, 0.05));
-    const edgeApplicantsToNoDrugs = React.useRef(setEdge(start.current.id, step2NoDrugs.current.id, 0.95));
-    const edgeUseDrugsToPositiveTest = React.useRef(setEdge(step1UseDrugs.current.id, truePositive.current.id, 0.99));
-    const edgeUseDrugsToNegativeTest = React.useRef(setEdge(step1UseDrugs.current.id, trueNegative.current.id, 0.01));
-    const edgeNoDrugsToPositiveTest = React.useRef(setEdge(step2NoDrugs.current.id, falsePositive.current.id, 0.02));
-    const edgeNoDrugsToNegativeTest = React.useRef(setEdge(step2NoDrugs.current.id, falseNegative.current.id, 0.98));
+    const edgePopulationToTrueFact = React.useRef(setEdge(population.current.id, trueFact.current.id, 0.05));
+    const edgePopulationToFalseFact = React.useRef(setEdge(population.current.id, falseFact.current.id, 0.95));
+    const edgeTrueFactToPositiveTest = React.useRef(setEdge(trueFact.current.id, truePositive.current.id, 0.99));
+    const edgeTrueFactToNegativeTest = React.useRef(setEdge(trueFact.current.id, trueNegative.current.id, 0.01));
+    const edgeFalseFactToPositiveTest = React.useRef(setEdge(falseFact.current.id, falsePositive.current.id, 0.02));
+    const edgeFalseFactToNegativeTest = React.useRef(setEdge(falseFact.current.id, falseNegative.current.id, 0.98));
 
     const fixedValue = 4;
 
@@ -516,21 +516,21 @@
     };
 
     React.useEffect(() => {
-      step1UseDrugs.current.val = start.current.val * edgeApplicantsToUseDrugs.current.val;
-      step2NoDrugs.current.val = start.current.val * edgeApplicantsToNoDrugs.current.val;
-      truePositive.current.val = step1UseDrugs.current.val * edgeUseDrugsToPositiveTest.current.val;
-      trueNegative.current.val = step1UseDrugs.current.val * edgeUseDrugsToNegativeTest.current.val;
-      falsePositive.current.val = step2NoDrugs.current.val * edgeNoDrugsToPositiveTest.current.val;
-      falseNegative.current.val = step2NoDrugs.current.val * edgeNoDrugsToNegativeTest.current.val;
+      trueFact.current.val = population.current.val * edgePopulationToTrueFact.current.val;
+      falseFact.current.val = population.current.val * edgePopulationToFalseFact.current.val;
+      truePositive.current.val = trueFact.current.val * edgeTrueFactToPositiveTest.current.val;
+      trueNegative.current.val = trueFact.current.val * edgeTrueFactToNegativeTest.current.val;
+      falsePositive.current.val = falseFact.current.val * edgeFalseFactToPositiveTest.current.val;
+      falseNegative.current.val = falseFact.current.val * edgeFalseFactToNegativeTest.current.val;
       forceUpdate({});
     }, [
-      start.current.val,
-      edgeApplicantsToUseDrugs.current.val,
-      edgeApplicantsToNoDrugs.current.val,
-      edgeUseDrugsToPositiveTest.current.val,
-      edgeUseDrugsToNegativeTest.current.val,
-      edgeNoDrugsToPositiveTest.current.val,
-      edgeNoDrugsToNegativeTest.current.val
+      population.current.val,
+      edgePopulationToTrueFact.current.val,
+      edgePopulationToFalseFact.current.val,
+      edgeTrueFactToPositiveTest.current.val,
+      edgeTrueFactToNegativeTest.current.val,
+      edgeFalseFactToPositiveTest.current.val,
+      edgeFalseFactToNegativeTest.current.val
     ]);
 
     const showModal = () => setIsModalVisible(true);
@@ -581,11 +581,11 @@
               </antd.Modal>
 
               <FlowDiagram width={1600} height={900}>
-                <Node id={start.current.id} x={start.current.x} y={start.current.y} width={start.current.width} height={start.current.height}>
-                  <NodeComponent text={start.current.text} val={start.current.val} />
+                <Node id={population.current.id} x={population.current.x} y={population.current.y} width={population.current.width} height={population.current.height}>
+                  <NodeComponent text={population.current.text} val={population.current.val} />
                 </Node>
-                <Node id={step1UseDrugs.current.id} x={step1UseDrugs.current.x} y={step1UseDrugs.current.y} width={step1UseDrugs.current.width} height={step1UseDrugs.current.height}>
-                  <NodeComponent text={step1UseDrugs.current.text} val={step1UseDrugs.current.val} />
+                <Node id={trueFact.current.id} x={trueFact.current.x} y={trueFact.current.y} width={trueFact.current.width} height={trueFact.current.height}>
+                  <NodeComponent text={trueFact.current.text} val={trueFact.current.val} />
                 </Node>
                 <Node id={truePositive.current.id} x={truePositive.current.x} y={truePositive.current.y} width={truePositive.current.width} height={truePositive.current.height}>
                   <NodeComponent text={truePositive.current.text} val={truePositive.current.val} />
@@ -593,8 +593,8 @@
                 <Node id={trueNegative.current.id} x={trueNegative.current.x} y={trueNegative.current.y} width={trueNegative.current.width} height={trueNegative.current.height}>
                   <NodeComponent text={trueNegative.current.text} val={trueNegative.current.val} />
                 </Node>
-                <Node id={step2NoDrugs.current.id} x={step2NoDrugs.current.x} y={step2NoDrugs.current.y} width={step2NoDrugs.current.width} height={step2NoDrugs.current.height}>
-                  <NodeComponent text={step2NoDrugs.current.text} val={step2NoDrugs.current.val} />
+                <Node id={falseFact.current.id} x={falseFact.current.x} y={falseFact.current.y} width={falseFact.current.width} height={falseFact.current.height}>
+                  <NodeComponent text={falseFact.current.text} val={falseFact.current.val} />
                 </Node>
                 <Node id={falsePositive.current.id} x={falsePositive.current.x} y={falsePositive.current.y} width={falsePositive.current.width} height={falsePositive.current.height}>
                   <NodeComponent text={falsePositive.current.text} val={falsePositive.current.val} />
@@ -603,23 +603,23 @@
                   <NodeComponent text={falseNegative.current.text} val={falseNegative.current.val} />
                 </Node>
 
-                <Edge source={edgeUseDrugsToPositiveTest.current.source} target={edgeUseDrugsToPositiveTest.current.target}>
-                  <EdgeComponent val={edgeUseDrugsToPositiveTest.current.val} />
+                <Edge source={edgeTrueFactToPositiveTest.current.source} target={edgeTrueFactToPositiveTest.current.target}>
+                  <EdgeComponent val={edgeTrueFactToPositiveTest.current.val} />
                 </Edge>
-                <Edge source={edgeUseDrugsToNegativeTest.current.source} target={edgeUseDrugsToNegativeTest.current.target}>
-                  <EdgeComponent val={edgeUseDrugsToNegativeTest.current.val} />
+                <Edge source={edgeTrueFactToNegativeTest.current.source} target={edgeTrueFactToNegativeTest.current.target}>
+                  <EdgeComponent val={edgeTrueFactToNegativeTest.current.val} />
                 </Edge>
-                <Edge source={edgeNoDrugsToPositiveTest.current.source} target={edgeNoDrugsToPositiveTest.current.target}>
-                  <EdgeComponent val={edgeNoDrugsToPositiveTest.current.val} />
+                <Edge source={edgeFalseFactToPositiveTest.current.source} target={edgeFalseFactToPositiveTest.current.target}>
+                  <EdgeComponent val={edgeFalseFactToPositiveTest.current.val} />
                 </Edge>
-                <Edge source={edgeNoDrugsToNegativeTest.current.source} target={edgeNoDrugsToNegativeTest.current.target}>
-                  <EdgeComponent val={edgeNoDrugsToNegativeTest.current.val} />
+                <Edge source={edgeFalseFactToNegativeTest.current.source} target={edgeFalseFactToNegativeTest.current.target}>
+                  <EdgeComponent val={edgeFalseFactToNegativeTest.current.val} />
                 </Edge>
-                <Edge source={edgeApplicantsToUseDrugs.current.source} target={edgeApplicantsToUseDrugs.current.target}>
-                  <EdgeComponent val={edgeApplicantsToUseDrugs.current.val} />
+                <Edge source={edgePopulationToTrueFact.current.source} target={edgePopulationToTrueFact.current.target}>
+                  <EdgeComponent val={edgePopulationToTrueFact.current.val} />
                 </Edge>
-                <Edge source={edgeApplicantsToNoDrugs.current.source} target={edgeApplicantsToNoDrugs.current.target}>
-                  <EdgeComponent val={edgeApplicantsToNoDrugs.current.val} />
+                <Edge source={edgePopulationToFalseFact.current.source} target={edgePopulationToFalseFact.current.target}>
+                  <EdgeComponent val={edgePopulationToFalseFact.current.val} />
                 </Edge>
 
                 {/* Result Nodes */}
