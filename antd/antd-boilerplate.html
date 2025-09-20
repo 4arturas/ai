@@ -17,16 +17,31 @@
 <div id="root"></div>
 
 <script type="text/babel">
-    const { Tabs } = antd;
-    function App()
-    {
+    function App() {
+        const { useState } = React;
+        const { Table } = antd;
 
-        return (
-            <div>
-                Hello
-            </div>
-        );
+        const users = [
+            { "user": "user1", "private": true, "key": "user1" },
+            { "user": "user2", "private": true, "key": "user2" },
+            { "user": "user3", "private": true, "key": "user3" }
+        ];
+
+        const [data] = useState(users);
+
+        const columns = [
+            { title: 'User', dataIndex: 'user', key: 'user' },
+            { title: 'Private', dataIndex: 'private', key: 'private' }
+        ];
+
+        return <Table
+            columns={columns}
+            dataSource={data}
+            rowKey="key"
+            pagination={false}
+        />
     }
+
     const { createRoot } = ReactDOM;
     const root = createRoot(document.getElementById('root'));
     root.render(<App />);
