@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <title>Logika</title>
+    <style>
+        .quantity { color: blue; font-weight: bold; }
+        .subject { color: green; font-weight: bold; }
+        .predicate { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+<table id="tbody"></table>
+<script>
+    function create_Sylogism(title,a,b,c) {
+        const create_Div = ( v ) => {
+            const replaceFn = (txt) => {
+                let replacedTxt = txt;
+
+                // 1. Paryškinti (mėlyna) kiekybės žodžius
+                replacedTxt = replacedTxt
+                    .replace('Visi', '<span class="quantity">Visi</span>')
+                    .replace('Visos', '<span class="quantity">Visos</span>')
+                    .replace('Nė viena', '<span class="quantity">Nė viena</span>')
+                    .replace('Nė vienas', '<span class="quantity">Nė vienas</span>')
+                    .replace('Kai kurie', '<span class="quantity">Kai kurie</span>')
+                    .replace('Kai kurios', '<span class="quantity">Kai kurios</span>');
+
+                // 2. Paryškinti (žalia) subjektą ir (raudona) predikatą.
+
+                const boldTerms = (text) => {
+                    // bArbArA
+                    if (text.includes('gyvūnai mirtingi')) return text.replace('gyvūnai mirtingi', '<span class="subject">gyvūnai</span> <span class="predicate">mirtingi</span>');
+                    if (text.includes('žmonės yra gyvūnai')) return text.replace('žmonės yra gyvūnai', '<span class="subject">žmonės</span> yra <span class="predicate">gyvūnai</span>');
+                    if (text.includes('žmonės mirtingi')) return text.replace('žmonės mirtingi', '<span class="subject">žmonės</span> <span class="predicate">mirtingi</span>');
+
+                    // cElArEnt
+                    if (text.includes('roplė neturi kailio')) return text.replace('roplė neturi kailio', '<span class="subject">roplė</span> neturi <span class="predicate">kailio</span>');
+                    if (text.includes('gyvatės yra roplės')) return text.replace('gyvatės yra roplės', '<span class="subject">gyvatės</span> yra <span class="predicate">roplės</span>');
+                    if (text.includes('gyvatė neturi kailio')) return text.replace('gyvatė neturi kailio', '<span class="subject">gyvatė</span> neturi <span class="predicate">kailio</span>');
+
+                    // dArII
+                    if (text.includes('kačiukai yra žaismingi')) return text.replace('kačiukai yra žaismingi', '<span class="subject">kačiukai</span> yra <span class="predicate">žaismingi</span>');
+                    if (text.includes('naminiai gyvūnai yra kačiukai')) return text.replace('naminiai gyvūnai yra kačiukai', '<span class="subject">naminiai gyvūnai</span> yra <span class="predicate">kačiukai</span>');
+                    if (text.includes('naminiai gyvūnai yra žaismingi')) return text.replace('naminiai gyvūnai yra žaismingi', '<span class="subject">naminiai gyvūnai</span> yra <span class="predicate">žaismingi</span>');
+
+                    // fErIO
+                    if (text.includes('namų darbas nėra linksmas')) return text.replace('namų darbas nėra linksmas', '<span class="subject">namų darbas</span> nėra <span class="predicate">linksmas</span>');
+                    if (text.includes('skaitymai yra namų darbai')) return text.replace('skaitymai yra namų darbai', '<span class="subject">skaitymai</span> yra <span class="predicate">namų darbai</span>');
+                    if (text.includes('skaitymai nėra linksmi')) return text.replace('skaitymai nėra linksmi', '<span class="subject">skaitymai</span> nėra <span class="predicate">linksmi</span>');
+
+                    // bArbArI
+                    if (text.includes('žmonės mirtingi')) return text.replace('žmonės mirtingi', '<span class="subject">žmonės</span> <span class="predicate">mirtingi</span>');
+
+                    // cElArOnt
+                    if (text.includes('gyvatės neturi kailio')) return text.replace('gyvatės neturi kailio', '<span class="subject">gyvatės</span> neturi <span class="predicate">kailio</span>');
+
+                    // cEsArE
+                    if (text.includes('sveikas maistas nestorina')) return text.replace('sveikas maistas nestorina', '<span class="subject">sveikas maistas</span> <span class="predicate">nestorina</span>');
+                    if (text.includes('tortai storina')) return text.replace('tortai storina', '<span class="subject">tortai</span> <span class="predicate">storina</span>');
+                    if (text.includes('tortas nėra sveikas maistas')) return text.replace('tortas nėra sveikas maistas', '<span class="subject">tortas</span> nėra <span class="predicate">sveikas maistas</span>');
+
+                    // cAmEstrEs
+                    if (text.includes('arkliai turi pilvo pūtimą')) return text.replace('arkliai turi pilvo pūtimą', '<span class="subject">arkliai</span> turi <span class="predicate">pilvo pūtimą</span>');
+                    if (text.includes('žmogus neturi pilvo pūtimo')) return text.replace('žmogus neturi pilvo pūtimo', '<span class="subject">žmogus</span> neturi <span class="predicate">pilvo pūtimo</span>');
+                    if (text.includes('žmogus nėra arklys')) return text.replace('žmogus nėra arklys', '<span class="subject">žmogus</span> nėra <span class="predicate">arklys</span>');
+
+                    // fEstInO
+                    if (text.includes('tinginys neišlaiko egzaminų')) return text.replace('tinginys neišlaiko egzaminų', '<span class="subject">tinginys</span> neišlaiko <span class="predicate">egzaminų</span>');
+                    if (text.includes('studentai išlaiko egzaminus')) return text.replace('studentai išlaiko egzaminus', '<span class="subject">studentai</span> išlaiko <span class="predicate">egzaminus</span>');
+                    if (text.includes('studentai nėra tinginiai')) return text.replace('studentai nėra tinginiai', '<span class="subject">studentai</span> nėra <span class="predicate">tinginiai</span>');
+
+                    // bArOcO
+                    if (text.includes('informatyvūs dalykai yra naudingi')) return text.replace('informatyvūs dalykai yra naudingi', '<span class="subject">informatyvūs dalykai</span> yra <span class="predicate">naudingi</span>');
+                    if (text.includes('svetainės nėra naudingos')) return text.replace('svetainės nėra naudingos', '<span class="subject">svetainės</span> nėra <span class="predicate">naudingos</span>');
+                    if (text.includes('svetainės nėra informatyvios')) return text.replace('svetainės nėra informatyvios', '<span class="subject">svetainės</span> nėra <span class="predicate">informatyvios</span>');
+
+                    // cEsArO
+                    if (text.includes('tortai nėra sveikas maistas')) return text.replace('tortai nėra sveikas maistas', '<span class="subject">tortai</span> nėra <span class="predicate">sveikas maistas</span>');
+
+                    // cAmEstrOs
+                    if (text.includes('žmonės nėra arkliai')) return text.replace('žmonės nėra arkliai', '<span class="subject">žmonės</span> nėra <span class="predicate">arkliai</span>');
+
+                    // dArAptI
+                    if (text.includes('vaisiai yra maistingi')) return text.replace('vaisiai yra maistingi', '<span class="subject">vaisiai</span> yra <span class="predicate">maistingi</span>');
+                    if (text.includes('vaisiai yra skanūs')) return text.replace('vaisiai yra skanūs', '<span class="subject">vaisiai</span> yra <span class="predicate">skanūs</span>');
+                    if (text.includes('skanūs produktai yra maistingi')) return text.replace('skanūs produktai yra maistingi', '<span class="subject">skanūs produktai</span> yra <span class="predicate">maistingi</span>');
+
+                    // dIsAmIs
+                    if (text.includes('puodeliai yra gražūs')) return text.replace('puodeliai yra gražūs', '<span class="subject">puodeliai</span> yra <span class="predicate">gražūs</span>');
+                    if (text.includes('puodeliai yra naudingi')) return text.replace('puodeliai yra naudingi', '<span class="subject">puodeliai</span> yra <span class="predicate">naudingi</span>');
+                    if (text.includes('naudingi dalykai yra gražūs')) return text.replace('naudingi dalykai yra gražūs', '<span class="subject">naudingi dalykai</span> yra <span class="predicate">gražūs</span>');
+
+                    // dAtIsI
+                    if (text.includes('stropūs berniukai šioje mokykloje yra raudoni')) return text.replace('stropūs berniukai šioje mokykloje yra raudoni', '<span class="subject">stropūs berniukai šioje mokykloje</span> yra <span class="predicate">raudoni</span>');
+                    if (text.includes('stropūs berniukai šioje mokykloje yra internato mokiniai')) return text.replace('stropūs berniukai šioje mokykloje yra internato mokiniai', '<span class="subject">stropūs berniukai šioje mokykloje</span> yra <span class="predicate">internato mokiniai</span>');
+                    if (text.includes('internato mokiniai šioje mokykloje yra raudoni')) return text.replace('internato mokiniai šioje mokykloje yra raudoni', '<span class="subject">internato mokiniai šioje mokykloje</span> yra <span class="predicate">raudoni</span>');
+
+                    // fElAptOn
+                    if (text.includes('ąsotis šioje spintoje nėra naujas')) return text.replace('ąsotis šioje spintoje nėra naujas', '<span class="subject">ąsotis šioje spintoje</span> nėra <span class="predicate">naujas</span>');
+                    if (text.includes('ąsočiai šioje spintoje yra įskilę')) return text.replace('ąsočiai šioje spintoje yra įskilę', '<span class="subject">ąsočiai šioje spintoje</span> yra <span class="predicate">įskilę</span>');
+                    if (text.includes('įskilę daiktai šioje spintoje nėra nauji')) return text.replace('įskilę daiktai šioje spintoje nėra nauji', '<span class="subject">įskilę daiktai šioje spintoje</span> nėra <span class="predicate">nauji</span>');
+
+                    // bAcArdO
+                    if (text.includes('katės neturi uodegos')) return text.replace('katės neturi uodegos', '<span class="subject">katės</span> neturi <span class="predicate">uodegos</span>');
+                    if (text.includes('katės yra žinduoliai')) return text.replace('katės yra žinduoliai', '<span class="subject">katės</span> yra <span class="predicate">žinduoliai</span>');
+                    if (text.includes('žinduoliai neturi uodegos')) return text.replace('žinduoliai neturi uodegos', '<span class="subject">žinduoliai</span> neturi <span class="predicate">uodegos</span>');
+
+                    // fErIsOn
+                    if (text.includes('medis nėra valgomas')) return text.replace('medis nėra valgomas', '<span class="subject">medis</span> nėra <span class="predicate">valgomas</span>');
+                    if (text.includes('medžiai yra žali')) return text.replace('medžiai yra žali', '<span class="subject">medžiai</span> yra <span class="predicate">žali</span>');
+                    if (text.includes('žali daiktai nėra valgomi')) return text.replace('žali daiktai nėra valgomi', '<span class="subject">žali daiktai</span> nėra <span class="predicate">valgomi</span>');
+
+                    // brAmAntIp
+                    if (text.includes('obuoliai mano sode yra naudingi')) return text.replace('obuoliai mano sode yra naudingi', '<span class="subject">obuoliai mano sode</span> yra <span class="predicate">naudingi</span>');
+                    if (text.includes('naudingi vaisiai yra sunokę')) return text.replace('naudingi vaisiai yra sunokę', '<span class="subject">naudingi vaisiai</span> yra <span class="predicate">sunokę</span>');
+                    if (text.includes('sunokę vaisiai yra obuoliai mano sode')) return text.replace('sunokę vaisiai yra obuoliai mano sode', '<span class="subject">sunokę vaisiai</span> yra <span class="predicate">obuoliai mano sode</span>');
+
+                    // cAmEnEs
+                    if (text.includes('ryškios gėlės yra kvapnios')) return text.replace('ryškios gėlės yra kvapnios', '<span class="subject">ryškios gėlės</span> yra <span class="predicate">kvapnios</span>');
+                    if (text.includes('kvapni gėlė nėra auginama patalpoje')) return text.replace('kvapni gėlė nėra auginama patalpoje', '<span class="subject">kvapni gėlė</span> nėra <span class="predicate">auginama patalpoje</span>');
+                    if (text.includes('auginama patalpoje gėlė nėra ryški')) return text.replace('auginama patalpoje gėlė nėra ryški', '<span class="subject">auginama patalpoje gėlė</span> nėra <span class="predicate">ryški</span>');
+
+                    // dImArIs
+                    if (text.includes('maži paukščiai minta medumi')) return text.replace('maži paukščiai minta medumi', '<span class="subject">maži paukščiai</span> minta <span class="predicate">medumi</span>');
+                    if (text.includes('medumi mintantys paukščiai yra spalvoti')) return text.replace('medumi mintantys paukščiai yra spalvoti', '<span class="subject">medumi mintantys paukščiai</span> yra <span class="predicate">spalvoti</span>');
+                    if (text.includes('spalvoti paukščiai yra maži')) return text.replace('spalvoti paukščiai yra maži', '<span class="subject">spalvoti paukščiai</span> yra <span class="predicate">maži</span>');
+
+                    // fEsApO
+                    if (text.includes('žmogus nėra tobulas')) return text.replace('žmogus nėra tobulas', '<span class="subject">žmogus</span> nėra <span class="predicate">tobulas</span>');
+                    if (text.includes('tobulos būtybės yra mitinės')) return text.replace('tobulos būtybės yra mitinės', '<span class="subject">tobulos būtybės</span> yra <span class="predicate">mitinės</span>');
+                    if (text.includes('mitinės būtybės nėra žmonės')) return text.replace('mitinės būtybės nėra žmonės', '<span class="subject">mitinės būtybės</span> nėra <span class="predicate">žmonės</span>');
+
+                    // frEsIsOn
+                    if (text.includes('kompetentingas žmogus neklysta')) return text.replace('kompetentingas žmogus neklysta', '<span class="subject">kompetentingas žmogus</span> <span class="predicate">neklysta</span>');
+                    if (text.includes('klystantys žmonės dirba čia')) return text.replace('klystantys žmonės dirba čia', '<span class="subject">klystantys žmonės</span> dirba <span class="predicate">čia</span>');
+                    if (text.includes('dirbantys žmonės yra nekompetentingi')) return text.replace('dirbantys žmonės yra nekompetentingi', '<span class="subject">dirbantys žmonės</span> yra <span class="predicate">nekompetentingi</span>');
+
+                    // cAmEnOs
+                    if (text.includes('patalpoje auginamos gėlės nėra ryškios')) return text.replace('patalpoje auginamos gėlės nėra ryškios', '<span class="subject">patalpoje auginamos gėlės</span> nėra <span class="predicate">ryškios</span>');
+
+                    return replacedTxt;
+                };
+
+                return boldTerms(replacedTxt);
+            }
+            const div = document.createElement('div');
+            div.style.whiteSpace = 'nowrap';
+            div.innerHTML = replaceFn(v);
+            return div;
+        }
+        const titleDiv = create_Div(title);
+        titleDiv.style.fontWeight = 'bold';
+        const aDiv = create_Div(a);
+        const bDiv = create_Div(b);
+        const cDiv = create_Div(c);
+        cDiv.style.borderTop = '1px solid black';
+        cDiv.style.marginBottom = '15px';
+        const td = document.createElement('td');
+        td.style.verticalAlign = 'top';
+        td.appendChild( titleDiv );
+        td.appendChild( aDiv );
+        td.appendChild( bDiv );
+        td.appendChild( cDiv );
+        return td;
+    }
+    function create_Table() {
+        const tbody = document.getElementById('tbody');
+        const tr0 = document.createElement('tr');
+        const tr1 = document.createElement('tr');
+        const tr2 = document.createElement('tr');
+        const tr3 = document.createElement('tr');
+        const tr4 = document.createElement('tr');
+        const tr5 = document.createElement('tr');
+        tbody.appendChild(tr0);
+        tbody.appendChild(tr1);
+        tbody.appendChild(tr2);
+        tbody.appendChild(tr3);
+        tbody.appendChild(tr4);
+        tbody.appendChild(tr5);
+
+        tr0.appendChild( create_Sylogism(
+            'bArbArA',
+            'Visi gyvūnai mirtingi.',
+            'Visi žmonės yra gyvūnai.',
+            'Visi žmonės mirtingi.',
+        ));
+
+        tr1.appendChild( create_Sylogism(
+            'cElArEnt',
+            'Nė viena roplė neturi kailio.',
+            'Visos gyvatės yra roplės.',
+            'Nė viena gyvatė neturi kailio.',
+        ));
+
+        tr2.appendChild( create_Sylogism(
+            'dArII',
+            'Visi kačiukai yra žaismingi.',
+            'Kai kurie naminiai gyvūnai yra kačiukai.',
+            'Kai kurie naminiai gyvūnai yra žaismingi.',
+        ));
+
+        tr3.appendChild( create_Sylogism(
+            'fErIO',
+            'Nė vienas namų darbas nėra linksmas.',
+            'Kai kurie skaitymai yra namų darbai.',
+            'Kai kurie skaitymai nėra linksmi.',
+        ));
+
+        tr4.appendChild( create_Sylogism(
+            'bArbArI',
+            'Visi gyvūnai mirtingi.',
+            'Visi žmonės yra gyvūnai.',
+            'Kai kurie žmonės mirtingi.',
+        ));
+
+        tr5.appendChild( create_Sylogism(
+            'cElArOnt',
+            'Nė viena roplė neturi kailio.',
+            'Visos gyvatės yra roplės.',
+            'Kai kurios gyvatės neturi kailio.',
+        ));
+
+        tr0.appendChild( create_Sylogism(
+            'cEsArE',
+            'Nė vienas sveikas maistas nestorina.',
+            'Visi tortai storina.',
+            'Nė vienas tortas nėra sveikas maistas.',
+        ));
+
+        tr1.appendChild( create_Sylogism(
+            'cAmEstrEs',
+            'Visi arkliai turi pilvo pūtimą.',
+            'Nė vienas žmogus neturi pilvo pūtimo.',
+            'Nė vienas žmogus nėra arklys.',
+        ));
+
+        tr2.appendChild( create_Sylogism(
+            'fEstInO',
+            'Nė vienas tinginys neišlaiko egzaminų.',
+            'Kai kurie studentai išlaiko egzaminus.',
+            'Kai kurie studentai nėra tinginiai.',
+        ));
+
+        tr3.appendChild( create_Sylogism(
+            'bArOcO',
+            'Visi informatyvūs dalykai yra naudingi.',
+            'Kai kurios svetainės nėra naudingos.',
+            'Kai kurios svetainės nėra informatyvios.',
+        ));
+
+        tr4.appendChild( create_Sylogism(
+            'cEsArO',
+            'Nė vienas sveikas maistas nestorina.',
+            'Visi tortai storina.',
+            'Kai kurie tortai nėra sveikas maistas.',
+        ));
+
+        tr5.appendChild( create_Sylogism(
+            'cAmEstrOs',
+            'Visi arkliai turi pilvo pūtimą.',
+            'Nė vienas žmogus neturi pilvo pūtimo.',
+            'Kai kurie žmonės nėra arkliai.',
+        ));
+
+        tr0.appendChild( create_Sylogism(
+            'dArAptI',
+            'Visi vaisiai yra maistingi.',
+            'Visi vaisiai yra skanūs.',
+            'Kai kurie skanūs produktai yra maistingi.',
+        ));
+
+        tr1.appendChild( create_Sylogism(
+            'dIsAmIs',
+            'Kai kurie puodeliai yra gražūs.',
+            'Visi puodeliai yra naudingi.',
+            'Kai kurie naudingi dalykai yra gražūs.',
+        ));
+
+        tr2.appendChild( create_Sylogism(
+            'dAtIsI',
+            'Visi stropūs berniukai šioje mokykloje yra raudoni.',
+            'Kai kurie stropūs berniukai šioje mokykloje yra internato mokiniai.',
+            'Kai kurie internato mokiniai šioje mokykloje yra raudoni.',
+        ));
+
+        tr3.appendChild( create_Sylogism(
+            'fElAptOn',
+            'Nė vienas ąsotis šioje spintoje nėra naujas.',
+            'Visi ąsočiai šioje spintoje yra įskilę.',
+            'Kai kurie įskilę daiktai šioje spintoje nėra nauji.',
+        ));
+
+        tr4.appendChild( create_Sylogism(
+            'bAcArdO',
+            'Kai kurios katės neturi uodegos.',
+            'Visos katės yra žinduoliai.',
+            'Kai kurie žinduoliai neturi uodegos.',
+        ));
+
+        tr5.appendChild( create_Sylogism(
+            'fErIsOn',
+            'Nė vienas medis nėra valgomas.',
+            'Kai kurie medžiai yra žali.',
+            'Kai kurie žali daiktai nėra valgomi.',
+        ));
+
+        tr0.appendChild( create_Sylogism(
+            'brAmAntIp',
+            'Visi obuoliai mano sode yra naudingi.',
+            'Visi naudingi vaisiai yra sunokę.',
+            'Kai kurie sunokę vaisiai yra obuoliai mano sode.',
+        ));
+
+        tr1.appendChild( create_Sylogism(
+            'cAmEnEs',
+            'Visos ryškios gėlės yra kvapnios.',
+            'Nė viena kvapni gėlė nėra auginama patalpoje.',
+            'Nė viena patalpoje auginama gėlė nėra ryški.',
+        ));
+
+        tr2.appendChild( create_Sylogism(
+            'dImArIs',
+            'Kai kurie maži paukščiai minta medumi.',
+            'Visi medumi mintantys paukščiai yra spalvoti.',
+            'Kai kurie spalvoti paukščiai yra maži.',
+        ));
+
+        tr3.appendChild( create_Sylogism(
+            'fEsApO',
+            'Nė vienas žmogus nėra tobulas.',
+            'Visos tobulos būtybės yra mitinės.',
+            'Kai kurios mitinės būtybės nėra žmonės.',
+        ));
+
+        tr4.appendChild( create_Sylogism(
+            'frEsIsOn',
+            'Nė vienas kompetentingas žmogus neklysta.',
+            'Kai kurie klystantys žmonės dirba čia.',
+            'Kai kurie čia dirbantys žmonės yra nekompetentingi.',
+        ));
+
+        tr5.appendChild( create_Sylogism(
+            'cAmEnOs',
+            'Visos ryškios gėlės yra kvapnios.',
+            'Nė viena kvapni gėlė nėra auginama patalpoje.',
+            'Kai kurios patalpoje auginamos gėlės nėra ryškios.',
+        ));
+    }
+    create_Table();
+</script>
+
+</body>
+</html>
