@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Diagram</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="svg-container"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const width = window.innerWidth-20;
+        const height = window.innerHeight-20;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const rings = [
+            {
+                r: 20,
+                labels: [],
+                rotation: 0
+            },
+            {
+                r: 60,
+                labels: [{"text": "Cosmos", "angle": 90}, {"text": "Chaos", "angle": 90, "color": "red"}],
+                rotation: 90
+            },
+            {
+                r: 100,
+                labels: [{"text": "Divine", "angle": -45}, {"text": "Terrestrial", "angle": 0}],
+                rotation: 0
+            },
+            {
+                r: 140,
+                labels: [{"text": "Incomprehensive ", "angle": 90}, {"text": "Comprehensive", "angle": 90}],
+                rotation: 90
+            },
+            {
+                r: 180,
+                labels: [{"text": "Thing", "angle": 0}, { "text": "Matter", "angle": 0 }, {"text": "Form", "angle": 0}, {"text": "Property", "angle": 0}],
+                rotation: 45
+            }
+        ];
+
+        let svgStr = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="${width}" height="${height}" fill="white" />
+                <defs>`;
+
+        rings.forEach((ring, index) => {
+            if (ring.labels.length > 0) {
+                const textRadius = ring.r - (ring.r - (index > 0 ? rings[index - 1].r : 0)) / 2;
+                svgStr += `<path id="text-path-${index}" d="M${centerX},${centerY - textRadius} A${textRadius},${textRadius} 0 1,1 ${centerX},${centerY + textRadius} A${textRadius},${textRadius} 0 1,1 ${centerX},${centerY - textRadius}" transform="rotate(${ring.rotation}, ${centerX}, ${centerY})" />`;
+            }
+        });
+
+        svgStr += `</defs>`;
+
+        rings.forEach((ring) => {
+            svgStr += `<circle cx="${centerX}" cy="${centerY}" r="${ring.r}" fill="none" stroke="black" stroke-width="2" />`;
+        });
+
+        rings.forEach((ring, index) => {
+            const sectorLines = ring.labels.length;
+
+            const prevRing = rings[index - 1];
+            const startRadius = prevRing ? prevRing.r : 0;
+            const endRadius = ring.r;
+
+            for (let i = 0; i < sectorLines; i++) {
+                const angleDeg = (i * 360 / sectorLines) + ring.rotation;
+                const angleRad = angleDeg * Math.PI / 180;
+                const x1 = centerX + startRadius * Math.cos(angleRad);
+                const y1 = centerY + startRadius * Math.sin(angleRad);
+                const x2 = centerX + endRadius * Math.cos(angleRad);
+                const y2 = centerY + endRadius * Math.sin(angleRad);
+                svgStr += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="2" />`;
+            }
+
+            ring.labels.forEach((label, labelIndex) => {
+                let startOffset = 0;
+                if (index === 2) {
+                    startOffset = labelIndex === 0 ? 12.5 : 50;
+                } else {
+                    const totalOffset = 100 / ring.labels.length;
+                    startOffset = (labelIndex * totalOffset) + (totalOffset / 2);
+                }
+
+                const color = label.color || "black";
+                svgStr += `
+                    <text fill="${color}" font-size="24" font-family="Arial, sans-serif" transform="rotate(${label.angle}, ${centerX}, ${centerY})">
+                        <textPath href="#text-path-${index}" startOffset="${startOffset}%" text-anchor="middle" dominant-baseline="central">
+                            ${label.text}
+                        </textPath>
+                    </text>
+                `;
+            });
+        });
+
+
+        svgStr += '</svg>';
+        document.getElementById('svg-container').innerHTML = svgStr;
+    });
+</script>
+</body>
+</html>
