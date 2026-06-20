@@ -32,15 +32,11 @@ const TRAINING_DATA = ANIMALS.map(animal => {
 
 const FEATURE_NAMES = ["Size", "Legs", "Wings", "Tail", "Fur", "Aquatic", "Speed", "Aggression", "Intelligence"];
 
+const GRID_SIZE = 20;
 const inputDim = TRAINING_DATA[0].length;
-const totalEpochs =  500 + ( GRID_SIZE*GRID_SIZE ) + (inputDim*20);
 
 function SOM()
 {
-    const GRID_SIZE = 20;
-    const INITIAL_RADIUS = GRID_SIZE/2;
-    const INITIAL_LEARNING_RATE = 0.1;
-
     const { appContext, setAppContext } = React.useContext(AppContext);
     const ref = React.useRef(null);
     const canvas = React.useRef(null);
@@ -48,7 +44,6 @@ function SOM()
 
     const [nodes, setNodes] = React.useState();
     const [currentEpoch, setCurrentEpoch] = React.useState(0);
-
 
     React.useEffect( () => {
         // ref.current.innerHTML = "Hello";
