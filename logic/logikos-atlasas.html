@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logikos atlasas – silogizmai, Carrollio diagramos ir loginis kvadratas</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --card: #fffdf8; --ink: #1f2937; --soft: #6b7280; --line: #e5e0d4;
+    --qA: #2563eb; --qE: #dc2626; --qI: #16a34a; --qO: #ea580c;
+    --tS: #0f766e; --tP: #9333ea; --tM: #b45309;
+    --one: #b91c1c; --zero: #9ca3af; --shade: #e7e5e4;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { position: sticky; top: 0; z-index: 10; background: #1f2937; color: #fff; padding: 10px 24px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+  header h1 { font-family: Georgia, serif; font-size: 22px; margin: 0; font-weight: normal; letter-spacing: .5px; }
+  header h1 b { color: #fbbf24; font-weight: normal; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button { background: transparent; border: 1px solid transparent; color: #d1d5db; padding: 7px 14px;
+    border-radius: 999px; cursor: pointer; font-size: 14px; }
+  nav button:hover { color: #fff; border-color: #4b5563; }
+  nav button.on { background: #fbbf24; color: #1f2937; font-weight: 600; }
+  .mode { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #d1d5db; }
+  .mode button { border: 1px solid #4b5563; background: #374151; color: #e5e7eb; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+  .mode button:first-of-type { border-radius: 6px 0 0 6px; } .mode button:last-of-type { border-radius: 0 6px 6px 0; }
+  .mode button.on { background: #fbbf24; color: #1f2937; border-color: #fbbf24; font-weight: 600; }
+  main { max-width: 1320px; margin: 0 auto; padding: 22px; }
+  h2 { font-family: Georgia, serif; font-weight: normal; font-size: 26px; margin: 4px 0 6px; }
+  .lead { color: var(--soft); margin: 0 0 18px; max-width: 900px; line-height: 1.5; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+
+  .q-A { color: var(--qA); } .q-E { color: var(--qE); } .q-I { color: var(--qI); } .q-O { color: var(--qO); }
+  .qw { font-weight: 700; }
+  .t { font-weight: 600; border-bottom: 2px solid; padding: 0 1px; }
+  .t-S { color: var(--tS); } .t-P { color: var(--tP); } .t-M { color: var(--tM); }
+  .mn { font-family: Georgia, serif; font-size: 18px; letter-spacing: .5px; }
+  .mn b { font-weight: 700; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-weight: 600; }
+  .badge.bad { background: #fee2e2; color: #991b1b; } .badge.ok { background: #dcfce7; color: #166534; } .badge.warn { background: #fef3c7; color: #92400e; }
+
+  /* Atlas */
+  .atlas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .fig-head { text-align: center; padding: 6px 0 10px; }
+  .fig-head h3 { margin: 0; font-family: Georgia, serif; font-weight: normal; font-size: 20px; }
+  .schema { display: inline-grid; grid-template-columns: auto auto; gap: 0 10px; font-family: Georgia, serif; font-size: 15px; margin-top: 4px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+    cursor: pointer; transition: transform .12s, box-shadow .12s; position: relative; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+  .card.dim { opacity: .55; }
+  .card .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .card .code { font-size: 12px; color: var(--soft); font-family: Consolas, monospace; }
+  .card .l { font-size: 14px; line-height: 1.45; }
+  .card .c { border-top: 1.5px solid var(--ink); margin-top: 4px; padding-top: 3px; }
+  .card .c::before { content: "∴ "; color: var(--soft); }
+
+  /* Solve */
+  .solve { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.15fr); gap: 18px; align-items: start; }
+  .role { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); margin-top: 10px; }
+  .sent { font-size: 17px; line-height: 1.5; }
+  .sent.c { border-top: 2px solid var(--ink); padding-top: 4px; margin-top: 6px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin: 14px 0 4px; color: var(--soft); }
+  .steps { display: flex; gap: 6px; align-items: center; margin: 16px 0 10px; flex-wrap: wrap; }
+  .steps .dot { min-width: 30px; height: 30px; border-radius: 15px; border: 2px solid var(--line); background: #fff; cursor: pointer;
+    font-weight: 600; color: var(--soft); padding: 0 8px; }
+  .steps .dot.on { border-color: #1f2937; background: #1f2937; color: #fff; }
+  .steps .dot.done { border-color: #1f2937; color: #1f2937; }
+  .btn { border: 1px solid #1f2937; background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+  .btn:hover { background: #1f2937; color: #fff; }
+  .btn:disabled { opacity: .35; cursor: default; background: #fff; color: inherit; }
+  .explain { background: #fffbeb; border-left: 4px solid #fbbf24; padding: 12px 14px; border-radius: 0 10px 10px 0; line-height: 1.55; font-size: 15px; min-height: 110px; }
+  .explain h4 { margin: 0 0 6px; font-size: 16px; }
+  .explain ul { margin: 6px 0 0; padding-left: 20px; }
+  .rules { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+  .rules li { padding: 4px 0; display: flex; gap: 8px; }
+  .rules li .m { width: 18px; text-align: center; font-weight: 700; }
+  .rules li.ok .m { color: var(--qI); } .rules li.no { color: var(--qE); } .rules li.no .m { color: var(--qE); }
+  .diagrams { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .dg { text-align: center; }
+  .dg .cap { font-size: 12px; color: var(--soft); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .seg { display: inline-flex; border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: #fff; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .seg button.on { background: #1f2937; color: #fff; }
+  .seg button + button { border-left: 1px solid #1f2937; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .verdict { font-size: 18px; font-weight: 600; margin: 8px 0; }
+
+  svg .cell { transition: fill .35s; }
+  svg .pop { animation: pop .6s ease-out; transform-box: fill-box; transform-origin: center; }
+  @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.35); } 100% { transform: scale(1); } }
+  svg .glow { animation: glow 1.4s ease-in-out 2; }
+  @keyframes glow { 50% { fill: #fde68a; } }
+
+  /* Constructor */
+  .cons { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.15fr); gap: 18px; align-items: start; }
+  .pick { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 12px; }
+  .pick button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 15px; }
+  .pick button.on { border-color: #1f2937; background: #1f2937; color: #fff; }
+  .pick .ql { font-weight: 700; font-family: Georgia, serif; font-size: 18px; width: 40px; }
+  .heat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 18px; }
+  .heat table { border-collapse: collapse; margin: 0 auto; font-size: 12px; }
+  .heat th { font-weight: 600; color: var(--soft); padding: 2px 4px; font-family: Consolas, monospace; }
+  .heat td { width: 30px; height: 20px; border: 2px solid var(--card); background: #ece8df; cursor: pointer; border-radius: 4px; text-align: center; }
+  .heat td.v2 { background: #15803d; } .heat td.v1 { background: #fbbf24; }
+  .heat td.sel { outline: 3px solid #1f2937; outline-offset: -2px; }
+  .heat caption { font-family: Georgia, serif; font-size: 16px; padding-bottom: 4px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+
+  /* Square */
+  .square { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(320px, 1fr); gap: 18px; align-items: start; }
+  .sq-corner { cursor: pointer; }
+  .sq-list { list-style: none; padding: 0; margin: 0; }
+  .sq-list li { display: grid; grid-template-columns: 34px 1fr 70px auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .sq-list .L { font-family: Georgia, serif; font-size: 22px; font-weight: 700; text-align: center; }
+  .val { font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 6px; text-align: center; }
+  .val.T { background: #dcfce7; color: #166534; } .val.F { background: #fee2e2; color: #991b1b; } .val.U { background: #f3f4f6; color: #6b7280; }
+  input[type=text] { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 15px; width: 170px; }
+  .rel-legend { font-size: 13px; line-height: 1.6; color: var(--ink); margin-top: 12px; }
+  .rel-legend div { display: grid; grid-template-columns: 60px 1fr; gap: 6px; padding: 2px 0; }
+  footer { text-align: center; color: var(--soft); font-size: 12px; padding: 18px; }
+  kbd { border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; background: #fff; }
+
+  @media (max-width: 1000px) {
+    .atlas, .heat { grid-template-columns: repeat(2, 1fr); }
+    .solve, .cons, .square { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Logikos <b>atlasas</b></h1>
+  <nav id="tabs"></nav>
+  <div class="mode" title="Ar terminai laikomi netuščiais (egzistencinė prielaida)?">
+    Egzistencinė prielaida:
+    <span>
+      <button data-act="mode" data-v="trad">Aristotelio</button><button data-act="mode" data-v="bool">Boole</button>
+    </span>
+  </div>
+</header>
+<main id="app"></main>
+<footer>Idėjos: <i>logic-lt.html</i> (silogizmų lentelė, loginis kvadratas), <i>logic.html</i> (rusiški pavyzdžiai),
+  <i>logic-game</i> (Lewiso Carrollio diagramos, langeliai 5–16). Viskas skaičiuojama naršyklėje, be interneto.</footer>
+
+<script id="core">
+// ================= LOGIKOS BRANDUOLYS =================
+// Regionas r (0..7) – bitai: S=4, P=2, M=1. Modelis – 8 bitų kaukė, kurie regionai netušti.
+const BIT = { S: 4, P: 2, M: 1 };
+const ALL_R = [0, 1, 2, 3, 4, 5, 6, 7];
+const has = (r, t) => (r & BIT[t]) !== 0;
+const FIG = {
+  1: { maj: ['M', 'P'], min: ['S', 'M'] },
+  2: { maj: ['P', 'M'], min: ['S', 'M'] },
+  3: { maj: ['M', 'P'], min: ['M', 'S'] },
+  4: { maj: ['P', 'M'], min: ['M', 'S'] },
+};
+const NEG = q => q === 'E' || q === 'O';
+const UNIV = q => q === 'A' || q === 'E';
+
+function makeProps(fig, mood) {
+  const f = FIG[fig];
+  return [
+    { q: mood[0], s: f.maj[0], p: f.maj[1], role: 'maj' },
+    { q: mood[1], s: f.min[0], p: f.min[1], role: 'min' },
+    { q: mood[2], s: 'S', p: 'P', role: 'concl' },
+  ];
+}
+function emptyCells(pr) {
+  if (pr.q === 'A') return ALL_R.filter(r => has(r, pr.s) && !has(r, pr.p));
+  if (pr.q === 'E') return ALL_R.filter(r => has(r, pr.s) && has(r, pr.p));
+  return [];
+}
+function existCells(pr) {
+  if (pr.q === 'I') return ALL_R.filter(r => has(r, pr.s) && has(r, pr.p));
+  if (pr.q === 'O') return ALL_R.filter(r => has(r, pr.s) && !has(r, pr.p));
+  return null;
+}
+const inModel = (m, r) => ((m >> r) & 1) === 1;
+function holds(pr, m) {
+  if (UNIV(pr.q)) return emptyCells(pr).every(r => !inModel(m, r));
+  return existCells(pr).some(r => inModel(m, r));
+}
+function models(premises, terms) {
+  const out = [];
+  for (let m = 0; m < 256; m++) {
+    if (!terms.every(t => ALL_R.some(r => has(r, t) && inModel(m, r)))) continue;
+    if (premises.every(p => holds(p, m))) out.push(m);
+  }
+  return out;
+}
+const importTerms = (trad, terms) => (trad ? terms : []);
+function entails(premises, concl, trad, terms = ['S', 'P', 'M']) {
+  return models(premises, importTerms(trad, terms)).every(m => holds(concl, m));
+}
+function isValid(fig, mood, trad) {
+  const [mj, mn, c] = makeProps(fig, mood);
+  return entails([mj, mn], c, trad);
+}
+// Mažosios diagramos langeliai: 5=S·P, 6=S·P′, 7=S′·P, 8=S′·P′
+const MD = [{ id: 5, s: 1, p: 1 }, { id: 6, s: 1, p: 0 }, { id: 7, s: 0, p: 1 }, { id: 8, s: 0, p: 0 }];
+const mdPair = c => [c.s * 4 + c.p * 2, c.s * 4 + c.p * 2 + 1];
+function mdCells(premises, trad, terms = ['S', 'P', 'M']) {
+  const ms = models(premises, importTerms(trad, terms));
+  const out = {};
+  MD.forEach(c => {
+    const pair = mdPair(c);
+    const non = ms.map(m => pair.some(r => inModel(m, r)));
+    out[c.id] = non.every(x => !x) ? '0' : non.every(x => x) ? '1' : '-';
+  });
+  return out;
+}
+// Carrollio procedūra: nuliai, vienetai, „sėdėjimas ant tvoros“
+function carroll(props, extraTerms = []) {
+  const zero = new Set();
+  props.forEach(p => emptyCells(p).forEach(r => zero.add(r)));
+  const claims = [];
+  props.forEach(p => { const c = existCells(p); if (c) claims.push({ cells: c, src: p.role }); });
+  extraTerms.forEach(t => claims.push({ cells: ALL_R.filter(r => has(r, t)), src: 'term', term: t }));
+  const one = new Set();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const c of claims) {
+      c.rem = c.cells.filter(r => !zero.has(r));
+      if (c.rem.some(r => one.has(r))) { c.status = 'sat'; continue; }
+      if (c.rem.length === 1) { one.add(c.rem[0]); c.status = 'solid'; changed = true; }
+      else c.status = c.rem.length === 0 ? 'contra' : c.rem.length === 2 ? 'fence' : 'open';
+    }
+  }
+  const fences = [];
+  claims.filter(c => c.status === 'fence').forEach(c => {
+    const key = c.rem.join('-');
+    if (!fences.some(f => f.key === key)) fences.push({ key, cells: c.rem, src: c.src });
+  });
+  return { zero, one, fences, claims };
+}
+// Tradicinės (viduramžių) taisyklės
+function dist(pr, t) {
+  if (pr.s === t) return UNIV(pr.q);
+  if (pr.p === t) return NEG(pr.q);
+  return false;
+}
+function rules(fig, mood, trad) {
+  const [mj, mn, c] = makeProps(fig, mood);
+  const r = [
+    { ok: dist(mj, 'M') || dist(mn, 'M'), txt: 'Vidurinis terminas M paskirstytas bent vienoje prielaidoje' },
+    { ok: !dist(c, 'P') || dist(mj, 'P'), txt: 'P paskirstytas išvadoje ⇒ paskirstytas ir didžiojoje prielaidoje' },
+    { ok: !dist(c, 'S') || dist(mn, 'S'), txt: 'S paskirstytas išvadoje ⇒ paskirstytas ir mažojoje prielaidoje' },
+    { ok: !(NEG(mj.q) && NEG(mn.q)), txt: 'Abi prielaidos negali būti neigiamos' },
+    { ok: (NEG(mj.q) || NEG(mn.q)) === NEG(c.q), txt: 'Neigiama prielaida ⇔ neigiama išvada' },
+  ];
+  if (!trad) r.push({ ok: !(UNIV(mj.q) && UNIV(mn.q) && !UNIV(c.q)), txt: 'Iš dviejų bendrųjų prielaidų – tik bendroji išvada (be egzistencinės prielaidos)' });
+  return r;
+}
+// Loginis kvadratas (egzistencinė prielaida tik subjektui S)
+function squareDerive(givenQ, givenVal, trad) {
+  const P = q => ({ q, s: 'S', p: 'P' });
+  const ms = models([], importTerms(trad, ['S'])).filter(m => holds(P(givenQ), m) === givenVal);
+  const out = {};
+  'AEIO'.split('').forEach(q => {
+    const v = ms.map(m => holds(P(q), m));
+    out[q] = v.every(x => x) ? 'T' : v.every(x => !x) ? 'F' : 'U';
+  });
+  return out;
+}
+</script>
+
+<script>
+// ================= DUOMENYS =================
+const MNEMONIC = {
+  '1-AAA': 'bArbArA', '1-EAE': 'cElArEnt', '1-AII': 'dArII', '1-EIO': 'fErIO', '1-AAI': 'bArbArI', '1-EAO': 'cElArOnt',
+  '2-EAE': 'cEsArE', '2-AEE': 'cAmEstrEs', '2-EIO': 'fEstInO', '2-AOO': 'bArOcO', '2-EAO': 'cEsArO', '2-AEO': 'cAmEstrOs',
+  '3-AAI': 'dArAptI', '3-IAI': 'dIsAmIs', '3-AII': 'dAtIsI', '3-EAO': 'fElAptOn', '3-OAO': 'bOcArdO', '3-EIO': 'fErIsOn',
+  '4-AAI': 'brAmAntIp', '4-AEE': 'cAmEnEs', '4-IAI': 'dImArIs', '4-EAO': 'fEsApO', '4-EIO': 'frEsIsOn', '4-AEO': 'cAmEnOs',
+};
+const SYL = [
+  [1, 'AAA', { S: 'žmonės', P: 'mirtingi', M: 'gyvūnai' }, '{Q:Visi} {M:gyvūnai} yra {P:mirtingi}.', '{Q:Visi} {S:žmonės} yra {M:gyvūnai}.', '{Q:Visi} {S:žmonės} yra {P:mirtingi}.'],
+  [1, 'EAE', { S: 'gyvatės', P: 'turi kailį', M: 'ropliai' }, '{Q:Nė vienas} {M:roplys} ne{P:turi kailio}.', '{Q:Visos} {S:gyvatės} yra {M:ropliai}.', '{Q:Nė viena} {S:gyvatė} ne{P:turi kailio}.'],
+  [1, 'AII', { S: 'naminiai gyvūnai', P: 'žaismingi', M: 'kačiukai' }, '{Q:Visi} {M:kačiukai} yra {P:žaismingi}.', '{Q:Kai kurie} {S:naminiai gyvūnai} yra {M:kačiukai}.', '{Q:Kai kurie} {S:naminiai gyvūnai} yra {P:žaismingi}.'],
+  [1, 'EIO', { S: 'skaitymai', P: 'linksmi', M: 'namų darbai' }, '{Q:Nė vienas} {M:namų darbas} nėra {P:linksmas}.', '{Q:Kai kurie} {S:skaitymai} yra {M:namų darbai}.', '{Q:Kai kurie} {S:skaitymai} nėra {P:linksmi}.'],
+  [1, 'AAI', { S: 'žmonės', P: 'mirtingi', M: 'gyvūnai' }, '{Q:Visi} {M:gyvūnai} yra {P:mirtingi}.', '{Q:Visi} {S:žmonės} yra {M:gyvūnai}.', '{Q:Kai kurie} {S:žmonės} yra {P:mirtingi}.'],
+  [1, 'EAO', { S: 'gyvatės', P: 'turi kailį', M: 'ropliai' }, '{Q:Nė vienas} {M:roplys} ne{P:turi kailio}.', '{Q:Visos} {S:gyvatės} yra {M:ropliai}.', '{Q:Kai kurios} {S:gyvatės} ne{P:turi kailio}.'],
+
+  [2, 'EAE', { S: 'tortai', P: 'sveikas maistas', M: 'storina' }, '{Q:Nė vienas} {P:sveikas maistas} ne{M:storina}.', '{Q:Visi} {S:tortai} {M:storina}.', '{Q:Nė vienas} {S:tortas} nėra {P:sveikas maistas}.'],
+  [2, 'AEE', { S: 'žmonės', P: 'arkliai', M: 'turi pilvo pūtimą' }, '{Q:Visi} {P:arkliai} {M:turi pilvo pūtimą}.', '{Q:Nė vienas} {S:žmogus} ne{M:turi pilvo pūtimo}.', '{Q:Nė vienas} {S:žmogus} nėra {P:arklys}.'],
+  [2, 'EIO', { S: 'studentai', P: 'tinginiai', M: 'išlaiko egzaminus' }, '{Q:Nė vienas} {P:tinginys} ne{M:išlaiko egzaminų}.', '{Q:Kai kurie} {S:studentai} {M:išlaiko egzaminus}.', '{Q:Kai kurie} {S:studentai} nėra {P:tinginiai}.'],
+  [2, 'AOO', { S: 'svetainės', P: 'informatyvūs', M: 'naudingi' }, '{Q:Visi} {P:informatyvūs dalykai} yra {M:naudingi}.', '{Q:Kai kurios} {S:svetainės} nėra {M:naudingos}.', '{Q:Kai kurios} {S:svetainės} nėra {P:informatyvios}.'],
+  [2, 'EAO', { S: 'tortai', P: 'sveikas maistas', M: 'storina' }, '{Q:Nė vienas} {P:sveikas maistas} ne{M:storina}.', '{Q:Visi} {S:tortai} {M:storina}.', '{Q:Kai kurie} {S:tortai} nėra {P:sveikas maistas}.'],
+  [2, 'AEO', { S: 'žmonės', P: 'arkliai', M: 'turi pilvo pūtimą' }, '{Q:Visi} {P:arkliai} {M:turi pilvo pūtimą}.', '{Q:Nė vienas} {S:žmogus} ne{M:turi pilvo pūtimo}.', '{Q:Kai kurie} {S:žmonės} nėra {P:arkliai}.'],
+
+  [3, 'AAI', { S: 'skanūs', P: 'maistingi', M: 'vaisiai' }, '{Q:Visi} {M:vaisiai} yra {P:maistingi}.', '{Q:Visi} {M:vaisiai} yra {S:skanūs}.', '{Q:Kai kurie} {S:skanūs produktai} yra {P:maistingi}.'],
+  [3, 'IAI', { S: 'naudingi', P: 'gražūs', M: 'puodeliai' }, '{Q:Kai kurie} {M:puodeliai} yra {P:gražūs}.', '{Q:Visi} {M:puodeliai} yra {S:naudingi}.', '{Q:Kai kurie} {S:naudingi daiktai} yra {P:gražūs}.'],
+  [3, 'AII', { S: 'internato mokiniai', P: 'rudaplaukiai', M: 'stropūs berniukai' }, '{Q:Visi} {M:stropūs berniukai} šioje mokykloje yra {P:rudaplaukiai}.', '{Q:Kai kurie} {M:stropūs berniukai} šioje mokykloje yra {S:internato mokiniai}.', '{Q:Kai kurie} {S:internato mokiniai} šioje mokykloje yra {P:rudaplaukiai}.'],
+  [3, 'EAO', { S: 'įskilę', P: 'nauji', M: 'ąsočiai' }, '{Q:Nė vienas} {M:ąsotis} šioje spintoje nėra {P:naujas}.', '{Q:Visi} {M:ąsočiai} šioje spintoje yra {S:įskilę}.', '{Q:Kai kurie} {S:įskilę daiktai} šioje spintoje nėra {P:nauji}.'],
+  [3, 'OAO', { S: 'žinduoliai', P: 'turi uodegą', M: 'katės' }, '{Q:Kai kurios} {M:katės} ne{P:turi uodegos}.', '{Q:Visos} {M:katės} yra {S:žinduoliai}.', '{Q:Kai kurie} {S:žinduoliai} ne{P:turi uodegos}.'],
+  [3, 'EIO', { S: 'žali', P: 'valgomi', M: 'medžiai' }, '{Q:Nė vienas} {M:medis} nėra {P:valgomas}.', '{Q:Kai kurie} {M:medžiai} yra {S:žali}.', '{Q:Kai kurie} {S:žali daiktai} nėra {P:valgomi}.'],
+
+  [4, 'AAI', { S: 'sunokę', P: 'mano sodo obuoliai', M: 'naudingi' }, '{Q:Visi} {P:obuoliai mano sode} yra {M:naudingi}.', '{Q:Visi} {M:naudingi vaisiai} yra {S:sunokę}.', '{Q:Kai kurie} {S:sunokę vaisiai} yra {P:obuoliai mano sode}.'],
+  [4, 'AEE', { S: 'auginamos patalpoje', P: 'ryškios', M: 'kvapnios' }, '{Q:Visos} {P:ryškios gėlės} yra {M:kvapnios}.', '{Q:Nė viena} {M:kvapni gėlė} nėra {S:auginama patalpoje}.', '{Q:Nė viena} {S:patalpoje auginama gėlė} nėra {P:ryški}.'],
+  [4, 'IAI', { S: 'spalvoti', P: 'maži', M: 'minta medumi' }, '{Q:Kai kurie} {P:maži paukščiai} {M:minta medumi}.', '{Q:Visi} {M:medumi mintantys paukščiai} yra {S:spalvoti}.', '{Q:Kai kurie} {S:spalvoti paukščiai} yra {P:maži}.'],
+  [4, 'EAO', { S: 'mitinės', P: 'žmonės', M: 'tobuli' }, '{Q:Nė vienas} {P:žmogus} nėra {M:tobulas}.', '{Q:Visos} {M:tobulos būtybės} yra {S:mitinės}.', '{Q:Kai kurios} {S:mitinės būtybės} nėra {P:žmonės}.'],
+  [4, 'EIO', { S: 'dirba čia', P: 'kompetentingi', M: 'klysta' }, '{Q:Nė vienas} {P:kompetentingas žmogus} ne{M:klysta}.', '{Q:Kai kurie} {M:klystantys žmonės} {S:dirba čia}.', '{Q:Kai kurie} {S:čia dirbantys žmonės} nėra {P:kompetentingi}.'],
+  [4, 'AEO', { S: 'auginamos patalpoje', P: 'ryškios', M: 'kvapnios' }, '{Q:Visos} {P:ryškios gėlės} yra {M:kvapnios}.', '{Q:Nė viena} {M:kvapni gėlė} nėra {S:auginama patalpoje}.', '{Q:Kai kurios} {S:patalpoje auginamos gėlės} nėra {P:ryškios}.'],
+].map(([fig, mood, t, a, b, c]) => ({ id: fig + '-' + mood, fig, mood, t, s: [a, b, c], mn: MNEMONIC[fig + '-' + mood] }));
+
+const FIG_NAME = { 1: 'I figūra', 2: 'II figūra', 3: 'III figūra', 4: 'IV figūra' };
+const FORM = { A: 'Visi X yra Y', E: 'Nė vienas X nėra Y', I: 'Kai kurie X yra Y', O: 'Kai kurie X nėra Y' };
+const ROLE = { maj: 'Didžioji prielaida', min: 'Mažoji prielaida', concl: 'Išvada' };
+const TERM_ROLE = { S: 'mažasis terminas (išvados subjektas)', P: 'didysis terminas (išvados predikatas)', M: 'vidurinis terminas' };
+
+// ================= BŪSENA =================
+const state = {
+  tab: 'atlas', trad: true, view: 'carroll', sel: '1-AAA', step: 0,
+  cons: { fig: 1, mood: 'AAA' },
+  sq: { q: 'A', val: true, s: 'studentai', p: 'darbštūs' },
+};
+
+// ================= PAGALBINĖS =================
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const sentence = (txt, q) => txt.replace(/\{(Q|S|P|M):([^}]+)\}/g, (_, k, v) =>
+  k === 'Q' ? `<span class="qw q-${q}">${v}</span>` : `<span class="t t-${k}" title="${k}: ${TERM_ROLE[k]}">${v}</span>`);
+const mnemonic = mn => mn.replace(/[AEIO]/g, ch => `<b class="q-${ch}">${ch}</b>`);
+const tm = t => `<b class="t t-${t}">${t}</b>`;
+const tmN = (t, syl) => tm(t) + (syl ? ` <i>(${esc(syl.t[t])})</i>` : '');
+const abstractSentence = pr => {
+  return FORM[pr.q].replace(/^(Visi|Nė vienas|Kai kurie)/, m => `<span class="qw q-${pr.q}">${m}</span>`)
+    .replace('X', tm(pr.s)).replace('Y', tm(pr.p));
+};
+const REG2ID = { 6: 9, 4: 10, 7: 11, 5: 12, 3: 13, 1: 14, 2: 15, 0: 16 };
+const ids = rs => rs.map(r => REG2ID[r]).sort((a, b) => a - b).join(', ');
+const regExpr = (r, syl) => ['S', 'P', 'M'].map(t => (has(r, t) ? t : t + '′')).join('·') +
+  (syl ? ' – ' + ['S', 'P', 'M'].map(t => (has(r, t) ? '' : 'ne ') + syl.t[t]).join(', ') : '');
+
+// ================= DIAGRAMOS (SVG) =================
+const DD = [
+  { r: 6, pt: [57, 57], poly: '10,10 200,10 200,105 105,105 105,200 10,200', n: [20, 34, 'start'] },
+  { r: 4, pt: [343, 57], poly: '200,10 390,10 390,200 295,200 295,105 200,105', n: [380, 34, 'end'] },
+  { r: 7, pt: [152, 152], poly: '105,105 200,105 200,200 105,200', n: [113, 126, 'start'] },
+  { r: 5, pt: [247, 152], poly: '200,105 295,105 295,200 200,200', n: [287, 126, 'end'] },
+  { r: 3, pt: [152, 247], poly: '105,200 200,200 200,295 105,295', n: [113, 289, 'start'] },
+  { r: 1, pt: [247, 247], poly: '200,200 295,200 295,295 200,295', n: [287, 289, 'end'] },
+  { r: 2, pt: [57, 343], poly: '10,200 105,200 105,295 200,295 200,390 10,390', n: [20, 382, 'start'] },
+  { r: 0, pt: [343, 343], poly: '295,200 390,200 390,390 200,390 200,295 295,295', n: [380, 382, 'end'] },
+];
+const VENN_PT = { 7: [200, 160], 6: [200, 92], 5: [138, 202], 3: [262, 202], 4: [108, 100], 2: [292, 100], 1: [200, 272], 0: [372, 318] };
+const counter = (x, y, v, cls = '', tip = '') =>
+  `<g class="${cls}"><title>${esc(tip)}</title><circle cx="${x}" cy="${y}" r="14" fill="${v === '1' ? 'var(--one)' : 'var(--zero)'}" stroke="#fff" stroke-width="2"/>` +
+  `<text x="${x}" y="${y + 5}" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">${v}</text></g>`;
+const fenceCounter = (a, b, cls, tip) => {
+  const x = (a[0] + b[0]) / 2, y = (a[1] + b[1]) / 2;
+  return `<g class="${cls}"><title>${esc(tip)}</title><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--one)" stroke-width="2" stroke-dasharray="4 4" opacity=".55"/>` +
+    `<circle cx="${x}" cy="${y}" r="17" fill="none" stroke="var(--one)" stroke-width="1.5" stroke-dasharray="3 3"/>` +
+    counter(x, y, '1') + '</g>';
+};
+
+function svgCarroll(st, syl, newSet = {}) {
+  const ptOf = r => DD.find(d => d.r === r).pt;
+  let s = `<svg width="400" height="400" viewBox="-40 -40 470 470" role="img" aria-label="Didžioji diagrama">`;
+  DD.forEach(d => {
+    const z = st.zero.has(d.r);
+    const cls = 'cell' + (newSet.z && newSet.z.has(d.r) ? ' glow' : '');
+    s += `<polygon class="${cls}" points="${d.poly}" fill="${z ? 'var(--shade)' : '#fff'}"><title>${REG2ID[d.r]}: ${esc(regExpr(d.r, syl))}</title></polygon>`;
+    s += `<text x="${d.n[0]}" y="${d.n[1]}" text-anchor="${d.n[2]}" font-size="13" fill="#a8a29e">${REG2ID[d.r]}</text>`;
+  });
+  s += `<rect x="10" y="10" width="380" height="380" fill="none" stroke="#334155" stroke-width="2"/>
+    <line x1="10" y1="200" x2="390" y2="200" stroke="var(--tS)" stroke-width="2.5"/>
+    <line x1="200" y1="10" x2="200" y2="390" stroke="var(--tP)" stroke-width="2.5"/>
+    <rect x="105" y="105" width="190" height="190" fill="none" stroke="var(--tM)" stroke-width="3"/>
+    <text x="200" y="-14" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tS)">S</text>
+    <text x="200" y="424" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tS)">S′</text>
+    <text x="-16" y="208" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tP)">P</text>
+    <text x="414" y="208" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tP)">P′</text>
+    <text x="99" y="99" text-anchor="end" font-family="Georgia" font-style="italic" font-size="22" fill="var(--tM)">M</text>`;
+  DD.forEach(d => {
+    const id = REG2ID[d.r];
+    if (st.zero.has(d.r)) s += counter(d.pt[0], d.pt[1], '0', newSet.z && newSet.z.has(d.r) ? 'pop' : '', `${id}: tuščias`);
+    else if (st.one.has(d.r)) s += counter(d.pt[0], d.pt[1], '1', newSet.o && newSet.o.has(d.r) ? 'pop' : '', `${id}: kažkas yra`);
+  });
+  st.fences.forEach(f => {
+    s += fenceCounter(ptOf(f.cells[0]), ptOf(f.cells[1]), newSet.f && newSet.f.has(f.key) ? 'pop' : '',
+      `1 ant tvoros tarp ${ids(f.cells)}`);
+  });
+  return s + '</svg>';
+}
+
+let UID = 0;
+function svgVenn(st, syl, newSet = {}) {
+  const u = 'v' + (UID++);
+  const C = { S: [150, 130], P: [250, 130], M: [200, 215] }, R = 92;
+  let defs = '<defs>';
+  ['S', 'P', 'M'].forEach(t => { defs += `<clipPath id="${u}c${t}"><circle cx="${C[t][0]}" cy="${C[t][1]}" r="${R}"/></clipPath>`; });
+  for (let k = 0; k < 8; k++) {
+    defs += `<mask id="${u}m${k}"><rect x="-20" y="-20" width="440" height="380" fill="#fff"/>` +
+      ['S', 'P', 'M'].filter(t => k & BIT[t]).map(t => `<circle cx="${C[t][0]}" cy="${C[t][1]}" r="${R}" fill="#000"/>`).join('') + '</mask>';
+  }
+  defs += '</defs>';
+  let s = `<svg width="400" height="350" viewBox="0 0 400 340" role="img" aria-label="Venno diagrama">${defs}`;
+  s += `<rect x="1" y="1" width="398" height="338" fill="#fff" stroke="#334155" stroke-width="2" rx="6"/>`;
+  ALL_R.forEach(r => {
+    if (!st.zero.has(r)) return;
+    let inner = `<rect class="${newSet.z && newSet.z.has(r) ? 'glow' : ''}" x="-20" y="-20" width="440" height="380" fill="var(--shade)"/>`;
+    ['S', 'P', 'M'].filter(t => has(r, t)).forEach(t => { inner = `<g clip-path="url(#${u}c${t})">${inner}</g>`; });
+    s += `<g mask="url(#${u}m${(~r) & 7})" pointer-events="none">${inner}</g>`;
+  });
+  s += `<circle cx="150" cy="130" r="${R}" fill="none" stroke="var(--tS)" stroke-width="3"/>
+    <circle cx="250" cy="130" r="${R}" fill="none" stroke="var(--tP)" stroke-width="3"/>
+    <circle cx="200" cy="215" r="${R}" fill="none" stroke="var(--tM)" stroke-width="3"/>
+    <text x="62" y="40" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tS)">S</text>
+    <text x="326" y="40" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tP)">P</text>
+    <text x="300" y="318" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tM)">M</text>`;
+  ALL_R.forEach(r => {
+    const [x, y] = VENN_PT[r];
+    if (st.zero.has(r)) s += counter(x, y, '0', newSet.z && newSet.z.has(r) ? 'pop' : '', regExpr(r, syl) + ': tuščias');
+    else if (st.one.has(r)) s += counter(x, y, '1', newSet.o && newSet.o.has(r) ? 'pop' : '', regExpr(r, syl) + ': kažkas yra');
+  });
+  st.fences.forEach(f => { s += fenceCounter(VENN_PT[f.cells[0]], VENN_PT[f.cells[1]], newSet.f && newSet.f.has(f.key) ? 'pop' : '', 'vienas iš dviejų regionų netuščias'); });
+  return s + '</svg>';
+}
+
+function svgSmall(md, opts = {}) {
+  const size = opts.size || 230;
+  const pts = { 5: [65, 65], 6: [185, 65], 7: [65, 185], 8: [185, 185] };
+  const box = { 5: [5, 5], 6: [125, 5], 7: [5, 125], 8: [125, 125] };
+  let s = `<svg width="${size}" height="${size}" viewBox="-34 -34 318 318" role="img" aria-label="Mažoji diagrama">`;
+  MD.forEach(c => {
+    const v = md ? md[c.id] : '-';
+    s += `<rect x="${box[c.id][0]}" y="${box[c.id][1]}" width="120" height="120" fill="${v === '0' ? 'var(--shade)' : '#fff'}" class="${opts.hl && opts.hl.includes(c.id) ? 'glow' : ''}"><title>${c.id}: ${c.s ? 'S' : 'S′'}·${c.p ? 'P' : 'P′'}</title></rect>`;
+    s += `<text x="${c.p ? 12 : 238}" y="${c.s ? 26 : 236}" text-anchor="${c.p ? 'start' : 'end'}" font-size="15" fill="#a8a29e">${c.id}</text>`;
+  });
+  s += `<rect x="5" y="5" width="240" height="240" fill="none" stroke="#334155" stroke-width="2"/>
+    <line x1="5" y1="125" x2="245" y2="125" stroke="var(--tS)" stroke-width="2.5"/>
+    <line x1="125" y1="5" x2="125" y2="245" stroke="var(--tP)" stroke-width="2.5"/>
+    <text x="125" y="-12" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tS)">S</text>
+    <text x="125" y="278" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tS)">S′</text>
+    <text x="-16" y="133" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tP)">P</text>
+    <text x="266" y="133" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" fill="var(--tP)">P′</text>`;
+  if (md) MD.forEach(c => { if (md[c.id] !== '-') s += counter(pts[c.id][0], pts[c.id][1], md[c.id], opts.anim ? 'pop' : ''); });
+  return s + '</svg>';
+}
+
+// ================= SPRENDIMO ŽINGSNIAI =================
+function describeProp(pr, before, after, syl) {
+  const X = tmN(pr.s, syl), Y = tmN(pr.p, syl);
+  const head = `<div>${syl ? sentence(syl.s[pr.role === 'maj' ? 0 : 1], pr.q) : abstractSentence(pr)}</div>` +
+    `<div style="color:var(--soft);font-size:13px;margin:4px 0">Forma <b class="q-${pr.q}">${pr.q}</b>: ${abstractSentence(pr)}</div>`;
+  let body = '';
+  if (UNIV(pr.q)) {
+    const z = emptyCells(pr);
+    body = pr.q === 'A'
+      ? `Nėra nė vieno ${X}, kuris būtų ne ${Y}. Todėl langeliai <b>${ids(z)}</b> (${tm(pr.s)}, bet ${tm(pr.p)}′) tampa tušti – dedame <b>0</b>.`
+      : `Nėra nė vieno ${X}, kuris būtų ${Y}. Todėl langeliai <b>${ids(z)}</b> (${tm(pr.s)}·${tm(pr.p)}) tampa tušti – dedame <b>0</b>.`;
+  } else {
+    const c = existCells(pr);
+    const cl = after.claims.find(k => k.src === pr.role);
+    const what = pr.q === 'I' ? `${tm(pr.s)}·${tm(pr.p)}` : `${tm(pr.s)}·${tm(pr.p)}′`;
+    body = `Bent vienas ${X} ${pr.q === 'I' ? 'yra' : 'nėra'} ${Y}: kažkas yra regione ${what}, t. y. langelyje <b>${ids(c)}</b>. `;
+    if (cl.rem.length === 1) body += cl.cells.length > 1 ? `Kitas langelis jau tuščias, todėl <b>1</b> dedame į langelį <b>${ids(cl.rem)}</b>.` : '';
+    else if (cl.rem.length === 2 && cl.status === 'fence') body += `Nežinome, kuriame iš jų, todėl <b>1</b> „sėdi ant tvoros“ tarp langelių ${ids(cl.rem)}.`;
+    else if (cl.status === 'sat') body += 'Tai jau pažymėta.';
+  }
+  return head + `<p style="margin:6px 0 0">${body}</p>` + fenceJumps(before, after);
+}
+function fenceJumps(before, after) {
+  if (!before) return '';
+  const out = [];
+  before.fences.forEach(f => {
+    if (after.fences.some(g => g.key === f.key)) return;
+    const landed = f.cells.find(r => after.one.has(r) && !after.zero.has(r));
+    const gone = f.cells.find(r => after.zero.has(r));
+    if (landed !== undefined && gone !== undefined)
+      out.push(`„1“, sėdėjęs ant tvoros tarp ${ids(f.cells)}, nušoka į langelį <b>${REG2ID[landed]}</b>, nes langelis ${REG2ID[gone]} dabar tuščias.`);
+  });
+  return out.length ? `<p style="margin:6px 0 0">🔁 ${out.join(' ')}</p>` : '';
+}
+const diffSets = (prev, cur) => ({
+  z: new Set([...cur.zero].filter(r => !prev || !prev.zero.has(r))),
+  o: new Set([...cur.one].filter(r => !prev || !prev.one.has(r))),
+  f: new Set(cur.fences.map(f => f.key).filter(k => !prev || !prev.fences.some(g => g.key === k))),
+});
+const sameState = (a, b) => a.zero.size === b.zero.size && a.one.size === b.one.size && [...a.one].every(r => b.one.has(r)) &&
+  a.fences.length === b.fences.length && a.fences.every(f => b.fences.some(g => g.key === f.key));
+
+function buildSteps(fig, mood, syl, trad) {
+  const [mj, mn, c] = makeProps(fig, mood);
+  const st0 = carroll([]), st1 = carroll([mj]), st2 = carroll([mj, mn]);
+  const steps = [];
+  steps.push({ key: 'T', title: 'Terminai ir langeliai', dd: st0, md: null, html:
+    `<p>Trys terminai: ${tmN('S', syl)} – ${TERM_ROLE.S}, ${tmN('P', syl)} – ${TERM_ROLE.P}, ${tmN('M', syl)} – ${TERM_ROLE.M}.</p>` +
+    (state.view === 'carroll'
+      ? `<p>Lewiso Carrollio didžiojoje diagramoje viršutinė pusė yra ${tm('S')}, apatinė – ${tm('S')}′; kairė – ${tm('P')}, dešinė – ${tm('P')}′; vidinis kvadratas – ${tm('M')}. Aštuoni langeliai (9–16) – visi galimi derinių atvejai. Užveskite pelę ant langelio.</p>`
+      : `<p>Venno diagramoje kiekvienas apskritimas – vienas terminas. Aštuoni regionai – visi galimi ${tm('S')}, ${tm('P')}, ${tm('M')} deriniai.</p>`) +
+    `<p><b>0</b> (pilka) – regionas tuščias, <b style="color:var(--one)">1</b> (raudona) – jame kažkas yra.</p>` });
+  steps.push({ key: '1', title: ROLE.maj, dd: st1, md: null, html: describeProp(mj, st0, st1, syl) });
+  steps.push({ key: '2', title: ROLE.min, dd: st2, md: null, html: describeProp(mn, st1, st2, syl) });
+  let last = st2;
+  if (trad) {
+    const st3 = carroll([mj, mn], ['S', 'P', 'M']);
+    if (!sameState(st2, st3)) {
+      const nw = [...st3.one].filter(r => !st2.one.has(r));
+      const nf = st3.fences.filter(f => !st2.fences.some(g => g.key === f.key));
+      steps.push({ key: '∃', title: 'Egzistencinė prielaida', dd: st3, md: null, html:
+        `<p>Aristotelio logikoje laikoma, kad kiekvienas terminas netuščias: egzistuoja bent vienas ${tm('S')}, ${tm('P')} ir ${tm('M')}.</p>` +
+        st3.claims.filter(k => k.src === 'term' && (k.status === 'solid' || k.status === 'fence')).map(k =>
+          `<p>${tmN(k.term, syl)}: iš jo langelių neištrinti liko tik <b>${ids(k.rem)}</b> ⇒ ${k.rem.length === 1 ? '<b>1</b> dedame čia' : '<b>1</b> ant tvoros'}.</p>`).join('') +
+        fenceJumps(st2, st3) + (nw.length + nf.length === 0 ? '' : '') });
+      last = st3;
+    }
+  }
+  const md = mdCells([mj, mn], trad);
+  steps.push({ key: '→', title: 'Perkėlimas į mažąją diagramą', dd: last, md, mdNew: true, html:
+    `<p>Pašaliname vidurinį terminą ${tm('M')}: kiekvienas mažosios diagramos langelis apjungia du didžiosios langelius (su ${tm('M')} ir be jo).</p>` +
+    `<ul>${MD.map(cc => { const p = mdPair(cc); return `<li>${cc.id} (${cc.s ? 'S' : 'S′'}·${cc.p ? 'P' : 'P′'}) ← ${ids(p)}: <b>${md[cc.id] === '-' ? 'nežinoma' : md[cc.id]}</b></li>`; }).join('')}</ul>` +
+    `<p style="font-size:13px;color:var(--soft)">0 perkeliamas, tik kai abu langeliai tušti; 1 – kai tikrai žinome, kad bent viename yra kas nors.</p>` });
+  const ent = 'AEIO'.split('').filter(q => entails([mj, mn], { q, s: 'S', p: 'P' }, trad));
+  const ok = ent.includes(c.q);
+  steps.push({ key: '∴', title: 'Išvada', dd: last, md, html:
+    `<p>Iš mažosios diagramos skaitome, kas tikrai teisinga apie ${tmN('S', syl)} ir ${tmN('P', syl)}:</p>` +
+    (ent.length ? `<ul>${ent.map(q => `<li>${abstractSentence({ q, s: 'S', p: 'P' })}${q === c.q ? ' ✔' : ''}</li>`).join('')}</ul>` : '<p><b>Nieko</b> – apie S ir P šios prielaidos nieko neteigia.</p>') +
+    `<div class="verdict">${ok ? '✅ Išvada išplaukia – silogizmas galioja.' : '❌ Išvada „' + abstractSentence(c) + '“ neišplaukia.'}</div>` +
+    (syl ? `<div>${sentence(syl.s[2], c.q)}</div>` : '') });
+  return steps;
+}
+
+// ================= VAIZDAI =================
+// Figūros schema „zigzagu“: prielaidų terminai sujungti, M–M linija rodo figūros formą (Z, ⊐, ⊏, S)
+function figSchema(f) {
+  const F = FIG[f], X = [36, 116], Y = [22, 70], YC = 122;
+  const pos = [[X[0], Y[0], F.maj[0]], [X[1], Y[0], F.maj[1]], [X[0], Y[1], F.min[0]], [X[1], Y[1], F.min[1]]];
+  const [a, b] = pos.filter(p => p[2] === 'M');
+  const seg = (x1, y1, x2, y2, c, w, dash = '') => {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), k = 15 / L;
+    return `<line x1="${x1 + dx * k}" y1="${y1 + dy * k}" x2="${x2 - dx * k}" y2="${y2 - dy * k}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" ${dash}/>`;
+  };
+  const term = (x, y, t) => `<text x="${x}" y="${y + 8}" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="24" font-weight="700" fill="var(--t${t})">${t}</text>`;
+  const lab = (y, txt) => `<text x="150" y="${y + 5}" font-size="12" fill="var(--soft)">${txt}</text>`;
+  return `<svg width="210" height="140" viewBox="0 0 210 140" role="img" aria-label="${FIG_NAME[f]} schema">
+    ${seg(X[0], Y[0], X[1], Y[0], '#94a3b8', 2)}${seg(X[0], Y[1], X[1], Y[1], '#94a3b8', 2)}
+    ${seg(a[0], a[1], b[0], b[1], 'var(--tM)', 3.5)}
+    <line x1="14" y1="98" x2="138" y2="98" stroke="#1f2937" stroke-width="1.5"/>
+    ${seg(X[0], YC, X[1], YC, '#94a3b8', 2, 'stroke-dasharray="4 4"')}
+    ${pos.map(p => term(...p)).join('')}${term(X[0], YC, 'S')}${term(X[1], YC, 'P')}
+    ${lab(Y[0], 'didžioji')}${lab(Y[1], 'mažoji')}${lab(YC, 'išvada')}
+  </svg>`;
+}
+
+function viewAtlas() {
+  let h = `<h2>Silogizmų atlasas</h2><p class="lead">24 galiojantys kategoriniai silogizmai, išdėstyti pagal keturias figūras – kaip lentelėje <i>logic-lt.html</i>.
+    Spalvos: kiekybės žodis pagal teiginio tipą (<b class="q-A">A</b> <b class="q-E">E</b> <b class="q-I">I</b> <b class="q-O">O</b>),
+    terminai ${tm('S')} ${tm('P')} ${tm('M')}. Mnemoninio vardo balsės koduoja modusą. Spustelėkite kortelę – pamatysite sprendimą žingsnis po žingsnio.</p>`;
+  if (!state.trad) h += `<p class="lead"><span class="badge warn">Boole režimas</span> Pilkos kortelės (9 iš 24) galioja tik su egzistencine prielaida.</p>`;
+  h += '<div class="atlas">';
+  [1, 2, 3, 4].forEach(f => {
+    h += `<div><div class="fig-head"><h3>${FIG_NAME[f]}</h3>${figSchema(f)}</div>`;
+    SYL.filter(s => s.fig === f).forEach(s => {
+      const v = isValid(s.fig, s.mood, state.trad);
+      h += `<div class="card ${v ? '' : 'dim'}" data-act="open" data-id="${s.id}">
+        <div class="top"><span class="mn">${mnemonic(s.mn)}</span><span class="code">${s.mood}-${s.fig}</span></div>
+        <div class="l">${sentence(s.s[0], s.mood[0])}</div><div class="l">${sentence(s.s[1], s.mood[1])}</div>
+        <div class="l c">${sentence(s.s[2], s.mood[2])}</div>
+        ${v ? '' : '<div style="margin-top:6px"><span class="badge bad">be egzistencinės prielaidos negalioja</span></div>'}</div>`;
+    });
+    h += '</div>';
+  });
+  return h + '</div>';
+}
+
+function diagramBlock(step, prevStep, syl) {
+  const nw = diffSets(prevStep ? prevStep.dd : null, step.dd);
+  const big = state.view === 'carroll' ? svgCarroll(step.dd, syl, nw) : svgVenn(step.dd, syl, nw);
+  return `<div class="diagrams"><div class="dg"><div class="cap">${state.view === 'carroll' ? 'Didžioji diagrama (S, P, M)' : 'Venno diagrama'}</div>${big}</div>
+    <div class="dg" style="${step.md ? '' : 'opacity:.35'}"><div class="cap">Mažoji diagrama (S, P)</div>${svgSmall(step.md, { anim: step.mdNew })}</div></div>`;
+}
+const viewToggle = () => `<div class="seg"><button data-act="view" data-v="carroll" class="${state.view === 'carroll' ? 'on' : ''}">Carroll</button><button data-act="view" data-v="venn" class="${state.view === 'venn' ? 'on' : ''}">Venn</button></div>`;
+const rulesList = (fig, mood) => `<ul class="rules">${rules(fig, mood, state.trad).map(r => `<li class="${r.ok ? 'ok' : 'no'}"><span class="m">${r.ok ? '✓' : '✗'}</span>${r.txt}</li>`).join('')}</ul>`;
+
+function viewSolve() {
+  const syl = SYL.find(s => s.id === state.sel);
+  const steps = buildSteps(syl.fig, syl.mood, syl, state.trad);
+  state.step = Math.min(state.step, steps.length - 1);
+  const st = steps[state.step];
+  const idx = SYL.indexOf(syl);
+  const [mj, mn, c] = makeProps(syl.fig, syl.mood);
+  const valid = isValid(syl.fig, syl.mood, state.trad);
+  return `<div class="toolbar"><div><h2 style="display:inline"><span class="mn" style="font-size:26px">${mnemonic(syl.mn)}</span></h2>
+      <span class="badge">${FIG_NAME[syl.fig]} · ${syl.mood}</span> ${valid ? '<span class="badge ok">galioja</span>' : '<span class="badge bad">negalioja (Boole)</span>'}</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" data-act="sylnav" data-d="-1" ${idx === 0 ? 'disabled' : ''}>← Ankstesnis</button>
+      <button class="btn" data-act="sylnav" data-d="1" ${idx === SYL.length - 1 ? 'disabled' : ''}>Kitas →</button>
+      ${viewToggle()}</div></div>
+  <div class="solve">
+    <div class="panel">
+      <div class="role">${ROLE.maj}</div><div class="sent">${sentence(syl.s[0], mj.q)}</div>
+      <div class="role">${ROLE.min}</div><div class="sent">${sentence(syl.s[1], mn.q)}</div>
+      <div class="sent c">∴ ${sentence(syl.s[2], c.q)}</div>
+      <div class="legend"><span>${tm('S')} ${esc(syl.t.S)}</span><span>${tm('P')} ${esc(syl.t.P)}</span><span>${tm('M')} ${esc(syl.t.M)}</span></div>
+      <div class="steps">
+        <button class="btn" data-act="step" data-d="-1" ${state.step === 0 ? 'disabled' : ''}>◀</button>
+        ${steps.map((s, i) => `<button class="dot ${i === state.step ? 'on' : i < state.step ? 'done' : ''}" data-act="goto" data-i="${i}" title="${esc(s.title)}">${s.key}</button>`).join('')}
+        <button class="btn" data-act="step" data-d="1" ${state.step === steps.length - 1 ? 'disabled' : ''}>▶</button>
+        <span style="font-size:12px;color:var(--soft)">arba <kbd>←</kbd> <kbd>→</kbd></span>
+      </div>
+      <div class="explain"><h4>${state.step + 1}. ${st.title}</h4>${st.html}</div>
+      <div class="role" style="margin-top:16px">Tradicinės taisyklės</div>${rulesList(syl.fig, syl.mood)}
+    </div>
+    <div class="panel">${diagramBlock(st, steps[state.step - 1], syl)}</div>
+  </div>`;
+}
+
+function viewCons() {
+  const { fig, mood } = state.cons;
+  const [mj, mn, c] = makeProps(fig, mood);
+  const tradV = isValid(fig, mood, true), boolV = isValid(fig, mood, false);
+  const valid = state.trad ? tradV : boolV;
+  const steps = buildSteps(fig, mood, null, state.trad);
+  const last = steps[steps.length - 2];
+  const ent = 'AEIO'.split('').filter(q => entails([mj, mn], { q, s: 'S', p: 'P' }, state.trad));
+  const name = MNEMONIC[fig + '-' + mood];
+  let h = `<h2>Konstruktorius ir visų 256 modusų žemėlapis</h2>
+    <p class="lead">4 figūros × 64 raidžių deriniai = 256 silogizmai. Pasirinkite figūrą ir tris teiginius – galiojimas apskaičiuojamas perrenkant visus 256 galimus pasaulius (kurie iš 8 regionų netušti), o tradicinės taisyklės paaiškina priežastį.</p>
+    <div class="cons"><div class="panel">
+      <div class="role">Figūra</div><div class="pick">${[1, 2, 3, 4].map(f => `<button data-act="cfig" data-v="${f}" class="${f === fig ? 'on' : ''}">${FIG_NAME[f]}</button>`).join('')}</div>
+      ${['maj', 'min', 'concl'].map((role, i) => `<div class="role">${ROLE[role]}</div><div class="pick">` +
+        'AEIO'.split('').map(q => `<button data-act="cq" data-i="${i}" data-v="${q}" class="${mood[i] === q ? 'on' : ''}"><b class="q-${q}">${q}</b></button>`).join('') +
+        `<span style="margin-left:10px;align-self:center">${abstractSentence([mj, mn, c][i])}</span></div>`).join('')}
+      <div class="verdict">${valid ? '✅ Galioja' : '❌ Negalioja'} ${name ? `<span class="mn" style="margin-left:8px">${mnemonic(name)}</span>` : ''}
+        ${tradV && !boolV ? '<span class="badge warn" style="margin-left:6px">tik su egzistencine prielaida</span>' : ''}</div>
+      <div>Iš šių prielaidų tikrai išplaukia: ${ent.length ? ent.map(q => abstractSentence({ q, s: 'S', p: 'P' })).join('; ') : '<b>nieko</b> apie S ir P'}.</div>
+      <div class="role" style="margin-top:14px">Tradicinės taisyklės</div>${rulesList(fig, mood)}
+    </div>
+    <div class="panel"><div class="toolbar"><span class="role" style="margin:0">Galutinė būsena</span>${viewToggle()}</div>${diagramBlock(last, null, null)}</div></div>
+    <div class="panel" style="margin-top:18px"><div class="toolbar"><b>Visi 256 modusai</b>
+      <span style="font-size:13px"><span class="sw" style="background:#15803d"></span>galioja visada (15)
+      <span class="sw" style="background:#fbbf24;margin-left:10px"></span>tik su egzistencine prielaida (9)
+      <span class="sw" style="background:#ece8df;margin-left:10px"></span>negalioja (232)</span></div>
+    <div class="heat">`;
+  [1, 2, 3, 4].forEach(f => {
+    h += `<table><caption>${FIG_NAME[f]}</caption><tr><th></th>${'AEIO'.split('').map(q => `<th class="q-${q}">${q}</th>`).join('')}</tr>`;
+    'AEIO'.split('').forEach(a => 'AEIO'.split('').forEach(b => {
+      h += `<tr><th>${a}${b}</th>` + 'AEIO'.split('').map(q => {
+        const m = a + b + q, t = isValid(f, m, true), bo = isValid(f, m, false);
+        const nm = MNEMONIC[f + '-' + m];
+        return `<td class="${bo ? 'v2' : t ? 'v1' : ''} ${f === fig && m === mood ? 'sel' : ''}" data-act="cset" data-f="${f}" data-m="${m}" title="${m}-${f}${nm ? ' ' + nm : ''}"></td>`;
+      }).join('') + '</tr>';
+    }));
+    h += '</table>';
+  });
+  return h + '</div></div>';
+}
+
+const SQ = { A: [70, 70], E: [330, 70], I: [70, 330], O: [330, 330] };
+const SQ_TXT = { A: 'Visi {S} yra {P}', E: 'Nė vienas {S} nėra {P}', I: 'Kai kurie {S} yra {P}', O: 'Kai kurie {S} nėra {P}' };
+const REL = {
+  AE: ['Priešingumas (kontrarūs)', 'negali abu būti teisingi'], IO: ['Popriešingumas (subkontrarūs)', 'negali abu būti klaidingi'],
+  AO: ['Prieštaravimas', 'visada priešingos reikšmės'], EI: ['Prieštaravimas', 'visada priešingos reikšmės'],
+  AI: ['Pavaldumas', 'A teisingas ⇒ I teisingas; I klaidingas ⇒ A klaidingas'], EO: ['Pavaldumas', 'E teisingas ⇒ O teisingas; O klaidingas ⇒ E klaidingas'],
+};
+const relOf = (a, b) => REL[[a, b].sort().join('')];
+function viewSquare() {
+  const { q, val, s, p } = state.sq;
+  const der = squareDerive(q, val, state.trad);
+  const trad = state.trad;
+  const ln = (a, b, color, dash, label, lx, ly, rot, weak) =>
+    `<line x1="${SQ[a][0]}" y1="${SQ[a][1]}" x2="${SQ[b][0]}" y2="${SQ[b][1]}" stroke="${color}" stroke-width="${weak ? 1.5 : 3}" stroke-dasharray="${weak ? '3 6' : dash}" opacity="${weak ? .35 : 1}"/>` +
+    `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="13" font-style="italic" fill="${weak ? '#aaa' : color}" transform="rotate(${rot} ${lx} ${ly})">${label}${weak ? ' ✗' : ''}</text>`;
+  let svg = `<svg width="420" height="420" viewBox="-10 -10 420 420">
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+    ${ln('A', 'O', '#1f2937', '', 'prieštaravimas', 140, 125, 45, false)}
+    ${ln('E', 'I', '#1f2937', '', 'prieštaravimas', 260, 125, -45, false)}
+    ${ln('A', 'E', 'var(--qA)', '8 5', 'priešingumas', 200, 58, 0, !trad)}
+    ${ln('I', 'O', 'var(--qI)', '8 5', 'popriešingumas', 200, 358, 0, !trad)}
+    <line x1="70" y1="104" x2="70" y2="292" stroke="#64748b" stroke-width="${trad ? 3 : 1.5}" opacity="${trad ? 1 : .35}" marker-end="url(#arr)"/>
+    <line x1="330" y1="104" x2="330" y2="292" stroke="#64748b" stroke-width="${trad ? 3 : 1.5}" opacity="${trad ? 1 : .35}" marker-end="url(#arr)"/>
+    <text x="48" y="200" text-anchor="middle" font-size="13" font-style="italic" fill="${trad ? '#64748b' : '#aaa'}" transform="rotate(-90 48 200)">pavaldumas${trad ? '' : ' ✗'}</text>
+    <text x="352" y="200" text-anchor="middle" font-size="13" font-style="italic" fill="${trad ? '#64748b' : '#aaa'}" transform="rotate(90 352 200)">pavaldumas${trad ? '' : ' ✗'}</text>`;
+  'AEIO'.split('').forEach(k => {
+    const v = der[k], [x, y] = SQ[k];
+    const fill = v === 'T' ? '#16a34a' : v === 'F' ? '#dc2626' : '#e5e7eb';
+    svg += `<g class="sq-corner" data-act="sq" data-q="${k}"><title>Spustelėkite: nustatyti ${k} teisingu / klaidingu</title>
+      <circle cx="${x}" cy="${y}" r="34" fill="${fill}" stroke="${k === q ? '#fbbf24' : '#fff'}" stroke-width="${k === q ? 6 : 3}"/>
+      <text x="${x}" y="${y + 4}" text-anchor="middle" font-family="Georgia" font-size="28" font-weight="700" fill="${v === 'U' ? `var(--q${k})` : '#fff'}">${k}</text>
+      <text x="${x}" y="${y + 22}" text-anchor="middle" font-size="11" font-weight="700" fill="${v === 'U' ? '#6b7280' : '#fff'}">${v === 'T' ? 'tiesa' : v === 'F' ? 'netiesa' : '?'}</text></g>`;
+  });
+  svg += '</svg>';
+  const fill = k => SQ_TXT[k].replace('{S}', `<span class="t t-S">${esc(s)}</span>`).replace('{P}', `<span class="t t-P">${esc(p)}</span>`)
+    .replace(/^(Visi|Nė vienas|Kai kurie)/, m => `<span class="qw q-${k}">${m}</span>`);
+  const vlabel = v => `<span class="val ${v}">${v === 'T' ? 'tiesa' : v === 'F' ? 'netiesa' : 'nežinoma'}</span>`;
+  return `<h2>Loginis kvadratas</h2>
+    <p class="lead">Spustelėkite kampą – jis tampa <b>duotas</b> (pakartotinai spustelėjus perjungiama tiesa ↔ netiesa). Kitų teiginių reikšmės apskaičiuojamos perrenkant visus galimus pasaulius.
+    ${trad ? 'Aristotelio režime laikoma, kad S egzistuoja.' : '<b>Boole režime</b> S gali būti tuščias – lieka tik prieštaravimai (įstrižainės).'}</p>
+    <div class="square"><div class="panel" style="text-align:center">${svg}</div>
+    <div class="panel">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <label>S: <input type="text" data-act="sqs" value="${esc(s)}"></label><label>P: <input type="text" data-act="sqp" value="${esc(p)}"></label></div>
+      <ul class="sq-list">${'AEIO'.split('').map(k => `<li><span class="L q-${k}">${k}</span><span>${fill(k)}${k === q ? ' <span class="badge">duota</span>' : ''}</span>
+        ${vlabel(der[k])}<span>${svgSmall(mdCells([{ q: k, s: 'S', p: 'P' }], trad, ['S']), { size: 70 })}</span></li>`).join('')}</ul>
+      <div class="rel-legend">${'AEIO'.split('').filter(k => k !== q).map(k => {
+        const r = relOf(q, k); const weak = !trad && r[0] !== 'Prieštaravimas';
+        return `<div><b>${q} → ${k}</b><span><b>${r[0]}</b>: ${r[1]}${weak ? ' <i>(be egzistencinės prielaidos negalioja)</i>' : ''}</span></div>`; }).join('')}</div>
+    </div></div>`;
+}
+
+// ================= VALDYMAS =================
+const TABS = [['atlas', 'Atlasas'], ['solve', 'Sprendimas'], ['cons', 'Konstruktorius'], ['square', 'Loginis kvadratas']];
+function render() {
+  document.getElementById('tabs').innerHTML = TABS.map(([k, n]) => `<button data-act="tab" data-v="${k}" class="${state.tab === k ? 'on' : ''}">${n}</button>`).join('');
+  document.querySelectorAll('[data-act=mode]').forEach(b => b.classList.toggle('on', (b.dataset.v === 'trad') === state.trad));
+  const v = { atlas: viewAtlas, solve: viewSolve, cons: viewCons, square: viewSquare }[state.tab];
+  document.getElementById('app').innerHTML = v();
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const d = el.dataset;
+  switch (d.act) {
+    case 'tab': state.tab = d.v; break;
+    case 'mode': state.trad = d.v === 'trad'; break;
+    case 'view': state.view = d.v; break;
+    case 'open': state.sel = d.id; state.step = 0; state.tab = 'solve'; window.scrollTo(0, 0); break;
+    case 'sylnav': { const i = SYL.findIndex(s => s.id === state.sel) + +d.d; state.sel = SYL[i].id; state.step = 0; break; }
+    case 'step': state.step = Math.max(0, state.step + +d.d); break;
+    case 'goto': state.step = +d.i; break;
+    case 'cfig': state.cons.fig = +d.v; break;
+    case 'cq': { const m = state.cons.mood.split(''); m[+d.i] = d.v; state.cons.mood = m.join(''); break; }
+    case 'cset': state.cons.fig = +d.f; state.cons.mood = d.m; break;
+    case 'sq': if (state.sq.q === d.q) state.sq.val = !state.sq.val; else { state.sq.q = d.q; state.sq.val = true; } break;
+    default: return;
+  }
+  render();
+});
+document.addEventListener('change', e => {
+  const d = e.target.dataset;
+  if (d.act === 'sqs') state.sq.s = e.target.value || 'S';
+  else if (d.act === 'sqp') state.sq.p = e.target.value || 'P';
+  else return;
+  render();
+});
+document.addEventListener('keydown', e => {
+  if (state.tab !== 'solve' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') { state.step++; render(); }
+  if (e.key === 'ArrowLeft' && state.step > 0) { state.step--; render(); }
+});
+render();
+</script>
+</body>
+</html>
